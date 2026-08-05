@@ -1,0 +1,44 @@
+---
+title: bluecadet docs
+tableOfContents: false
+template: splash
+description: A reusable docs system — a Starlight theme, a CLI, and a reusable CI workflow that turns a repo's markdown into a branded static site.
+hero:
+  tagline: Turn a repo's markdown into a branded static site — no Astro project, no config, no build pipeline to maintain.
+  actions:
+    - text: Add docs to your repo
+      link: tutorials/add-docs-to-your-repo/
+      icon: right-arrow
+      variant: primary
+    - text: CLI reference
+      link: reference/cli/
+      icon: external
+      variant: minimal
+---
+
+import CardGrid from "@bluecadet/docs-theme/components/CardGrid.astro";
+import PackageCard from "@bluecadet/docs-theme/components/PackageCard.astro";
+
+## Packages
+
+<CardGrid>
+  <PackageCard
+    title="@bluecadet/docs"
+    description="CLI that turns a repo's colocated markdown (README + docs/) into a branded static Starlight site. No install required in the consumer repo."
+    href="reference/cli/"
+    version="0.0.1"
+  />
+  <PackageCard
+    title="@bluecadet/docs-theme"
+    description="Starlight plugin bundling bluecadet's 'Paper' design tokens, fonts, and landing-page components (CardGrid, PackageCard)."
+    href="reference/theme-components/"
+    version="0.0.1"
+  />
+</CardGrid>
+
+## Where to go next
+
+- **New to this?** Start with [Add docs to your repo](tutorials/add-docs-to-your-repo/).
+- **Have a specific task?** See the [how-to guides](how-to/configure-docs-config-json/).
+- **Looking something up?** See the [reference](reference/cli/).
+- **Curious how it works?** Read the [architecture explanation](explanation/architecture/).

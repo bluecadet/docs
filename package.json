@@ -1,0 +1,40 @@
+{
+  "name": "bluecadet-docs-monorepo",
+  "private": true,
+  "version": "0.0.1",
+  "description": "monorepo for @bluecadet/docs-theme, @bluecadet/docs, and friends",
+  "scripts": {
+    "changeset": "changeset",
+    "dev": "npm run build -w @bluecadet/docs && node packages/docs/dist/cli.js dev --root .",
+    "lint": "npx @biomejs/biome check",
+    "lint:fix": "npx @biomejs/biome check --fix",
+    "release": "changeset publish"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bluecadet/docs.git"
+  },
+  "contributors": [],
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/bluecadet/docs/issues"
+  },
+  "homepage": "https://github.com/bluecadet/docs#readme",
+  "workspaces": [
+    "packages/*"
+  ],
+  "devDependencies": {
+    "@biomejs/biome": "2.5.6",
+    "@changesets/changelog-github": "^0.7.0",
+    "@changesets/cli": "^2.30.0",
+    "lefthook": "^2.1.4"
+  },
+  "engines": {
+    "node": ">=23"
+  },
+  "packageManager": "npm@11.12.0",
+  "allowScripts": {
+    "esbuild@0.28.1": true,
+    "fsevents@2.3.3": true
+  }
+}

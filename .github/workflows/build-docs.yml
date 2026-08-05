@@ -1,0 +1,148 @@
+# Reusable workflow: build a repo's markdown into a Starlight site and deploy it to GitHub Pages.
+#
+# Any bluecadet repo (Go, C#, Node, whatever) can call this without a package.json — it installs
+# and runs @bluecadet/docs from the npm registry via npx. Example consumer usage:
+#
+#   name: Docs
+#   on:
+#     push:
+#       branches: [main]
+#   permissions:
+#     contents: read
+#     pages: write
+#     id-token: write
+#   concurrency:
+#     group: pages
+#     cancel-in-progress: false
+#   jobs:
+#     docs:
+#       uses: bluecadet/docs/.github/workflows/build-docs.yml@main
+#
+# Assumptions (see also packages/docs/README.md for CLI behavior):
+#   - GitHub Pages is already enabled on the caller repo with source set to "GitHub Actions".
+#   - The caller repo has a README.md at its root or a docs/index.md (the CLI's landing-page
+#     requirement); otherwise the build step fails.
+#   - `site`/`base` default via actions/configure-pages, which also transparently handles custom
+#     domains (a CNAME file) by leaving `base` empty and `site` pointed at the custom domain.
+#   - npm 11's `allowScripts` install-script gate would otherwise warn (not hard-fail) on
+#     esbuild's postinstall for a bare `npm install`/`npx` with no consumer package.json to carry
+#     an approval. We silence it explicitly via `npm_config_dangerously_allow_all_scripts=true`,
+#     scoped only to the npx step below, rather than pinning an exact esbuild version in an
+#     allowScripts block (which would drift and silently stop matching whenever @bluecadet/docs
+#     bumps its astro/vite/esbuild transitive dependency).
+
+on:
+  workflow_call:
+    inputs:
+      site:
+        description: >
+          Absolute site origin, e.g. https://bluecadet.github.io. Defaults to this repo's GitHub
+          Pages origin (or custom domain, if configured).
+        type: string
+        required: false
+        default: ""
+      base:
+        description: >
+          Base path for the deployed site, e.g. /my-repo/. Defaults to this repo's GitHub Pages
+          project path. Pass an explicit "" to force no base (e.g. custom domains normally handle
+          this automatically via GitHub Pages settings already).
+        type: string
+        required: false
+        default: ""
+      deploy:
+        description: When false, build and upload the Pages artifact but skip the deploy step.
+        type: boolean
+        required: false
+        default: true
+      docs-version:
+        description: >
+          npm dist-tag or version of @bluecadet/docs to run, e.g. "latest" or "1.2.0". Set to
+          "workspace" to build and run this monorepo's own packages/docs instead of installing
+          the published package (only valid when the caller repo IS bluecadet/docs — used for
+          dogfooding, see .github/workflows/docs.yml).
+        type: string
+        required: false
+        default: "latest"
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24 # satisfies @bluecadet/docs' engines >=23
+
+      - name: Setup Pages
+        id: pages
+        uses: actions/configure-pages@v4
+
+      - name: Resolve site & base
+        id: resolved
+        shell: bash
+        run: |
+          site="${{ inputs.site }}"
+          base="${{ inputs.base }}"
+          # Empty input (the default) means "use GitHub Pages' own answer" — which is already ""
+          # for a custom domain (configure-pages reads the CNAME file), so custom domains need no
+          # special-casing here.
+          if [ -z "$site" ]; then site="${{ steps.pages.outputs.origin }}"; fi
+          if [ -z "$base" ]; then base="${{ steps.pages.outputs.base_path }}"; fi
+          if [ -n "$base" ] && [[ "$base" != */ ]]; then base="$base/"; fi
+          echo "site=$site" >> "$GITHUB_OUTPUT"
+          echo "base=$base" >> "$GITHUB_OUTPUT"
+
+      - name: Build docs (published @bluecadet/docs)
+        if: inputs.docs-version != 'workspace'
+        env:
+          # See the top-of-file note: avoids an `allow-scripts` warning for esbuild's postinstall
+          # since there's no consumer package.json to carry an approval.
+          npm_config_dangerously_allow_all_scripts: "true"
+        run: |
+          npx --yes "@bluecadet/docs@${{ inputs.docs-version }}" build \
+            --out ./dist \
+            --site "${{ steps.resolved.outputs.site }}" \
+            --base "${{ steps.resolved.outputs.base }}"
+
+      - name: Install workspace dependencies (dogfooding only)
+        if: inputs.docs-version == 'workspace'
+        run: npm ci
+
+      - name: Build @bluecadet/docs (workspace)
+        if: inputs.docs-version == 'workspace'
+        run: npm run build --workspace packages/docs
+
+      - name: Build docs (workspace @bluecadet/docs)
+        if: inputs.docs-version == 'workspace'
+        run: |
+          node packages/docs/dist/cli.js build \
+            --out ./dist \
+            --site "${{ steps.resolved.outputs.site }}" \
+            --base "${{ steps.resolved.outputs.base }}"
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./dist
+
+  deploy:
+    if: inputs.deploy
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

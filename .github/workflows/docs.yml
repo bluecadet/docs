@@ -1,0 +1,38 @@
+# Deploys this repo's OWN docs (this README + docs/) to https://bluecadet.github.io/docs/.
+#
+# This is dogfooding: it calls the local reusable workflow (build-docs.yml) with
+# `docs-version: workspace`, which tells that workflow to build @bluecadet/docs from THIS repo's
+# own packages/docs source (via `npm ci` + `npm run build`) rather than installing the published
+# npm package. That's necessary here specifically — every other consumer repo installs the
+# published package via npx, but this repo IS the source of that package, so publish-then-consume
+# isn't available (and would be circular: this build has to work using code that hasn't shipped
+# yet, e.g. right after a change lands on main but before its changeset is released).
+#
+# Assumes GitHub Pages is enabled on this repo with source set to "GitHub Actions".
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "README.md"
+      - "docs/**"
+      - "docs.config.json"
+      - "packages/docs/**"
+      - "packages/docs-theme/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  docs:
+    uses: ./.github/workflows/build-docs.yml
+    with:
+      docs-version: workspace

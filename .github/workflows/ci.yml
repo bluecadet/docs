@@ -1,0 +1,48 @@
+# CI for the monorepo: lint, typecheck docs-theme (Biome doesn't typecheck .astro), build the
+# CLI, run each workspace's tests (if any), and a smoke build of this repo's own docs (using the
+# workspace CLI, not the published package — the same "workspace" build path docs.yml uses) as an
+# integration test that catches breakage before it reaches main/release.
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    name: CI
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck docs-theme
+        run: npm run typecheck --workspace packages/docs-theme
+
+      - name: Build @bluecadet/docs
+        run: npm run build --workspace packages/docs
+
+      - name: Test
+        run: npm test --workspaces --if-present
+
+      - name: Smoke build this repo's own docs (workspace CLI, no deploy)
+        run: node packages/docs/dist/cli.js build --out ./dist

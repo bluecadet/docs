@@ -1,0 +1,61 @@
+{
+  "name": "@bluecadet/docs",
+  "version": "0.0.1",
+  "description": "Turn any repo's colocated markdown docs into a branded static Starlight site with near-zero config.",
+  "type": "module",
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bluecadet/docs.git",
+    "directory": "packages/docs"
+  },
+  "author": {
+    "name": "Bluecadet",
+    "url": "https://bluecadet.com"
+  },
+  "bugs": {
+    "url": "https://github.com/bluecadet/docs/issues"
+  },
+  "homepage": "https://github.com/bluecadet/docs#readme",
+  "publishConfig": {
+    "access": "public"
+  },
+  "bin": {
+    "docs": "./dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "app/astro.config.mjs",
+    "app/src/content.config.ts",
+    "app/src/content/docs/.gitkeep",
+    "app/public/favicon.svg",
+    "app/public/.gitkeep"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsc -p tsconfig.json --watch",
+    "test": "vitest",
+    "prepack": "npm run build"
+  },
+  "dependencies": {
+    "@astrojs/starlight": "^0.41.7",
+    "@bluecadet/docs-theme": "*",
+    "astro": "^7.1.6",
+    "gray-matter": "^4.0.3",
+    "mdast-util-to-string": "^4.0.0",
+    "remark-gfm": "^4.0.0",
+    "remark-parse": "^11.0.0",
+    "remark-stringify": "^11.0.0",
+    "unified": "^11.0.5",
+    "unist-util-visit": "^5.0.0"
+  },
+  "devDependencies": {
+    "@types/mdast": "^4.0.4",
+    "@types/node": "^22.10.0",
+    "typescript": "^5.7.3",
+    "vitest": "^4.1.2"
+  },
+  "engines": {
+    "node": ">=23"
+  }
+}

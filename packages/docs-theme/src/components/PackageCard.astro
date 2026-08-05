@@ -1,0 +1,84 @@
+---
+import type { HTMLAttributes } from "astro/types";
+
+/**
+ * A card linking to a package's docs, with an optional version badge.
+ *
+ * Fetching the version number (e.g. from a `package.json` or the npm registry) is left to the
+ * consumer — pass whatever string you resolve at build time as the `version` prop.
+ *
+ * @example
+ * ```mdx
+ * <PackageCard
+ *   title="@bluecadet/docs"
+ *   description="CLI that builds a branded docs site from your repo's markdown."
+ *   href="/reference/docs-cli/"
+ *   version="1.4.0"
+ * />
+ * ```
+ */
+interface Props extends Omit<HTMLAttributes<"a">, "title"> {
+	/** Package or card title. */
+	title: string;
+	/** Short description shown below the title. */
+	description?: string;
+	/** Version string to render as a badge, e.g. `"1.4.0"`. Omit to hide the badge. */
+	version?: string;
+}
+
+const { title, description, version, ...attributes } = Astro.props;
+---
+
+<a class="docs-theme-package-card" {...attributes}>
+	<span class="title">{title}</span>
+	{description && <span class="description">{description}</span>}
+	{version && <span class="version-badge">v{version}</span>}
+</a>
+
+<style>
+	.docs-theme-package-card {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 0.5rem;
+		border: 1px solid var(--rule);
+		border-radius: var(--radius);
+		padding: 1.25rem;
+		text-decoration: none;
+		color: inherit;
+		background: var(--bg-2);
+		transition:
+			border-color 0.15s ease,
+			background-color 0.15s ease;
+	}
+
+	.docs-theme-package-card:hover,
+	.docs-theme-package-card:focus-visible {
+		border-color: var(--accent);
+		background: var(--bg-3);
+	}
+
+	.title {
+		font-family: var(--sans);
+		font-weight: 600;
+		font-size: var(--sl-text-lg, 1.125rem);
+		color: var(--ink);
+	}
+
+	.description {
+		font-family: var(--sans);
+		font-size: var(--sl-text-sm, 0.875rem);
+		color: var(--ink-2);
+		line-height: 1.5;
+	}
+
+	.version-badge {
+		font-family: var(--mono);
+		font-size: var(--sl-text-xs, 0.8125rem);
+		color: var(--accent-ink);
+		background: var(--accent-wash);
+		border-radius: 999px;
+		padding: 0.15em 0.6em;
+		line-height: 1.4;
+	}
+</style>
