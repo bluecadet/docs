@@ -8,8 +8,8 @@
 //   `disclosure` — a native <details> for tablet/mobile. Mounted INSIDE the article content by the
 //                  doc page template so it sits in the article flow rather than above the
 //                  breadcrumb. No JS: <details>/<summary> is the whole interaction.
-// The 1920 "updated for / edit this page" metadata and "related" links blocks are deliberately
-// omitted: no data source for either.
+// The design's "updated for / edit this page" metadata and "related" links blocks are
+// deliberately omitted: no data source for either.
 interface Heading {
 	depth: number;
 	slug: string;
@@ -81,7 +81,7 @@ const sections = headings.filter((heading) => heading.depth === 2);
 		scrollbar-gutter: stable;
 		scrollbar-width: thin;
 		scrollbar-color: var(--hairline-14) transparent;
-		padding: 32px 22px;
+		padding: var(--content-pad-top) 36px 64px;
 		font-size: 12.5px;
 	}
 
@@ -171,8 +171,9 @@ const sections = headings.filter((heading) => heading.depth === 2);
 	}
 
 	/* Tablet/mobile: the persistent aside column drops (see BaseLayout.astro's .page-main grid)
-	   and the inline disclosure takes over. */
-	@media (max-width: 1023px) {
+	   and the inline disclosure takes over. Matches BaseLayout's .page-main--toc collapse so the
+	   aside never renders in the squeezed 1024-1279px range. */
+	@media (max-width: 1279px) {
 		.toc-rail {
 			display: none;
 		}
@@ -185,25 +186,6 @@ const sections = headings.filter((heading) => heading.depth === 2);
 	@media (max-width: 767px) {
 		.toc-disclosure__links {
 			grid-template-columns: 1fr;
-		}
-	}
-
-	@media (min-width: 1920px) {
-		.toc-rail {
-			border-left: none;
-		}
-
-		.toc-aside {
-			padding: 66px 0 0;
-			font-size: 13px;
-		}
-
-		.toc-aside__links {
-			gap: 11px;
-		}
-
-		.toc-aside__link {
-			padding-left: 15px;
 		}
 	}
 </style>

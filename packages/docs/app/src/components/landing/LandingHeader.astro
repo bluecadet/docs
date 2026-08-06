@@ -41,7 +41,7 @@ const base = import.meta.env.BASE_URL;
 		display: flex;
 		align-items: center;
 		gap: 24px;
-		padding: 0 32px;
+		padding: 0 var(--content-pad-x);
 		min-width: 0;
 	}
 
@@ -51,13 +51,6 @@ const base = import.meta.env.BASE_URL;
 		font-size: 13.5px;
 		color: var(--text-muted);
 		margin-left: auto;
-	}
-
-	@media (min-width: 1920px) {
-		.landing-header-nav {
-			gap: 26px;
-			padding: 0 44px;
-		}
 	}
 
 	/* Tablet: HeaderShell collapses to a flex row. The "docs" text link is dropped in favor of the

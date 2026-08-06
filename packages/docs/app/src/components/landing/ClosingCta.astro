@@ -29,18 +29,18 @@ const { firstSectionTitle, firstHref, repoUrl, accent } = Astro.props;
 
 <style>
 	.closing-cta {
-		padding: 56px 56px 62px;
+		padding: 88px var(--content-pad-x) 96px;
 		background: var(--surface-panel-1);
 		display: flex;
 		align-items: baseline;
-		gap: 40px;
+		gap: 56px;
 		flex-wrap: wrap;
 	}
 
 	.closing-cta-title {
 		margin: 0;
-		font: 300 36px/1.15 var(--font-serif);
-		max-width: 620px;
+		font: 300 38px/1.2 var(--font-serif);
+		max-width: 24ch;
 		color: var(--ink);
 	}
 
@@ -57,7 +57,7 @@ const { firstSectionTitle, firstHref, repoUrl, accent } = Astro.props;
 
 	.btn {
 		font: 400 13px var(--font-mono);
-		padding: 10px 18px;
+		padding: 12px 20px;
 		border-radius: var(--radius-md);
 	}
 
@@ -71,37 +71,20 @@ const { firstSectionTitle, firstHref, repoUrl, accent } = Astro.props;
 		border: 1px solid var(--amber-border-40);
 	}
 
-	@media (min-width: 1920px) {
-		.closing-cta {
-			padding: 64px 80px 72px;
-			gap: 48px;
-		}
-
-		.closing-cta-title {
-			font-size: 42px;
-			max-width: 760px;
-		}
-
-		.btn {
-			font-size: 13.5px;
-			padding: 12px 20px;
-		}
-	}
-
 	/* Tablet keeps the flex row (it already wraps via flex-wrap above, just with less padding);
 	   only mobile stacks into a column. */
 	@media (max-width: 1023px) {
 		.closing-cta {
-			padding: 40px 26px;
+			padding: 60px var(--content-pad-x);
 		}
 	}
 
 	@media (max-width: 767px) {
 		.closing-cta {
-			padding: 40px 20px;
+			padding: 60px var(--content-pad-x);
 			flex-direction: column;
 			align-items: flex-start;
-			gap: 20px;
+			gap: 30px;
 		}
 
 		.closing-cta-actions {

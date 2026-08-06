@@ -8,13 +8,13 @@
 
 .prose {
 	color: var(--text-body);
-	font-size: 14.5px;
-	line-height: 1.7;
+	font-size: 15px;
+	line-height: 1.8;
 
 	/* Vertical offset a jumped-to (or anchor-linked) heading scrolls to rest under, so the sticky
 	   header never covers it. Derived from `--header-height` (declared on `.page` in
 	   BaseLayout.astro, owned by a concurrent agent) rather than a fixed px value: that variable
-	   already changes per breakpoint (56px tablet, 52px mobile, 62px at 1920+), and `.prose` lives
+	   already changes per breakpoint (68px desktop, 60px tablet, 56px mobile), and `.prose` lives
 	   inside `.page` so it inherits whichever value is current. The extra 16px is breathing room
 	   so the heading doesn't sit flush against the header. */
 	--heading-scroll-offset: calc(var(--header-height) + 16px);
@@ -28,66 +28,53 @@
    it so this one stylesheet owns all article-scope type (H1 through H4) without splitting the
    scale across two rulesets. */
 .prose h1 {
-	margin: 0 0 10px;
-	font: 400 38px/1.15 var(--font-serif);
+	margin: 0 0 16px;
+	font: 400 42px/1.15 var(--font-serif);
 	letter-spacing: -0.01em;
 	color: var(--ink);
 }
 
 /* The lead paragraph (`entry.data.description`, optional) reads as the page's subtitle — larger
    and lighter than body prose. `.lead` is the class [...slug].astro renders on it directly; the
-   `h1 + p` fallback covers hand-authored markdown that follows the same H1-then-paragraph shape. */
+   `h1 + p` fallback covers hand-authored markdown that follows the same H1-then-paragraph shape.
+   Font size holds constant across breakpoints — it's reading copy, not display type, so it
+   doesn't step down at tablet/mobile the way the H1 does. */
 .prose h1 + p,
 .prose .lead {
-	margin: 0 0 24px;
-	font-size: 16px;
+	margin: 0 0 28px;
+	font-size: 17px;
+	line-height: 1.75;
 	color: var(--text-muted);
 }
 
 @media (max-width: 1023px) {
 	.prose h1 {
-		margin: 0 0 8px;
-		font-size: 34px;
-	}
-
-	.prose h1 + p,
-	.prose .lead {
-		margin: 0 0 20px;
-		font-size: 15.5px;
-	}
-}
-
-@media (max-width: 767px) {
-	.prose h1 {
-		margin: 0 0 8px;
-		font-size: 32px;
-	}
-
-	.prose h1 + p,
-	.prose .lead {
-		margin: 0 0 22px;
-		font-size: 15px;
-	}
-}
-
-@media (min-width: 1920px) {
-	.prose h1 {
-		margin: 0 0 10px;
-		font-size: 42px;
-		letter-spacing: -0.015em;
+		margin: 0 0 12px;
+		font-size: 38px;
 	}
 
 	.prose h1 + p,
 	.prose .lead {
 		margin: 0 0 26px;
-		font-size: 17px;
+	}
+}
+
+@media (max-width: 767px) {
+	.prose h1 {
+		margin: 0 0 12px;
+		font-size: 34px;
+	}
+
+	.prose h1 + p,
+	.prose .lead {
+		margin: 0 0 24px;
 	}
 }
 
 .prose h2 {
-	margin: 32px 0 4px;
-	padding-bottom: 9px;
-	font: 400 24px/1.2 var(--font-serif);
+	margin: 64px 0 6px;
+	padding-bottom: 14px;
+	font: 400 26px/1.25 var(--font-serif);
 	color: var(--ink);
 	border-bottom: 1px solid var(--hairline-08);
 	scroll-margin-top: var(--heading-scroll-offset);
@@ -102,7 +89,7 @@
 }
 
 .prose h3 {
-	margin: 28px 0 8px;
+	margin: 40px 0 10px;
 	font: 500 20px var(--font-serif);
 	color: var(--ink);
 	scroll-margin-top: var(--heading-scroll-offset);
@@ -159,7 +146,7 @@
 }
 
 .prose h4 {
-	margin: 22px 0 6px;
+	margin: 30px 0 8px;
 	font: 500 14px var(--font-mono);
 	letter-spacing: 0.04em;
 	color: var(--text-muted);
@@ -169,7 +156,7 @@
 /* ---- Body text --------------------------------------------------------- */
 
 .prose p {
-	margin: 14px 0;
+	margin: 20px 0;
 	color: var(--text-body);
 }
 
@@ -180,14 +167,14 @@
 
 .prose ul,
 .prose ol {
-	margin: 14px 0;
+	margin: 20px 0;
 	padding-left: 22px;
 	color: var(--text-body);
 	line-height: 1.7;
 }
 
 .prose li + li {
-	margin-top: 6px;
+	margin-top: 8px;
 }
 
 .prose li::marker {
@@ -195,7 +182,7 @@
 }
 
 .prose blockquote {
-	margin: 16px 0;
+	margin: 24px 0;
 	padding: 2px 0 2px 14px;
 	border-left: 2px solid var(--hairline-14);
 	color: var(--text-muted);
@@ -211,7 +198,7 @@
 }
 
 .prose hr {
-	margin: 32px 0;
+	margin: 44px 0;
 	border: 0;
 	border-top: 1px solid var(--hairline-10);
 }
@@ -283,7 +270,7 @@
    `rehype-code-blocks.ts` in this `.code-block` header-bar + copy-button chrome. */
 
 .prose .code-block {
-	margin: 16px 0;
+	margin: 24px 0;
 	border: 1px solid var(--hairline-10);
 	border-radius: var(--radius-md);
 	background: var(--surface-code);
@@ -361,7 +348,7 @@
 	display: grid;
 	grid-template-columns: auto 1fr;
 	gap: 14px;
-	margin: 16px 0;
+	margin: 24px 0;
 	padding: 14px 18px;
 	border-radius: var(--radius-md);
 	font-size: 13.5px;
@@ -417,7 +404,7 @@
    the wrapper, not the table itself, so border-radius doesn't fight border-collapse. */
 
 .prose .table-wrap {
-	margin: 16px 0;
+	margin: 24px 0;
 	border: 1px solid var(--hairline-10);
 	border-radius: var(--radius-md);
 	overflow-x: auto;

@@ -43,3 +43,60 @@ jobs:
 
       - name: Smoke build this repo's own docs (workspace CLI, no deploy)
         run: node packages/docs/dist/cli.js build --out ./dist
+
+  # Regression guard for a shipped tarball missing files the app needs at build time (e.g. the
+  # published package.json's "files" whitelist dropping a directory the app imports): every other
+  # job here dogfoods the *workspace* CLI, which runs straight from the repo tree and never
+  # notices a "files" gap. This job packs the real tarball, installs it into a scratch npm project
+  # with no relation to this repo, and runs the CLI's build against a throwaway fixture repo — the
+  # same path a real consumer hits with `npx @bluecadet/docs build`.
+  package-install-smoke:
+    name: Package install smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Pack @bluecadet/docs
+        run: |
+          mkdir -p "$RUNNER_TEMP/pack"
+          npm pack --workspace packages/docs --pack-destination "$RUNNER_TEMP/pack"
+
+      - name: Write a minimal fixture repo
+        run: |
+          mkdir -p "$RUNNER_TEMP/fixture/docs"
+          cat > "$RUNNER_TEMP/fixture/README.md" <<'EOF'
+          # Fixture Repo
+
+          Minimal fixture repo for smoke-testing the packed @bluecadet/docs tarball.
+          EOF
+          cat > "$RUNNER_TEMP/fixture/docs/getting-started.md" <<'EOF'
+          # Getting Started
+
+          Fixture page with a little prose so the build has something to render.
+          EOF
+
+      - name: Install the packed tarball into a scratch project
+        run: |
+          mkdir -p "$RUNNER_TEMP/install"
+          cd "$RUNNER_TEMP/install"
+          npm init -y
+          npm install "$RUNNER_TEMP"/pack/bluecadet-docs-*.tgz
+
+      - name: Build the fixture repo from the installed tarball
+        run: |
+          cd "$RUNNER_TEMP/install"
+          npx docs build --root "$RUNNER_TEMP/fixture" --out "$RUNNER_TEMP/fixture-dist"
+
+      - name: Verify build output
+        run: |
+          test -f "$RUNNER_TEMP/fixture-dist/index.html"
+          test -f "$RUNNER_TEMP/fixture-dist/getting-started/index.html"
+          test -f "$RUNNER_TEMP/fixture-dist/pagefind/pagefind.js"

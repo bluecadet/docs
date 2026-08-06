@@ -18,13 +18,13 @@ const { lead, status = "no" } = Astro.props;
 <style>
 	.wont-item {
 		display: grid;
-		grid-template-columns: 24px minmax(0, 1fr);
-		gap: 16px;
-		padding: 14px 0;
+		grid-template-columns: 28px minmax(0, 1fr);
+		gap: 20px;
+		padding: 20px 0;
 		/* --hairline-07 isn't in the token set; this is the design's row rule, one step below the
 		   band hairlines so a list of rows never reads as a table. */
 		border-bottom: 1px solid color-mix(in srgb, white 7%, transparent);
-		font-size: 14.5px;
+		font-size: 15px;
 		color: var(--text-muted);
 		text-wrap: pretty;
 	}
@@ -55,34 +55,26 @@ const { lead, status = "no" } = Astro.props;
 		color: inherit;
 	}
 
-	@media (min-width: 1920px) {
-		.wont-item {
-			grid-template-columns: 26px minmax(0, 1fr);
-			gap: 18px;
-			padding: 15px 0;
-			font-size: 15px;
-		}
-	}
-
 	@media (max-width: 1023px) {
 		.wont-item {
-			grid-template-columns: 22px minmax(0, 1fr);
-			gap: 14px;
-			padding: 13px 0;
-			font-size: 14px;
+			grid-template-columns: 24px minmax(0, 1fr);
+			gap: 18px;
+			padding: 18px 0;
+			font-size: 14.5px;
 		}
 	}
 
 	@media (max-width: 767px) {
 		.wont-item {
-			grid-template-columns: 20px minmax(0, 1fr);
-			gap: 12px;
-			font-size: 13.5px;
+			grid-template-columns: 22px minmax(0, 1fr);
+			gap: 16px;
+			padding: 16px 0;
+			font-size: 14px;
 		}
 
 		.wont-icon {
 			padding-top: 2px;
-			font-size: 11px;
+			font-size: 11.5px;
 		}
 	}
 </style>

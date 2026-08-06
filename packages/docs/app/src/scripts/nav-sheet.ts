@@ -48,11 +48,11 @@ export function initNavSheet(): void {
 		trigger.addEventListener("click", () => openSheet(trigger));
 	});
 
-	// NavSheet.astro hides itself with `display: none !important` at desktop widths (>=1024px),
-	// but a resize while it's open leaves the underlying `<dialog>` still `open` — and therefore
-	// still modal-blocking the rest of the page — with nothing visible to close it. Close it
-	// ourselves the moment the viewport crosses into desktop.
-	const desktopQuery = window.matchMedia("(min-width: 1024px)");
+	// NavSheet.astro hides itself with `display: none !important` at tablet/desktop widths
+	// (>=768px), but a resize while it's open leaves the underlying `<dialog>` still `open` — and
+	// therefore still modal-blocking the rest of the page — with nothing visible to close it.
+	// Close it ourselves the moment the viewport crosses out of mobile.
+	const desktopQuery = window.matchMedia("(min-width: 768px)");
 	desktopQuery.addEventListener("change", (event) => {
 		if (event.matches) closeSheet();
 	});

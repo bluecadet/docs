@@ -1,6 +1,7 @@
 ---
 // Shared hamburger trigger for NavSheet.astro, reused by Header.astro and LandingHeader.astro.
-// Hidden at desktop (>=1024px); shown once viewport width drops to tablet.
+// SidebarNav stays visible down to tablet widths, so the hamburger only needs to exist where the
+// sidebar itself is hidden: mobile (<=767px). See SidebarNav.astro / NavSheet.astro.
 ---
 
 <button
@@ -45,7 +46,7 @@
 		width: 13px;
 	}
 
-	@media (max-width: 1023px) {
+	@media (max-width: 767px) {
 		.nav-toggle {
 			display: flex;
 		}

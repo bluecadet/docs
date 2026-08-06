@@ -117,13 +117,13 @@ const marginalia = notes?.filter((note) => note.trim().length > 0).slice(0, 2) ?
 
 <style>
 	/* Named grid areas, rather than nested wrappers, are what let the marginalia column move
-	   between three positions without duplicating the markup: below the lead on mobile, beside
-	   the lead from tablet up, and beside the whole hero column at 1920. */
+	   between two positions without duplicating the markup: below the lead on mobile, beside
+	   the lead from tablet up. */
 	.hero {
 		display: grid;
 		grid-template-areas: "eyebrows" "title" "lead" "notes" "actions";
 		grid-template-columns: minmax(0, 1fr);
-		padding: 76px 56px 0;
+		padding: 104px var(--content-pad-x) 96px;
 	}
 
 	.hero-eyebrows {
@@ -132,11 +132,11 @@ const marginalia = notes?.filter((note) => note.trim().length > 0).slice(0, 2) ?
 		flex-wrap: wrap;
 		align-items: center;
 		gap: 12px;
-		margin-bottom: 26px;
+		margin-bottom: 34px;
 	}
 
 	.eyebrow {
-		padding: 3px 8px;
+		padding: 4px 9px;
 		border-radius: var(--radius-sm);
 		font: 400 11.5px var(--font-mono);
 		letter-spacing: 0.14em;
@@ -161,8 +161,8 @@ const marginalia = notes?.filter((note) => note.trim().length > 0).slice(0, 2) ?
 	h1 {
 		grid-area: title;
 		margin: 0;
-		font: 300 64px/1.05 var(--font-serif);
-		max-width: 840px;
+		font: 300 68px/1.08 var(--font-serif);
+		max-width: 15ch;
 		letter-spacing: -0.02em;
 		color: var(--ink);
 	}
@@ -172,12 +172,15 @@ const marginalia = notes?.filter((note) => note.trim().length > 0).slice(0, 2) ?
 		color: var(--accent);
 	}
 
+	/* Font size holds constant across breakpoints — it's the hero's reading copy, not display
+	   type, so (unlike the H1) it doesn't step down at tablet/mobile. */
 	.hero-lead {
 		grid-area: lead;
-		margin: 26px 0 0;
-		max-width: 640px;
+		margin: 36px 0 0;
+		max-width: 58ch;
 		color: var(--text-muted);
 		font-size: 17px;
+		line-height: 1.8;
 		text-wrap: pretty;
 	}
 
@@ -185,8 +188,8 @@ const marginalia = notes?.filter((note) => note.trim().length > 0).slice(0, 2) ?
 		grid-area: notes;
 		display: flex;
 		flex-direction: column;
-		gap: 22px;
-		margin-top: 20px;
+		gap: 28px;
+		margin-top: 26px;
 	}
 
 	.hero-note {
@@ -206,13 +209,16 @@ const marginalia = notes?.filter((note) => note.trim().length > 0).slice(0, 2) ?
 		color: var(--text-dim);
 	}
 
+	/* Bottom spacing before the next band comes from `.hero`'s own bottom padding, not a margin
+	   here — the actions row isn't reliably the tallest column (the notes column can run longer),
+	   so a margin on it alone can't be trusted to set the hero's total height. */
 	.hero-actions {
 		grid-area: actions;
 		display: flex;
 		align-items: center;
 		flex-wrap: wrap;
-		gap: 16px;
-		margin: 36px 0 60px;
+		gap: 24px;
+		margin: 48px 0 0;
 	}
 
 	.install {
@@ -266,7 +272,6 @@ const marginalia = notes?.filter((note) => note.trim().length > 0).slice(0, 2) ?
 		}
 
 		.hero-notes {
-			margin-top: 26px;
 			align-self: start;
 		}
 	}
@@ -278,88 +283,31 @@ const marginalia = notes?.filter((note) => note.trim().length > 0).slice(0, 2) ?
 		}
 	}
 
-	/* 1920: extra width goes to the margin apparatus, not the measure — the note column runs the
-	   full height of the hero instead of only beside the lead. */
-	@media (min-width: 1920px) {
+	@media (max-width: 1023px) {
 		.hero {
-			grid-template-areas: "eyebrows notes" "title notes" "lead notes" "actions notes";
-			grid-template-columns: minmax(0, 880px) 320px;
-			column-gap: 80px;
-			justify-content: start;
-			padding: 96px 80px 0;
-		}
-
-		.hero-eyebrows {
-			margin-bottom: 28px;
+			padding: 80px var(--content-pad-x) 70px;
 		}
 
 		h1 {
-			font-size: 76px;
-			line-height: 1.03;
-			letter-spacing: -0.025em;
+			font-size: 56px;
 			max-width: none;
-		}
-
-		.hero-lead {
-			margin-top: 28px;
-		}
-
-		.hero-notes {
-			margin-top: 0;
-			padding-top: 80px;
-			align-self: start;
-		}
-
-		.hero-note {
-			padding-left: 15px;
-			font-size: 12.5px;
-			line-height: 1.8;
 		}
 
 		.hero-actions {
 			gap: 18px;
-			margin: 38px 0 64px;
-		}
-
-		.install {
-			padding: 12px 17px;
-			font-size: 14px;
-		}
-
-		.hero-quickstart {
-			font-size: 13.5px;
-		}
-	}
-
-	@media (max-width: 1023px) {
-		.hero {
-			padding: 52px 40px 0;
-		}
-
-		h1 {
-			font-size: 52px;
-			max-width: none;
-		}
-
-		.hero-lead {
-			font-size: 15.5px;
-		}
-
-		.hero-actions {
-			gap: 14px;
-			margin: 30px 0 46px;
+			margin: 40px 0 0;
 		}
 	}
 
 	/* Mobile: the chip becomes a full-width 48px tap target and the quickstart link a button. */
 	@media (max-width: 767px) {
 		.hero {
-			padding: 38px 18px 0;
+			padding: 58px var(--content-pad-x) 52px;
 		}
 
 		.hero-eyebrows {
 			gap: 7px;
-			margin-bottom: 20px;
+			margin-bottom: 24px;
 		}
 
 		.eyebrow {
@@ -369,19 +317,18 @@ const marginalia = notes?.filter((note) => note.trim().length > 0).slice(0, 2) ?
 		}
 
 		h1 {
-			font-size: 38px;
-			line-height: 1.1;
+			font-size: 40px;
+			line-height: 1.12;
 			letter-spacing: -0.015em;
 		}
 
 		.hero-lead {
-			margin-top: 18px;
-			font-size: 15px;
+			margin-top: 22px;
 		}
 
 		.hero-notes {
-			gap: 14px;
-			margin-top: 20px;
+			gap: 16px;
+			margin-top: 22px;
 		}
 
 		.hero-note {
@@ -394,7 +341,7 @@ const marginalia = notes?.filter((note) => note.trim().length > 0).slice(0, 2) ?
 			display: grid;
 			grid-template-columns: minmax(0, 1fr);
 			gap: 10px;
-			margin: 26px 0 34px;
+			margin: 30px 0 0;
 		}
 
 		.install {

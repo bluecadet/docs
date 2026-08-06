@@ -13,7 +13,6 @@ import { getCollection, render } from "astro:content";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import CtaCards from "../components/landing/CtaCards.astro";
 import ClosingCta from "../components/landing/ClosingCta.astro";
-import LandingFooter from "../components/landing/LandingFooter.astro";
 import LandingHeader from "../components/landing/LandingHeader.astro";
 import LandingHero from "../components/landing/LandingHero.astro";
 import { firstPageOf, getNavTree } from "../lib/nav";
@@ -35,48 +34,54 @@ const pageTitle = data?.title ?? siteTitle;
 const pageDescription = data?.description;
 ---
 
-<BaseLayout title={pageTitle} description={pageDescription} main="full" appendSiteTitle={false}>
+<BaseLayout
+	title={pageTitle}
+	description={pageDescription}
+	main="full"
+	appendSiteTitle={false}
+	footerDocsHref={docsHref}
+	footerMeta={data?.footerMeta}
+>
 	<LandingHeader slot="header" title={siteTitle} docsHref={docsHref} repoUrl={repoUrl} />
-	<LandingFooter
-		slot="footer"
-		title={siteTitle}
-		docsHref={docsHref}
-		repoUrl={repoUrl}
-		meta={data?.footerMeta}
-	/>
 
-	<LandingHero
-		title={pageTitle}
-		lead={pageDescription}
-		eyebrows={data?.eyebrows}
-		installCommand={data?.installCommand}
-		notes={data?.heroNotes}
-		quickstartHref={docsHref}
-	/>
-	{
-		Content && (
-			<article class="prose landing-content">
-				<Content />
-			</article>
-		)
-	}
-	{
-		nodes.length > 0 && (
-			<section class="landing-section">
-				<CtaCards nodes={nodes} />
-			</section>
-		)
-	}
-	{
-		firstSection && (
-			<ClosingCta
-				firstSectionTitle={firstSection.label}
-				firstHref={docsHref}
-				repoUrl={repoUrl}
-				accent={data?.closingAccent}
-			/>
-		)
-	}
+	{/* data-pagefind-body scopes the search index to the landing page's own content — see the
+	    pagefindIndex() comment in astro.config.mjs for why this also determines which pages are
+	    indexed at all. Everything the landing route renders into BaseLayout's default slot lives
+	    here, so it's all wrapped together rather than piecemeal. */}
+	<div data-pagefind-body data-pagefind-meta={`title:${pageTitle}`}>
+		<LandingHero
+			title={pageTitle}
+			lead={pageDescription}
+			eyebrows={data?.eyebrows}
+			installCommand={data?.installCommand}
+			notes={data?.heroNotes}
+			quickstartHref={docsHref}
+		/>
+		{
+			Content && (
+				<article class="prose landing-content">
+					<Content />
+				</article>
+			)
+		}
+		{
+			nodes.length > 0 && (
+				<section class="landing-section">
+					<CtaCards nodes={nodes} />
+				</section>
+			)
+		}
+		{
+			firstSection && (
+				<ClosingCta
+					firstSectionTitle={firstSection.label}
+					firstHref={docsHref}
+					repoUrl={repoUrl}
+					accent={data?.closingAccent}
+				/>
+			)
+		}
+	</div>
 </BaseLayout>
 
 <style>
@@ -87,11 +92,13 @@ const pageDescription = data?.description;
 	.landing-content {
 		display: grid;
 		grid-template-columns:
-			[full-start] 56px
-			[content-start] minmax(0, 880px)
+			[full-start] var(--content-pad-x)
+			[content-start] minmax(0, 1004px)
 			[content-end] 1fr
 			[full-end];
-		padding: 44px 0;
+		padding: 66px 0;
+		font-size: 15.5px;
+		line-height: 1.75;
 	}
 
 	/* `:global` because `<Content />` output carries no scope attribute of this component's. */
@@ -107,83 +114,60 @@ const pageDescription = data?.description;
 	   cancels the article's padding on that edge so it butts straight against the hero / CTA
 	   cards, the way the design's bands do. */
 	.landing-content > :global(.landing-band:first-child) {
-		margin-top: -44px;
+		margin-top: -66px;
 	}
 
 	.landing-content > :global(.landing-band:last-child) {
-		margin-bottom: -44px;
+		margin-bottom: -66px;
 	}
 
 	.landing-section {
-		padding: 0 56px 56px;
-	}
-
-	@media (min-width: 1920px) {
-		.landing-content {
-			grid-template-columns:
-				[full-start] 80px
-				[content-start] minmax(0, 880px)
-				[content-end] 1fr
-				[full-end];
-			padding: 48px 0;
-		}
-
-		.landing-content > :global(.landing-band:first-child) {
-			margin-top: -48px;
-		}
-
-		.landing-content > :global(.landing-band:last-child) {
-			margin-bottom: -48px;
-		}
-
-		.landing-section {
-			padding: 0 80px 64px;
-		}
+		padding: 0 var(--content-pad-x) 84px;
 	}
 
 	@media (max-width: 1023px) {
 		.landing-content {
 			grid-template-columns:
-				[full-start] 40px
+				[full-start] var(--content-pad-x)
 				[content-start] minmax(0, 1fr)
-				[content-end] 40px
+				[content-end] var(--content-pad-x)
 				[full-end];
-			padding: 36px 0;
+			padding: 54px 0;
 		}
 
 		.landing-content > :global(.landing-band:first-child) {
-			margin-top: -36px;
+			margin-top: -54px;
 		}
 
 		.landing-content > :global(.landing-band:last-child) {
-			margin-bottom: -36px;
+			margin-bottom: -54px;
 		}
 
 		.landing-section {
-			padding: 0 40px 44px;
+			padding: 0 var(--content-pad-x) 66px;
 		}
 	}
 
 	@media (max-width: 767px) {
 		.landing-content {
 			grid-template-columns:
-				[full-start] 18px
+				[full-start] var(--content-pad-x)
 				[content-start] minmax(0, 1fr)
-				[content-end] 18px
+				[content-end] var(--content-pad-x)
 				[full-end];
-			padding: 28px 0;
+			padding: 42px 0;
 		}
 
 		.landing-content > :global(.landing-band:first-child) {
-			margin-top: -28px;
+			margin-top: -42px;
 		}
 
 		.landing-content > :global(.landing-band:last-child) {
-			margin-bottom: -28px;
+			margin-bottom: -42px;
 		}
 
 		.landing-section {
-			padding: 0 18px 36px;
+			padding: 0 var(--content-pad-x) 54px;
 		}
 	}
 </style>

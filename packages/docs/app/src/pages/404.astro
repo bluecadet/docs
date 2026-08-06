@@ -8,7 +8,6 @@
 // into an inline JSON payload and let not-found-client.ts fuzzy-match against `location.pathname`.
 import BaseLayout from "../layouts/BaseLayout.astro";
 import LandingHeader from "../components/landing/LandingHeader.astro";
-import LandingFooter from "../components/landing/LandingFooter.astro";
 import { getNavTree } from "../lib/nav";
 
 const base = import.meta.env.BASE_URL;
@@ -25,7 +24,6 @@ const routesPayload = {
 
 <BaseLayout title={`404 — ${siteTitle}`} main="full" appendSiteTitle={false} robots="noindex">
 	<LandingHeader slot="header" title={siteTitle} docsHref={base} repoUrl={repoUrl} />
-	<LandingFooter slot="footer" title={siteTitle} docsHref={base} repoUrl={repoUrl} />
 
 	<div class="notfound-main">
 		<div class="notfound-eyebrow">404 — no page here</div>
@@ -80,7 +78,7 @@ const routesPayload = {
 <style>
 	.notfound-main {
 		min-width: 0;
-		padding: 88px 56px 96px;
+		padding: 88px var(--content-pad-x) 96px;
 	}
 
 	.notfound-eyebrow {
@@ -287,7 +285,7 @@ const routesPayload = {
 
 	@media (max-width: 1023px) {
 		.notfound-main {
-			padding: 40px 20px 48px;
+			padding: 40px var(--content-pad-x) 48px;
 		}
 
 		.notfound-h1 {

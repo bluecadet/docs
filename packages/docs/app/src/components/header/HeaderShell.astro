@@ -14,16 +14,18 @@
 ---
 
 <header class="header-shell">
-	<slot />
+	<div class="header-shell-inner">
+		<slot />
+	</div>
 </header>
 
 <style>
+	/* Full-bleed: sticky positioning, height, background and the bottom hairline live on the
+	   outer element so they always span the viewport, even below the 1480px cap. */
 	.header-shell {
 		position: sticky;
 		top: 0;
 		z-index: 20;
-		display: grid;
-		grid-template-columns: var(--rail-width) 1fr;
 		height: var(--header-height);
 		border-bottom: 1px solid var(--hairline-08);
 		background: var(--bg);
@@ -37,22 +39,34 @@
 		}
 	}
 
+	/* Capped, centered inner row — max-width plus the left/right hairlines are shared with
+	   .page-body and the footer's inner row so the two vertical rules read as one continuous
+	   edge from the header down through the footer. */
+	.header-shell-inner {
+		display: grid;
+		grid-template-columns: var(--rail-width) 1fr;
+		height: 100%;
+		max-width: var(--shell-width);
+		margin-inline: auto;
+		border-inline: 1px solid var(--hairline-08);
+	}
+
 	/* Tablet: the left rail column is gone (SidebarNav narrows in place, but nothing needs to
 	   align with it up here), so this becomes a plain flex row: logo, search, repo link,
 	   hamburger. */
 	@media (max-width: 1023px) {
-		.header-shell {
+		.header-shell-inner {
 			display: flex;
 			align-items: center;
 			gap: 18px;
-			padding: 0 26px;
+			padding: 0 var(--content-pad-x);
 		}
 	}
 
 	@media (max-width: 767px) {
-		.header-shell {
+		.header-shell-inner {
 			gap: 12px;
-			padding: 0 18px;
+			padding: 0 var(--content-pad-x);
 		}
 	}
 </style>

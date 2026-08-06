@@ -1,34 +1,58 @@
 ---
-// Doc-page footer: grid mirrors the header (same --rail-width column). Only renders links we
-// actually have data for — no fictional changelog/discord links, no fabricated version/license
-// string (no data source for either).
+// One footer for every route (doc pages and the landing page both render this via BaseLayout's
+// default `footer` slot — landing used to override it with its own near-duplicate, deleted in
+// favor of this shared component). Grid mirrors the header (same --rail-width column). Only
+// renders links we actually have data for — no fictional changelog/discord links, no fabricated
+// version/license string (no data source for either).
+interface Props {
+	/** "docs" link target. Doc pages want the site root; the landing page (which IS the site
+	 *  root) wants the first real doc page instead — see index.astro. */
+	docsHref?: string;
+	/** Optional right-aligned meta string (landing frontmatter's `footerMeta`, e.g.
+	 *  "MIT · no telemetry"). Doc pages never pass one. */
+	meta?: string;
+}
+
 const siteTitle = process.env.DOCS_TITLE ?? "docs";
 const repoUrl = process.env.DOCS_REPO_URL;
 const base = import.meta.env.BASE_URL;
+
+const { docsHref = base, meta } = Astro.props;
 ---
 
 <footer class="site-footer">
-	<div class="site-footer__brand">
-		<span class="glyph">▞</span>{siteTitle}
-	</div>
-	<div class="site-footer__right">
-		<a class="site-footer__link" href={base}>docs</a>
-		{
-			repoUrl && (
-				<a class="site-footer__link" href={repoUrl} rel="noopener noreferrer" target="_blank">
-					github
-				</a>
-			)
-		}
+	<div class="site-footer-inner">
+		<div class="site-footer__brand">
+			<span class="glyph">▞</span>{siteTitle}
+		</div>
+		<div class="site-footer__right">
+			<a class="site-footer__link" href={docsHref}>docs</a>
+			{
+				repoUrl && (
+					<a class="site-footer__link" href={repoUrl} rel="noopener noreferrer" target="_blank">
+						github
+					</a>
+				)
+			}
+			{meta && <span class="site-footer__meta">{meta}</span>}
+		</div>
 	</div>
 </footer>
 
 <style>
 	.site-footer {
-		display: grid;
-		grid-template-columns: var(--rail-width) 1fr;
 		border-top: 1px solid var(--hairline-08);
 		background: var(--surface-footer);
+	}
+
+	/* Capped, centered inner row — mirrors .header-shell-inner and .page-body so the left/right
+	   hairlines line up into one continuous edge from the header down through the footer. */
+	.site-footer-inner {
+		display: grid;
+		grid-template-columns: var(--rail-width) 1fr;
+		max-width: var(--shell-width);
+		margin-inline: auto;
+		border-inline: 1px solid var(--hairline-08);
 	}
 
 	.site-footer__brand {
@@ -36,7 +60,7 @@ const base = import.meta.env.BASE_URL;
 		align-items: center;
 		gap: 8px;
 		border-right: 1px solid var(--hairline-08);
-		padding: 26px 28px;
+		padding: 32px 36px;
 		font: 400 12px var(--font-mono);
 		color: var(--text-faint);
 		text-transform: lowercase;
@@ -51,7 +75,7 @@ const base = import.meta.env.BASE_URL;
 		display: flex;
 		align-items: center;
 		gap: 28px;
-		padding: 26px 56px;
+		padding: 32px var(--content-pad-x);
 		font: 400 12px var(--font-mono);
 	}
 
@@ -64,27 +88,37 @@ const base = import.meta.env.BASE_URL;
 		color: var(--accent);
 	}
 
+	.site-footer__meta {
+		margin-left: auto;
+		color: var(--text-faint);
+	}
+
 	@media (max-width: 1023px) {
-		.site-footer {
+		.site-footer-inner {
 			grid-template-columns: 1fr;
 		}
 
 		.site-footer__brand {
 			border-right: none;
 			border-bottom: 1px solid var(--hairline-08);
+			padding: 32px var(--content-pad-x);
 		}
 	}
 
 	@media (max-width: 767px) {
 		.site-footer__right {
 			flex-wrap: wrap;
-			padding: 10px 18px;
 		}
 
 		.site-footer__link {
 			display: flex;
 			align-items: center;
 			min-height: 48px;
+		}
+
+		.site-footer__meta {
+			margin-left: 0;
+			flex-basis: 100%;
 		}
 	}
 </style>

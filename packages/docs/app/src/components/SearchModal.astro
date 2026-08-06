@@ -38,7 +38,7 @@ const startHere = [...new Map([...entryPoints, ...flat].map((page) => [page.id, 
 		<span class="search-modal__status" data-search-status></span>
 		<button type="button" class="search-modal__cancel" data-search-cancel>cancel</button>
 	</div>
-	<div id="search-results" class="search-modal__body" data-search-body role="listbox" aria-label="Search results">
+	<div class="search-modal__body" data-search-body>
 	</div>
 	<div class="search-modal__footer">
 		<div class="search-modal__hints" data-search-hints>
@@ -153,17 +153,21 @@ const startHere = [...new Map([...entryPoints, ...flat].map((page) => [page.id, 
 		flex-shrink: 0;
 	}
 
-	.search-modal__hints {
+	/* :global() because scripts/search.ts's setHintsIndexing() rewrites this container's innerHTML
+	   at runtime — that injected markup never carries Astro's scoped-CSS data attribute, so these
+	   three selectors have to match on class name alone (same pattern as the .search-row/
+	   .search-group globals below). */
+	.search-modal__footer :global(.search-modal__hints) {
 		display: flex;
 		gap: 16px;
 	}
 
-	.search-modal__hints.is-indexing {
+	.search-modal__footer :global(.search-modal__hints.is-indexing) {
 		color: var(--accent);
 		font: 400 11.5px var(--font-mono);
 	}
 
-	.kbd-hint {
+	.search-modal__footer :global(.kbd-hint) {
 		display: flex;
 		align-items: center;
 		gap: 6px;
@@ -171,7 +175,7 @@ const startHere = [...new Map([...entryPoints, ...flat].map((page) => [page.id, 
 		color: var(--text-dim);
 	}
 
-	.kbd-hint kbd {
+	.search-modal__footer :global(.kbd-hint kbd) {
 		border: 1px solid var(--hairline-14);
 		border-radius: var(--radius-sm);
 		padding: 1px 5px;
@@ -375,6 +379,7 @@ const startHere = [...new Map([...entryPoints, ...flat].map((page) => [page.id, 
 		}
 
 		.search-modal__header {
+			display: flex;
 			flex-wrap: wrap;
 			height: auto;
 			min-height: 56px;
@@ -388,6 +393,7 @@ const startHere = [...new Map([...entryPoints, ...flat].map((page) => [page.id, 
 
 		.search-modal__input {
 			order: 2;
+			width: auto;
 			flex: 1 1 auto;
 			min-width: 0;
 		}

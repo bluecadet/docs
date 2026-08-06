@@ -87,8 +87,9 @@ function childrenAreNested(node: NavNode): boolean {
 		scrollbar-gutter: stable;
 		scrollbar-width: thin;
 		scrollbar-color: var(--hairline-14) transparent;
-		padding: 26px 0 48px;
+		padding: var(--content-pad-top) 0 48px;
 		font-size: 13.5px;
+		line-height: 1.6;
 	}
 
 	.sidebar-nav::-webkit-scrollbar {
@@ -106,7 +107,7 @@ function childrenAreNested(node: NavNode): boolean {
 	}
 
 	.sidebar-label {
-		padding: 20px 26px 9px;
+		padding: 20px 34px 8px;
 		font: 400 12px var(--font-mono);
 		color: var(--text-dim);
 	}
@@ -116,7 +117,7 @@ function childrenAreNested(node: NavNode): boolean {
 	}
 
 	.sidebar-item {
-		padding: 5px 26px;
+		padding: 6px 34px;
 		color: var(--text-muted);
 		transition: color 0.15s ease;
 	}
@@ -138,12 +139,12 @@ function childrenAreNested(node: NavNode): boolean {
 
 	/* Sub-page column: hairline rail, indented, smaller type. */
 	.sidebar-list.is-nested {
-		margin: 3px 0 5px 38px;
+		margin: 4px 0 6px 46px;
 		border-left: 1px solid var(--hairline-10);
 	}
 
 	.sidebar-list.is-nested .sidebar-item {
-		padding: 4px 14px;
+		padding: 5px 16px;
 		font-size: 12.5px;
 	}
 
@@ -154,7 +155,7 @@ function childrenAreNested(node: NavNode): boolean {
 	}
 
 	.sidebar-list.is-nested .sidebar-label {
-		padding: 10px 14px 5px;
+		padding: 10px 16px 5px;
 		font-size: 11.5px;
 	}
 
@@ -162,7 +163,7 @@ function childrenAreNested(node: NavNode): boolean {
 	   items from feeling cramped. */
 	@media (max-width: 1023px) {
 		.sidebar-nav {
-			padding: 22px 0 40px;
+			padding: var(--content-pad-top) 0 32px;
 			font-size: 13px;
 		}
 	}
@@ -171,35 +172,6 @@ function childrenAreNested(node: NavNode): boolean {
 	@media (max-width: 767px) {
 		.sidebar-rail {
 			display: none;
-		}
-	}
-
-	@media (min-width: 1920px) {
-		.sidebar-nav {
-			padding: 32px 0 56px;
-			font-size: 14px;
-		}
-
-		.sidebar-label {
-			padding: 22px 36px 10px;
-		}
-
-		.sidebar-item {
-			padding: 6px 36px;
-		}
-
-		.sidebar-list.is-nested {
-			margin: 4px 0 6px 48px;
-		}
-
-		.sidebar-list.is-nested .sidebar-item {
-			padding: 4px 16px;
-			font-size: 13px;
-		}
-
-		.sidebar-list.is-nested .sidebar-label {
-			padding: 11px 16px 5px;
-			font-size: 12px;
 		}
 	}
 </style>

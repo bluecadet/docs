@@ -57,7 +57,7 @@ const parent = ancestors.at(-1);
 		gap: 8px;
 		font: 400 12px var(--font-mono);
 		color: var(--text-dim);
-		margin-bottom: 22px;
+		margin-bottom: 30px;
 	}
 
 	.breadcrumb__segment {
@@ -86,13 +86,11 @@ const parent = ancestors.at(-1);
 		}
 
 		.breadcrumb-pill {
-			/* Bleeds full-bleed by canceling BaseLayout's `.page-main-content` mobile padding
-			   (26px 18px 40px) — named here so the two numbers this depends on are declared once,
-			   not scattered across the width/margin/padding below. If that padding ever changes,
-			   update these two values (BaseLayout.astro is out of scope for this component to
-			   edit directly). */
-			--page-pad-x: 18px;
-			--page-pad-top: 26px;
+			/* Bleeds full-bleed by canceling BaseLayout's `.page-main-content` mobile padding —
+			   named here so the two numbers this depends on are declared once, not scattered
+			   across the width/margin/padding below. */
+			--page-pad-x: var(--content-pad-x);
+			--page-pad-top: var(--content-pad-top);
 			display: flex;
 			align-items: center;
 			gap: 10px;

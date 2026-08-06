@@ -38,6 +38,11 @@ interface Props {
 	/** Append " — <site title>" to the document title. */
 	appendSiteTitle?: boolean;
 	robots?: string;
+	/** Forwarded to the default footer's "docs" link — see Footer.astro. Only the landing page
+	 *  (which has no header/footer overrides of its own for this) needs to set it. */
+	footerDocsHref?: string;
+	/** Forwarded to the default footer's optional right-aligned meta string. */
+	footerMeta?: string;
 }
 
 const {
@@ -48,6 +53,8 @@ const {
 	main = "article",
 	appendSiteTitle = true,
 	robots,
+	footerDocsHref,
+	footerMeta,
 } = Astro.props;
 
 const siteTitle = process.env.DOCS_TITLE ?? "docs";
@@ -82,7 +89,7 @@ const hasToc = main === "article" && headings.some((heading) => heading.depth ==
 					{hasToc && <Toc variant="aside" headings={headings} />}
 				</main>
 			</div>
-			<slot name="footer"><Footer /></slot>
+			<slot name="footer"><Footer docsHref={footerDocsHref} meta={footerMeta} /></slot>
 		</div>
 		<NavSheet currentId={currentId} />
 		<SearchModal />
@@ -93,9 +100,18 @@ const hasToc = main === "article" && headings.some((heading) => heading.depth ==
 	.page {
 		/* Left rail width and header height, shared by header/sidebar/TOC/footer so their columns
 		   and sticky offsets stay aligned on every route. */
-		--rail-width: 250px;
-		--header-height: 58px;
-		--toc-width: 220px;
+		--rail-width: 300px;
+		--header-height: 68px;
+		--toc-width: 272px;
+		/* Shared cap: header, body and footer each center an inner row to this width with matching
+		   border-left/border-right hairlines, so the two rules read as one continuous edge running
+		   from the top of the header to the bottom of the footer. */
+		--shell-width: 1480px;
+		/* Shared horizontal/top gutters — every band that abuts the shell's outer edge (sidebar,
+		   article, TOC, header search cell, landing bands) pads from these two so their edges and
+		   top-aligned labels line up without each component re-declaring the same numbers. */
+		--content-pad-x: 56px;
+		--content-pad-top: 44px;
 		display: grid;
 		grid-template-rows: auto 1fr auto;
 		/* dvh keeps mobile browsers' collapsing toolbars from over-sizing the shell; the vh line
@@ -107,7 +123,10 @@ const hasToc = main === "article" && headings.some((heading) => heading.depth ==
 	.page-body {
 		display: grid;
 		grid-template-columns: var(--rail-width) 1fr;
+		width: min(100%, var(--shell-width));
 		min-width: 0;
+		margin-inline: auto;
+		border-inline: 1px solid var(--hairline-08);
 	}
 
 	.page-body:not(:has(.sidebar-rail)) { grid-template-columns: 1fr; } /* SidebarNav.astro renders nothing when there are no nav-worthy pages; collapse the empty rail column */
@@ -118,8 +137,13 @@ const hasToc = main === "article" && headings.some((heading) => heading.depth ==
 		min-width: 0;
 	}
 
-	.page-main--toc {
-		grid-template-columns: 1fr var(--toc-width);
+	/* Two-column grid only at the widths that can actually afford the rail — below that the TOC
+	   aside is display:none (Toc.astro) in favor of the inline disclosure, so the empty column
+	   must not reserve width or the content squeezes for nothing. */
+	@media (min-width: 1280px) {
+		.page-main--toc {
+			grid-template-columns: 1fr var(--toc-width);
+		}
 	}
 
 	.page-main--full {
@@ -128,10 +152,11 @@ const hasToc = main === "article" && headings.some((heading) => heading.depth ==
 
 	.page-main-content {
 		min-width: 0;
-		padding: 32px 52px 52px;
+		padding: var(--content-pad-top) var(--content-pad-x) 96px;
 	}
 
 	.page-main--full .page-main-content {
+		max-width: none;
 		padding: 0;
 	}
 
@@ -140,15 +165,13 @@ const hasToc = main === "article" && headings.some((heading) => heading.depth ==
 	@media (max-width: 1023px) {
 		.page {
 			--rail-width: 212px;
-			--header-height: 56px;
-		}
-
-		.page-main--toc {
-			grid-template-columns: 1fr;
+			--header-height: 60px;
+			--content-pad-x: 36px;
+			--content-pad-top: 28px;
 		}
 
 		.page-main-content {
-			padding: 28px 36px 44px;
+			padding: var(--content-pad-top) var(--content-pad-x) 44px;
 		}
 	}
 
@@ -156,7 +179,9 @@ const hasToc = main === "article" && headings.some((heading) => heading.depth ==
 	   the breadcrumb pill (Breadcrumb.astro) take over wayfinding. */
 	@media (max-width: 767px) {
 		.page {
-			--header-height: 52px;
+			--header-height: 56px;
+			--content-pad-x: 18px;
+			--content-pad-top: 26px;
 		}
 
 		.page-body {
@@ -164,34 +189,7 @@ const hasToc = main === "article" && headings.some((heading) => heading.depth ==
 		}
 
 		.page-main-content {
-			padding: 26px 18px 40px;
-		}
-	}
-
-	@media (min-width: 1920px) {
-		.page {
-			--rail-width: 300px;
-			--header-height: 62px;
-			--toc-width: 300px;
-		}
-
-		.page-main {
-			grid-template-columns: minmax(0, 760px);
-			gap: 64px;
-			justify-content: center;
-			padding: 40px 0 64px;
-		}
-
-		.page-main--toc {
-			grid-template-columns: minmax(0, 760px) var(--toc-width);
-		}
-
-		.page-main--full {
-			padding: 0;
-		}
-
-		.page-main-content {
-			padding: 0;
+			padding: var(--content-pad-top) var(--content-pad-x) 40px;
 		}
 	}
 </style>

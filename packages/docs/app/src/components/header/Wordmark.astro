@@ -18,7 +18,7 @@ const { title, href } = Astro.props;
 	.wordmark {
 		display: flex;
 		align-items: center;
-		padding: 0 28px;
+		padding: 0 36px;
 		border-right: 1px solid var(--hairline-08);
 		min-width: 0;
 	}
@@ -27,7 +27,7 @@ const { title, href } = Astro.props;
 		display: flex;
 		align-items: center;
 		gap: 10px;
-		font: 500 15px var(--font-mono);
+		font: 500 15.5px var(--font-mono);
 		text-transform: lowercase;
 		color: var(--ink);
 		white-space: nowrap;
@@ -37,16 +37,6 @@ const { title, href } = Astro.props;
 
 	.glyph {
 		color: var(--accent);
-	}
-
-	@media (min-width: 1920px) {
-		.wordmark {
-			padding: 0 36px;
-		}
-
-		.wordmark a {
-			font-size: 15.5px;
-		}
 	}
 
 	@media (max-width: 1023px) {

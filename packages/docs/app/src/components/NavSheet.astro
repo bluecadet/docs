@@ -133,10 +133,10 @@ function childrenAreNested(node: NavNode): boolean {
 		background: var(--overlay-scrim);
 	}
 
-	@media (min-width: 1024px) {
-		/* Nav sheet is a tablet/mobile-only surface — its trigger buttons are hidden at desktop
-		   widths (see Header.astro / LandingHeader.astro / Breadcrumb.astro), so it never opens
-		   there, but keep it fully inert as a safety net. */
+	@media (min-width: 768px) {
+		/* Nav sheet is a mobile-only surface — its trigger buttons are hidden at tablet/desktop
+		   widths (see NavToggle.astro / Breadcrumb.astro) now that SidebarNav stays visible down to
+		   768px, so it never opens there, but keep it fully inert as a safety net. */
 		.nav-sheet {
 			display: none !important;
 		}

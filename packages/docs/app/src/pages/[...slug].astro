@@ -30,7 +30,11 @@ const { Content, headings } = await render(entry);
 	currentId={entry.id}
 >
 	<Breadcrumb id={entry.id} title={entry.data.title} />
-	<article class="prose">
+	{/* data-pagefind-body scopes the search index to this article's own prose — see the
+	    pagefindIndex() comment in astro.config.mjs for why this also determines which pages are
+	    indexed at all. data-pagefind-meta pins the result title to the page's own title, not
+	    whatever <title> ends up rendering (BaseLayout appends the site name to it). */}
+	<article class="prose" data-pagefind-body data-pagefind-meta={`title:${entry.data.title}`}>
 		<h1>{entry.data.title}</h1>
 		{entry.data.description && <p class="lead">{entry.data.description}</p>}
 		{/* Tablet/mobile "on this page" — sits after the lead and before the first H2, matching

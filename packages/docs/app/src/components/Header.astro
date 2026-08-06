@@ -37,8 +37,8 @@ const base = import.meta.env.BASE_URL;
 	.site-header__right {
 		display: flex;
 		align-items: center;
-		gap: 24px;
-		padding: 0 32px;
+		gap: 32px;
+		padding: 0 var(--content-pad-x);
 		min-width: 0;
 	}
 
@@ -48,17 +48,6 @@ const base = import.meta.env.BASE_URL;
 		align-items: center;
 		gap: 22px;
 		font-size: 13px;
-	}
-
-	@media (min-width: 1920px) {
-		.site-header__right {
-			gap: 26px;
-			padding: 0 44px;
-		}
-
-		.site-header__nav {
-			font-size: 13.5px;
-		}
 	}
 
 	/* Tablet: HeaderShell collapses to a flex row; push this side to the far right. */

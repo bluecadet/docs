@@ -22,6 +22,18 @@ const site = process.env.DOCS_SITE;
  * below), Astro loads astro.config.mjs through Vite's SSR module runner to transpile those
  * imports, and that runner is already closed by the time `astro:build:done` fires — any dynamic
  * `import()` performed inside the hook throws "Vite module runner has been closed."
+ *
+ * Scoping: every doc page and the landing page wrap their real content in a `data-pagefind-body`
+ * element (see src/pages/[...slug].astro and src/pages/index.astro). Pagefind's opt-in rule is
+ * global once ANY page in the site declares `data-pagefind-body`, every page WITHOUT one is
+ * dropped from the index entirely — which is exactly what keeps 404.html (which declares none)
+ * out, without having to special-case it here. Without that marker, Pagefind falls back to
+ * indexing the whole `<html>`, which on this site means the sidebar nav and the always-rendered
+ * mobile NavSheet (both a full list of every page title) plus header/footer/search-modal chrome,
+ * duplicated into every single page's index entry. `excludeSelectors` additionally trims the
+ * mobile "on this page" disclosure that's nested inside the article itself (SidebarNav/NavSheet/
+ * Header/Footer/SearchModal/Toc-aside are untouched here — they're already outside the marked
+ * body element, not swept in by a selector).
  */
 function pagefindIndex() {
 	return {
@@ -30,7 +42,9 @@ function pagefindIndex() {
 			"astro:build:done": async ({ dir, logger }) => {
 				const outDir = fileURLToPath(dir);
 
-				const { index, errors: createErrors } = await createIndex({});
+				const { index, errors: createErrors } = await createIndex({
+					excludeSelectors: [".toc-disclosure"],
+				});
 				if (createErrors.length > 0) {
 					logger.error(`pagefind: failed to create index: ${createErrors.join(", ")}`);
 					return;

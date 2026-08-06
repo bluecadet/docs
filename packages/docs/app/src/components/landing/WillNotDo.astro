@@ -38,9 +38,9 @@ const after = at === -1 ? "" : title.slice(at + (accent?.length ?? 0));
 <style>
 	.wont {
 		display: grid;
-		grid-template-columns: 340px minmax(0, 1fr);
-		gap: 56px;
-		padding: 48px 56px 54px;
+		grid-template-columns: 360px minmax(0, 1fr);
+		gap: 88px;
+		padding: 80px var(--content-pad-x) 88px;
 		border-bottom: 1px solid var(--hairline-08);
 		background: var(--surface-panel-2);
 	}
@@ -50,9 +50,9 @@ const after = at === -1 ? "" : title.slice(at + (accent?.length ?? 0));
 	   be reset explicitly rather than left unset, or `.prose h2` supplies them uncontested (a
 	   class selector beats an unset property regardless of specificity). */
 	.wont-title {
-		margin: 0 0 10px;
+		margin: 0 0 18px;
 		padding-bottom: 0;
-		font: 400 30px/1.15 var(--font-serif);
+		font: 400 32px/1.2 var(--font-serif);
 		color: var(--ink);
 		border-bottom: none;
 	}
@@ -65,6 +65,7 @@ const after = at === -1 ? "" : title.slice(at + (accent?.length ?? 0));
 	.wont-intro {
 		margin: 0;
 		font-size: 14px;
+		line-height: 1.8;
 		color: var(--text-dim);
 		text-wrap: pretty;
 	}
@@ -74,46 +75,32 @@ const after = at === -1 ? "" : title.slice(at + (accent?.length ?? 0));
 		flex-direction: column;
 	}
 
-	@media (min-width: 1920px) {
-		.wont {
-			grid-template-columns: 400px minmax(0, 800px);
-			gap: 80px;
-			padding: 56px 80px 62px;
-			justify-content: start;
-		}
-
-		.wont-title {
-			font-size: 34px;
-		}
-	}
-
 	/* Tablet and mobile stack: the heading column sits above the list. */
 	@media (max-width: 1023px) {
 		.wont {
 			grid-template-columns: minmax(0, 1fr);
-			gap: 10px;
-			padding: 38px 40px 42px;
+			gap: 15px;
+			padding: 56px var(--content-pad-x) 64px;
 		}
 
 		.wont-title {
-			margin-bottom: 8px;
-			font-size: 28px;
+			margin-bottom: 12px;
+			font-size: 30px;
 		}
 
 		.wont-intro {
 			max-width: 520px;
-			font-size: 13.5px;
 		}
 	}
 
 	@media (max-width: 767px) {
 		.wont {
-			gap: 8px;
-			padding: 32px 18px 34px;
+			gap: 12px;
+			padding: 48px var(--content-pad-x) 50px;
 		}
 
 		.wont-title {
-			font-size: 26px;
+			font-size: 28px;
 		}
 	}
 </style>
