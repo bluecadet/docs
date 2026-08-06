@@ -5,7 +5,7 @@ import { syncContent } from "./sync.js";
 import type { ResolvedConfig } from "./types.js";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-/** The bundled Astro+Starlight app, shipped alongside `dist/` in the published package. */
+/** The bundled Astro app, shipped alongside `dist/` in the published package. */
 export const APP_ROOT = path.join(here, "..", "app");
 
 /** Syncs the consumer repo's markdown into the bundled app, then runs a static Astro build. */

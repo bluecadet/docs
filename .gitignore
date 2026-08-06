@@ -5,7 +5,7 @@ node_modules/
 dist/
 build/
 
-# Astro / Starlight
+# Astro
 .astro/
 
 # MacOS

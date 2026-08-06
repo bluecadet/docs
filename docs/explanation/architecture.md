@@ -2,16 +2,16 @@
 
 ## Copy-with-transform, not in-place
 
-`@bluecadet/docs` ships its own Astro+Starlight app (`packages/docs/app`), with its own
-`node_modules`. Rather than pointing Astro's content collection loader at the consumer repo
-directly, every `build`/`dev` invocation first **syncs** the consumer's `README.md` and `docs/`
-tree into that bundled app's `src/content/docs/` (and copies referenced assets into its
-`public/`), applying title injection and link/asset rewriting along the way. Only then does
-Astro's `docsLoader()` read from the synced copy.
+`@bluecadet/docs` ships its own Astro app (`packages/docs/app`), with its own `node_modules`.
+Rather than pointing Astro's content collection loader at the consumer repo directly, every
+`build`/`dev` invocation first **syncs** the consumer's `README.md` and `docs/` tree into that
+bundled app's `src/content/docs/` (and copies referenced assets into its `public/`), applying
+title injection and link/asset rewriting along the way. Only then does Astro's content `glob()`
+loader read from the synced copy.
 
 This is a copy step, not a glob pattern reaching into the consumer repo, for two reasons:
 
-- **Content-collection loaders read from a fixed location.** Astro's `docsLoader()` expects
+- **Content-collection loaders read from a fixed location.** The `glob()` loader expects
   `src/content/docs/` inside the app it's configured for; there's no supported way to point it at
   an arbitrary external directory that also varies per invocation (`--root`).
 - **Rewriting needs a write target.** Link/asset rewriting (see
@@ -27,11 +27,11 @@ local preview), rather than a long-running authoring workflow.
 
 ## Why titles are injected pre-validation
 
-Starlight's `docs` content collection schema requires a `title` field. Source markdown in a
+The bundled app's `docs` content collection schema requires a `title` field. Source markdown in a
 consumer repo very often doesn't have frontmatter at all — it's plain, GitHub-flavored markdown
 with a leading `# Heading`. Rather than requiring every consumer repo to add frontmatter, the sync
 step lifts the first `# Heading` into a `title:` frontmatter field (and strips the heading from the
-body, so Starlight doesn't render the title twice) **before** the file is written into the
+body, so the page layout doesn't render the title twice) **before** the file is written into the
 content collection. By the time Astro's schema validation runs, every synced file already has a
 valid `title`, so the loader never sees (or has to work around) a schema violation.
 

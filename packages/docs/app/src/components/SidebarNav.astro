@@ -1,0 +1,89 @@
+---
+// Stub: sidebar navigation. Builds a real nav tree from the docs collection, grouped by
+// top-level directory. Design pass will style this later.
+import { getCollection } from "astro:content";
+
+interface NavItem {
+	label: string;
+	href: string;
+}
+
+interface NavGroup {
+	label: string;
+	items: NavItem[];
+}
+
+function labelFromSlug(slug: string): string {
+	return slug.replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+const base = import.meta.env.BASE_URL;
+const entries = await getCollection("docs", ({ id }) => id !== "index");
+
+const topLevel: NavItem[] = [];
+const groupsByKey = new Map<string, NavGroup>();
+
+for (const entry of entries) {
+	const parts = entry.id.split("/");
+	const href = `${base}${entry.id}/`;
+	const label = entry.data.title;
+
+	if (parts.length === 1) {
+		topLevel.push({ label, href });
+		continue;
+	}
+
+	const key = parts[0];
+	let group = groupsByKey.get(key);
+	if (!group) {
+		group = { label: labelFromSlug(key), items: [] };
+		groupsByKey.set(key, group);
+	}
+	group.items.push({ label, href });
+}
+
+topLevel.sort((a, b) => a.label.localeCompare(b.label));
+const groups = [...groupsByKey.values()].sort((a, b) => a.label.localeCompare(b.label));
+for (const group of groups) group.items.sort((a, b) => a.label.localeCompare(b.label));
+---
+
+<nav class="sidebar-nav" aria-label="Docs navigation">
+	<ul>
+		<li>
+			<a href={base}>Home</a>
+		</li>
+		{topLevel.map((item) => (
+			<li>
+				<a href={item.href}>{item.label}</a>
+			</li>
+		))}
+		{groups.map((group) => (
+			<li>
+				<span class="nav-group-label">{group.label}</span>
+				<ul>
+					{group.items.map((item) => (
+						<li>
+							<a href={item.href}>{item.label}</a>
+						</li>
+					))}
+				</ul>
+			</li>
+		))}
+	</ul>
+</nav>
+
+<style>
+	.sidebar-nav ul {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+	}
+
+	.sidebar-nav ul ul {
+		padding-inline-start: 1rem;
+	}
+
+	.nav-group-label {
+		display: block;
+	}
+</style>

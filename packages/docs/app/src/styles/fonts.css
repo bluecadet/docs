@@ -1,0 +1,15 @@
+/*
+ * Self-hosted fonts (no Google Fonts CDN).
+ *
+ * Newsreader Variable — the "opsz" (optical sizing) axis is what this typeface's design leans
+ * on: it's a display serif that reshapes itself between text and display sizes. The bare
+ * `@fontsource-variable/newsreader` entrypoint (and its `wght.css`) ships wght-only font files
+ * with the opsz axis pinned/stripped — importing that silently kills the effect. We import the
+ * `opsz.css` / `opsz-italic.css` files specifically, which carry the opsz axis alongside wght.
+ */
+@import "@fontsource-variable/newsreader/opsz.css";
+@import "@fontsource-variable/newsreader/opsz-italic.css";
+
+/* IBM Plex Mono — weights 400 (body/code) and 500 (labels, emphasis), latin subset only. */
+@import "@fontsource/ibm-plex-mono/latin-400.css";
+@import "@fontsource/ibm-plex-mono/latin-500.css";

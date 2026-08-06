@@ -72,10 +72,10 @@ function writePage(absPath: string, route: string, ctx: WriteCtx): void {
 	let body: string;
 
 	if (isMdx) {
-		// Passed through untransformed: MDX may hold JSX/component imports (e.g. from
-		// @bluecadet/docs-theme) that a plain markdown AST pass would corrupt. Title is still
-		// derived (frontmatter, then a naive leading-`#` match) since Starlight requires one, but
-		// the heading itself is left in the body and links/images are not rewritten.
+		// Passed through untransformed: MDX may hold JSX/component imports that a plain markdown
+		// AST pass would corrupt. Title is still derived (frontmatter, then a naive leading-`#`
+		// match) since the app's content schema requires one, but the heading itself is left in
+		// the body and links/images are not rewritten.
 		body = parsed.content.trim();
 		if (!title) {
 			const match = body.match(H1);

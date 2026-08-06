@@ -31,9 +31,9 @@
 Checked in order, first match wins:
 
 1. Frontmatter `title:`, if present.
-2. The first `# Heading` in the body — lifted into the title and stripped from the body (Starlight
-   already renders the page title from frontmatter, so leaving the heading in place would show it
-   twice).
+2. The first `# Heading` in the body — lifted into the title and stripped from the body (the page
+   layout already renders the title from frontmatter, so leaving the heading in place would show
+   it twice).
 3. The filename, title-cased (`install-preflight.md` → "Install Preflight").
 
 `.mdx` files use the same order, except the heading is left in the body (see
@@ -72,8 +72,8 @@ and would corrupt them. One consequence: MDX gets **no base-path prefixing eithe
 prefixing happens in the same rewrite pass. Give MDX files explicit `title:` frontmatter, and
 **prefer relative links** (`reference/cli/`, not `/reference/cli/`) for anything internal —
 they resolve correctly under any `base` because the browser resolves them against the current
-page's URL. This applies to plain markdown links, JSX component `href`/`src` props (e.g.
-`PackageCard`'s `href`), and frontmatter-driven links like a splash page's `hero.actions[].link`.
+page's URL. This applies to plain markdown links as well as any JSX component `href`/`src` props
+or frontmatter-driven links you author in the MDX yourself.
 
 ## Known limitations
 

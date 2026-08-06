@@ -1,0 +1,87 @@
+---
+// Semantic skeleton only. Plumbing for the design pass to style later — no component colors,
+// no component fonts here; global.css/tokens.css/fonts.css establish the base only.
+import "../styles/index.css";
+import Header from "../components/Header.astro";
+import SidebarNav from "../components/SidebarNav.astro";
+import Toc from "../components/Toc.astro";
+
+interface Heading {
+	depth: number;
+	slug: string;
+	text: string;
+}
+
+interface Props {
+	title: string;
+	description?: string;
+	headings?: Heading[];
+}
+
+const { title, description, headings = [] } = Astro.props;
+const siteTitle = process.env.DOCS_TITLE ?? "Docs";
+const pageTitle = title ? `${title} — ${siteTitle}` : siteTitle;
+const base = import.meta.env.BASE_URL;
+---
+
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>{pageTitle}</title>
+		{description && <meta name="description" content={description} />}
+		<link rel="icon" href={`${base}favicon.svg`} type="image/svg+xml" />
+	</head>
+	<body>
+		<div class="page-grid">
+			<div class="page-grid-header">
+				<Header />
+			</div>
+			<div class="page-grid-sidebar">
+				<SidebarNav />
+			</div>
+			<main class="page-grid-main">
+				<slot />
+			</main>
+			<div class="page-grid-toc">
+				<Toc headings={headings} />
+			</div>
+			<footer class="page-grid-footer">
+				<slot name="footer" />
+			</footer>
+		</div>
+	</body>
+</html>
+
+<style>
+	.page-grid {
+		display: grid;
+		grid-template-areas:
+			"header header header"
+			"sidebar main toc"
+			"footer footer footer";
+		grid-template-columns: minmax(0, 16rem) minmax(0, 1fr) minmax(0, 16rem);
+		grid-template-rows: auto 1fr auto;
+		min-height: 100vh;
+	}
+
+	.page-grid-header {
+		grid-area: header;
+	}
+
+	.page-grid-sidebar {
+		grid-area: sidebar;
+	}
+
+	.page-grid-main {
+		grid-area: main;
+	}
+
+	.page-grid-toc {
+		grid-area: toc;
+	}
+
+	.page-grid-footer {
+		grid-area: footer;
+	}
+</style>

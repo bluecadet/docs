@@ -1,7 +1,7 @@
-# Changesets version/publish flow for @bluecadet/docs and @bluecadet/docs-theme, mirroring
-# bluecadet/launchpad's release.yml.
+# Changesets version/publish flow for @bluecadet/docs, mirroring bluecadet/launchpad's
+# release.yml.
 #
-# Assumes npm Trusted Publishing (OIDC) is configured for both packages on npmjs.com, linked to
+# Assumes npm Trusted Publishing (OIDC) is configured for the package on npmjs.com, linked to
 # this repo — same convention launchpad uses. No NPM_TOKEN secret is needed: `id-token: write`
 # lets `npm run release` (changesets publish -> npm publish) exchange the job's OIDC token for
 # provenance/publish access.

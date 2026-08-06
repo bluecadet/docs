@@ -2,7 +2,7 @@
   "name": "bluecadet-docs-monorepo",
   "private": true,
   "version": "0.0.1",
-  "description": "monorepo for @bluecadet/docs-theme, @bluecadet/docs, and friends",
+  "description": "monorepo for @bluecadet/docs and friends",
   "scripts": {
     "changeset": "changeset",
     "dev": "npm run build -w @bluecadet/docs && node packages/docs/dist/cli.js dev --root .",

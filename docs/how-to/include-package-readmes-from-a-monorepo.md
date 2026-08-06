@@ -11,7 +11,7 @@ main `docs/` tree with the `content` field in `docs.config.json`.
 
 Every match is treated exactly like a file under `docs/`: its `README`/`index` basename collapses
 onto its containing directory's route. So `packages/docs/README.md` publishes at `/packages/docs/`
-and `packages/docs-theme/README.md` publishes at `/packages/docs-theme/`.
+and `packages/other-package/README.md` publishes at `/packages/other-package/`.
 
 ## Notes
 
@@ -25,5 +25,5 @@ and `packages/docs-theme/README.md` publishes at `/packages/docs-theme/`.
 - Link them from your hand-written `docs/` pages once you know their routes, e.g.:
 
   ```md
-  See the [@bluecadet/docs-theme README](/packages/docs-theme/) for its full component reference.
+  See the [other-package README](/packages/other-package/) for its full API reference.
   ```

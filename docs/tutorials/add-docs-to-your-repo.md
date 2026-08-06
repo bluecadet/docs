@@ -42,7 +42,7 @@ to see:
 
 - Your README as the landing page at `/`.
 - A sidebar generated from your `docs/` folder structure.
-- Bluecadet's "Paper" theme (colors, fonts) applied automatically.
+- Bluecadet's docs styling (colors, fonts) applied automatically.
 
 Prefer a local dev server instead of a one-shot build?
 
@@ -86,7 +86,5 @@ See that workflow's own inputs for deploy targets and options (e.g. GitHub Pages
 
 - Need per-repo settings (a custom title, a monorepo's extra READMEs, a non-root base path)? See
   [Configure docs.config.json](/how-to/configure-docs-config-json/).
-- Want a richer landing page than a plain README? See
-  [Build a rich landing page](/how-to/build-a-rich-landing-page/).
 - Full flag/behavior reference: [CLI](/reference/cli/) and
   [content conventions](/reference/content-conventions/).

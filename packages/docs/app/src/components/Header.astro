@@ -1,0 +1,23 @@
+---
+// Stub: site header. Design pass will style this later.
+const siteTitle = process.env.DOCS_TITLE ?? "Docs";
+const repoUrl = process.env.DOCS_REPO_URL;
+const base = import.meta.env.BASE_URL;
+---
+
+<header class="site-header">
+	<a class="site-title" href={base}>{siteTitle}</a>
+	{repoUrl && (
+		<a class="repo-link" href={repoUrl} rel="noopener noreferrer" target="_blank">
+			GitHub
+		</a>
+	)}
+</header>
+
+<style>
+	.site-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+	}
+</style>

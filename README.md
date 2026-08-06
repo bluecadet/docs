@@ -1,7 +1,7 @@
 # bluecadet docs
 
-A reusable docs system: a Starlight theme, a CLI, and a reusable CI workflow that turns a repo's
-markdown into a branded static site.
+A reusable docs system: a CLI and a reusable CI workflow that turns a repo's markdown into a
+static Astro site.
 
 Point it at any repo's `README.md` + `docs/` tree and get a fully-built, branded static site — no
 Astro project to maintain, no build config to write, no `package.json` required in the consumer
@@ -27,5 +27,4 @@ reference material.
 
 | Package | Description |
 | --- | --- |
-| [`@bluecadet/docs`](./packages/docs) | CLI (`npx @bluecadet/docs build`) that syncs a repo's markdown into a bundled Astro+Starlight app and builds a static site. |
-| [`@bluecadet/docs-theme`](./packages/docs-theme) | Starlight plugin bundling bluecadet's "Paper" design tokens, fonts, and landing-page components (`CardGrid`, `PackageCard`). |
+| [`@bluecadet/docs`](./packages/docs) | CLI (`npx @bluecadet/docs build`) that syncs a repo's markdown into a bundled Astro app and builds a static site with Pagefind search. |

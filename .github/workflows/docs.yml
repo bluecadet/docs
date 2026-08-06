@@ -19,7 +19,6 @@ on:
       - "docs/**"
       - "docs.config.json"
       - "packages/docs/**"
-      - "packages/docs-theme/**"
   workflow_dispatch:
 
 permissions:

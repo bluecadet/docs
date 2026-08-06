@@ -1,4 +1,4 @@
-# Reusable workflow: build a repo's markdown into a Starlight site and deploy it to GitHub Pages.
+# Reusable workflow: build a repo's markdown into a static Astro site and deploy it to GitHub Pages.
 #
 # Any bluecadet repo (Go, C#, Node, whatever) can call this without a package.json — it installs
 # and runs @bluecadet/docs from the npm registry via npx. Example consumer usage:
