@@ -78,4 +78,12 @@ const { title, docsHref, repoUrl } = Astro.props;
 			flex-wrap: wrap;
 		}
 	}
+
+	@media (max-width: 767px) {
+		.landing-footer-links a {
+			display: flex;
+			align-items: center;
+			min-height: 48px;
+		}
+	}
 </style>

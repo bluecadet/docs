@@ -42,7 +42,9 @@ to see:
 
 - Your README as the landing page at `/`.
 - A sidebar generated from your `docs/` folder structure.
-- Bluecadet's docs styling (colors, fonts) applied automatically.
+- Full-text search over every page (press `/` or click the search field) — see
+  [Search](/reference/search/).
+- The site's built-in design applied automatically; there's no theme to configure.
 
 Prefer a local dev server instead of a one-shot build?
 
@@ -51,7 +53,8 @@ npx @bluecadet/docs dev
 ```
 
 Content is synced once at startup — restart the command after editing markdown to pick up
-changes.
+changes. Search is inert in `dev` (the index only exists after a real build) — see
+[Search](/reference/search/).
 
 ## 3. Wire it into CI
 

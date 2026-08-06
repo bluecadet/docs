@@ -1,14 +1,27 @@
 ---
-// Landing-only CTA link grid: one numbered card per top-level doc section, linking to that
-// section's first page.
-import type { NavSection } from "./nav-tree";
+// Landing-only CTA link grid: one numbered card per top-level nav node, linking to that section's
+// first page (see ../../lib/nav.ts).
+import { firstPageOf, type NavNode, pageCount } from "../../lib/nav";
 
 interface Props {
-	sections: NavSection[];
-	base: string;
+	nodes: NavNode[];
 }
 
-const { sections, base } = Astro.props;
+const { nodes } = Astro.props;
+
+const cards = nodes
+	.map((node) => {
+		const target = firstPageOf(node);
+		if (!target) return null;
+		const count = pageCount(node);
+		return {
+			label: node.label,
+			href: target.href,
+			title: target.label,
+			description: target.description ?? `${count} page${count === 1 ? "" : "s"}`,
+		};
+	})
+	.filter((card) => card !== null);
 
 function pad(n: number): string {
 	return String(n).padStart(2, "0");
@@ -16,18 +29,17 @@ function pad(n: number): string {
 ---
 
 <div class="cta-cards">
-	{sections.map((section, i) => (
-		<a class="cta-card" href={`${base}${section.firstEntry.id}/`}>
-			<span class="cta-num">
-				{pad(i + 1)} / {section.title.toLowerCase()}
-			</span>
-			<span class="cta-title">{section.firstEntry.data.title}</span>
-			<span class="cta-desc">
-				{section.firstEntry.data.description ??
-					`${section.entries.length} page${section.entries.length === 1 ? "" : "s"}`}
-			</span>
-		</a>
-	))}
+	{
+		cards.map((card, i) => (
+			<a class="cta-card" href={card.href}>
+				<span class="cta-num">
+					{pad(i + 1)} / {card.label.toLowerCase()}
+				</span>
+				<span class="cta-title">{card.title}</span>
+				<span class="cta-desc">{card.description}</span>
+			</a>
+		))
+	}
 </div>
 
 <style>
@@ -89,7 +101,9 @@ function pad(n: number): string {
 		}
 	}
 
-	@media (max-width: 1023px) {
+	/* Tablet keeps the 2-up grid (it's already the default above); only mobile collapses to a
+	   single column. */
+	@media (max-width: 767px) {
 		.cta-cards {
 			grid-template-columns: 1fr;
 		}

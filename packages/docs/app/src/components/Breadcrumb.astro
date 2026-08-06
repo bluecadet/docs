@@ -1,6 +1,14 @@
 ---
-// Above-H1 breadcrumb: docs / <section> / <page>. Section segment is plain text (not a link —
-// directories don't have their own index pages in this system).
+// Above-H1 breadcrumb: `docs / <segment> / … / <page>`, one segment per directory level. An
+// intermediate segment links when that directory has its own index page (the CLI collapses
+// `docs/guides/index.md` onto `/guides/`) and stays inert text when it doesn't.
+//
+// Mobile (<=767px) swaps this for a full-bleed pill button showing `<parent> / <page>` plus an
+// "all pages" trigger that opens NavSheet.astro — the design's mobile doc-page header treatment.
+// It's rendered here (not BaseLayout) because it needs the same trail data; CSS alone toggles
+// which variant is visible per breakpoint.
+import { getNavTree, trailFor } from "../lib/nav";
+
 interface Props {
 	id: string;
 	title: string;
@@ -8,28 +16,44 @@ interface Props {
 
 const { id, title } = Astro.props;
 const base = import.meta.env.BASE_URL;
-const parts = id.split("/");
-const section = parts.length > 1 ? parts[0] : null;
+const { nodes } = await getNavTree();
+
+// Everything above the current page, outermost first.
+const ancestors = trailFor(nodes, id).slice(0, -1);
+const parent = ancestors.at(-1);
 ---
 
 <nav class="breadcrumb" aria-label="Breadcrumb">
 	<a class="breadcrumb__segment" href={base}>docs</a>
 	{
-		section && (
+		ancestors.map((node) => (
 			<>
 				<span class="breadcrumb__sep">/</span>
-				<span class="breadcrumb__segment">{section}</span>
+				{node.href ? (
+					<a class="breadcrumb__segment" href={node.href}>
+						{node.segment}
+					</a>
+				) : (
+					<span class="breadcrumb__segment">{node.segment}</span>
+				)}
 			</>
-		)
+		))
 	}
 	<span class="breadcrumb__sep">/</span>
 	<span class="breadcrumb__current">{title}</span>
 </nav>
 
+<button type="button" class="breadcrumb-pill" data-nav-sheet-trigger aria-haspopup="dialog">
+	{parent && <span class="breadcrumb-pill__section">{parent.segment} /</span>}
+	<span class="breadcrumb-pill__current">{title}</span>
+	<span class="breadcrumb-pill__trigger">▾ all pages</span>
+</button>
+
 <style>
 	.breadcrumb {
 		display: flex;
 		align-items: center;
+		flex-wrap: wrap;
 		gap: 8px;
 		font: 400 12px var(--font-mono);
 		color: var(--text-dim);
@@ -50,5 +74,46 @@ const section = parts.length > 1 ? parts[0] : null;
 
 	.breadcrumb__current {
 		color: var(--accent);
+	}
+
+	.breadcrumb-pill {
+		display: none;
+	}
+
+	@media (max-width: 767px) {
+		.breadcrumb {
+			display: none;
+		}
+
+		.breadcrumb-pill {
+			display: flex;
+			align-items: center;
+			gap: 10px;
+			width: calc(100% + 36px);
+			min-height: 46px;
+			margin: -26px -18px 26px;
+			padding: 0 18px;
+			background: var(--white-02);
+			border: none;
+			border-bottom: 1px solid var(--hairline-08);
+			font: 400 12px var(--font-mono);
+			color: var(--text-muted);
+			cursor: pointer;
+			text-align: left;
+		}
+
+		.breadcrumb-pill__section {
+			color: var(--text-dim);
+		}
+
+		.breadcrumb-pill__current {
+			color: var(--accent);
+		}
+
+		.breadcrumb-pill__trigger {
+			margin-left: auto;
+			font-size: 10px;
+			color: var(--text-dim);
+		}
 	}
 </style>

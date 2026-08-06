@@ -1,9 +1,11 @@
 import { fileURLToPath } from "node:url";
 import mdx from "@astrojs/mdx";
+import { rehypeHeadingIds } from "@astrojs/markdown-remark";
 import { createIndex } from "pagefind";
 import { defineConfig } from "astro/config";
 import { remarkAlerts } from "./src/lib/remark-alerts";
 import { rehypeCodeBlocks } from "./src/lib/rehype-code-blocks";
+import { rehypeHeadingAnchors } from "./src/lib/rehype-heading-anchors";
 import { rehypeTables } from "./src/lib/rehype-tables";
 
 // Populated by the CLI (see ../src/build.ts / ../src/dev.ts) before this config loads. Pages and
@@ -78,7 +80,12 @@ export default defineConfig({
 	integrations: [mdx(), pagefindIndex(), codeCopyScript()],
 	markdown: {
 		remarkPlugins: [remarkAlerts],
-		rehypePlugins: [rehypeCodeBlocks, rehypeTables],
+		// `rehypeHeadingIds` is Astro's own built-in slugger — it's listed here *again*, ahead of
+		// `rehypeHeadingAnchors`, because Astro always re-runs it once more after every plugin in
+		// this array (unconditionally, to guarantee every heading gets an id); running it early too
+		// gives `rehypeHeadingAnchors` a real id to read instead of re-slugging. See
+		// `rehype-heading-anchors.ts` for the full ordering rationale.
+		rehypePlugins: [rehypeCodeBlocks, rehypeTables, rehypeHeadingIds, rehypeHeadingAnchors],
 		shikiConfig: {
 			theme: "css-variables",
 		},

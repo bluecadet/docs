@@ -1,6 +1,6 @@
 ---
-// Prev/next pagination, ordered by the flattened nav tree (see ../lib/nav.ts) — same order as
-// the sidebar.
+// Prev/next pagination, ordered by the nav tree's depth-first pre-order page list (see
+// ../lib/nav.ts) — i.e. exactly the order the sidebar reads top to bottom, child pages included.
 import { getNavTree } from "../lib/nav";
 
 interface Props {
@@ -55,5 +55,28 @@ const next = index >= 0 && index < flat.length - 1 ? flat[index + 1] : null;
 
 	.pagination__link--next {
 		margin-left: auto;
+	}
+
+	/* Mobile: prev/next become full-width bordered buttons stacked in a column instead of a
+	   plain inline row — bigger, unambiguous tap targets. */
+	@media (max-width: 767px) {
+		.pagination {
+			flex-direction: column;
+			gap: 10px;
+		}
+
+		.pagination__link {
+			display: flex;
+			align-items: center;
+			min-height: 48px;
+			padding: 0 14px;
+			border: 1px solid var(--hairline-10);
+			border-radius: var(--radius-md);
+		}
+
+		.pagination__link--next {
+			margin-left: 0;
+			justify-content: flex-end;
+		}
 	}
 </style>

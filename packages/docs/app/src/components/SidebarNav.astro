@@ -1,129 +1,172 @@
 ---
-// Doc-page left rail. Groups mirror the docs/ directory tree (see ../lib/nav.ts). The active
-// entry gets the "you are here" treatment and, under it only, an indented list of that page's
-// own H2 sections (scroll-spy for those sub-items is Toc's job, not this component's).
-import { getNavTree } from "../lib/nav";
-
-interface Heading {
-	depth: number;
-	slug: string;
-	text: string;
-}
+// The one left rail — identical on the landing page, doc pages and 404 (see BaseLayout.astro,
+// which is the only place that mounts it). It renders the real docs tree recursively via
+// `Astro.self`: pages are links, index-less directories are inert `segment/` labels, and children
+// nest at any depth. Per-page H2 headings are NOT part of this component — that's Toc.astro's job.
+//
+// Two layers here: `.sidebar-rail` is the grid cell (owns the full-height hairline, so the border
+// runs to the bottom of the page even when the nav is short), `.sidebar-nav` is the sticky,
+// independently-scrolling nav itself.
+import { getNavTree, type NavNode } from "../lib/nav";
 
 interface Props {
+	/** Active page id, when one of the nav entries is the current page. */
 	currentId?: string;
-	headings?: Heading[];
+	/** Recursion only — set by this component when it calls itself. */
+	nodes?: NavNode[];
+	/** Recursion only — true for lists rendered inside the indented, bordered column. */
+	nested?: boolean;
 }
 
-const { currentId, headings = [] } = Astro.props;
-const { topLevel, groups } = await getNavTree();
-const sections = headings.filter((heading) => heading.depth === 2);
+const { currentId, nodes, nested = false } = Astro.props;
+const isRoot = nodes === undefined;
+const items = nodes ?? (await getNavTree()).nodes;
+
+// Children of a root-level directory keep the design's flat "group" treatment (dim `guides/`
+// label, items flush in the same column). Every deeper list becomes the indented, hairline-bordered
+// sub-page column.
+function childrenAreNested(node: NavNode): boolean {
+	return nested || node.isPage || node.depth > 0;
+}
 ---
 
-<nav class="sidebar-nav" aria-label="Docs navigation">
-	{
-		topLevel.length > 0 && (
-			<div class="sidebar-nav__list">
-				{topLevel.map((item) => (
-					<a
-						class="sidebar-nav__item"
-						class:list={{ "is-active": item.id === currentId }}
-						href={item.href}
-					>
-						{item.label}
-					</a>
-				))}
-			</div>
-		)
-	}
-	{
-		groups.map((group) => (
-			<div class="sidebar-nav__group">
-				<div class="sidebar-nav__group-label">{group.label}</div>
-				<div class="sidebar-nav__list">
-					{group.items.map((item) => {
-						const isActive = item.id === currentId;
-						return (
-							<>
-								<a class="sidebar-nav__item" class:list={{ "is-active": isActive }} href={item.href}>
-									{item.label}
-								</a>
-								{isActive && sections.length > 0 && (
-									<div class="sidebar-nav__subitems">
-										{sections.map((section) => (
-											<a class="sidebar-nav__subitem" href={`#${section.slug}`}>
-												{section.text}
-											</a>
-										))}
-									</div>
-								)}
-							</>
-						);
-					})}
-				</div>
-			</div>
-		))
-	}
-</nav>
+{
+	isRoot ? (
+		<div class="sidebar-rail">
+			<nav class="sidebar-nav" aria-label="Docs navigation">
+				<Astro.self nodes={items} currentId={currentId} />
+			</nav>
+		</div>
+	) : (
+		<div class="sidebar-list" class:list={{ "is-nested": nested }}>
+			{items.map((node) => (
+				<>
+					{node.href ? (
+						<a
+							class="sidebar-item"
+							class:list={{ "is-active": node.id === currentId }}
+							href={node.href}
+							aria-current={node.id === currentId ? "page" : undefined}
+						>
+							{node.label}
+						</a>
+					) : (
+						<div class="sidebar-label">{node.segment}/</div>
+					)}
+					{node.children.length > 0 && (
+						<Astro.self
+							nodes={node.children}
+							currentId={currentId}
+							nested={childrenAreNested(node)}
+						/>
+					)}
+				</>
+			))}
+		</div>
+	)
+}
 
 <style>
-	.sidebar-nav {
+	.sidebar-rail {
 		border-right: 1px solid var(--hairline-08);
+		min-width: 0;
+	}
+
+	.sidebar-nav {
+		position: sticky;
+		top: var(--header-height);
+		max-height: calc(100vh - var(--header-height));
+		max-height: calc(100dvh - var(--header-height));
+		overflow-y: auto;
+		overscroll-behavior: contain;
+		scrollbar-gutter: stable;
+		scrollbar-width: thin;
+		scrollbar-color: var(--hairline-14) transparent;
 		padding: 26px 0 48px;
 		font-size: 13.5px;
 	}
 
-	.sidebar-nav__list {
+	.sidebar-nav::-webkit-scrollbar {
+		width: 6px;
+	}
+
+	.sidebar-nav::-webkit-scrollbar-thumb {
+		background: var(--hairline-12);
+		border-radius: var(--radius-sm);
+	}
+
+	.sidebar-list {
 		display: flex;
 		flex-direction: column;
 	}
 
-	.sidebar-nav__group-label {
+	.sidebar-label {
 		padding: 20px 26px 9px;
 		font: 400 12px var(--font-mono);
 		color: var(--text-dim);
 	}
 
-	.sidebar-nav > .sidebar-nav__group:first-child .sidebar-nav__group-label {
+	.sidebar-nav > .sidebar-list > .sidebar-label:first-child {
 		padding-top: 0;
 	}
 
-	.sidebar-nav__item {
+	.sidebar-item {
 		padding: 5px 26px;
 		color: var(--text-muted);
 		transition: color 0.15s ease;
 	}
 
-	.sidebar-nav__item:hover {
+	.sidebar-item:hover {
 		color: var(--accent);
 	}
 
-	.sidebar-nav__item.is-active {
+	/* Exactly one node in the whole tree — the current page — carries the "you are here" mark. */
+	.sidebar-item.is-active {
 		color: var(--ink);
 		background: var(--sage-tint-08);
 		box-shadow: inset 2px 0 var(--accent);
 	}
 
-	.sidebar-nav__item.is-active:hover {
+	.sidebar-item.is-active:hover {
 		color: var(--ink);
 	}
 
-	.sidebar-nav__subitems {
-		display: flex;
-		flex-direction: column;
+	/* Sub-page column: hairline rail, indented, smaller type. */
+	.sidebar-list.is-nested {
 		margin: 3px 0 5px 38px;
 		border-left: 1px solid var(--hairline-10);
 	}
 
-	.sidebar-nav__subitem {
+	.sidebar-list.is-nested .sidebar-item {
 		padding: 4px 14px;
 		font-size: 12.5px;
-		color: var(--text-muted);
-		transition: color 0.15s ease;
 	}
 
-	.sidebar-nav__subitem:hover {
-		color: var(--accent);
+	/* The active sub-page keeps the canonical "you are here" treatment; the -1px pull lets its
+	   2px sage bar sit on top of the column hairline rather than beside it. */
+	.sidebar-list.is-nested .sidebar-item.is-active {
+		margin-left: -1px;
+	}
+
+	.sidebar-list.is-nested .sidebar-label {
+		padding: 10px 14px 5px;
+		font-size: 11.5px;
+	}
+
+	/* Tablet: rail narrows (see BaseLayout.astro's .page-body grid) — a little less padding keeps
+	   items from feeling cramped. */
+	@media (max-width: 1023px) {
+		.sidebar-nav {
+			padding: 22px 0 40px;
+			font-size: 13px;
+		}
+	}
+
+	/* Mobile: no persistent sidebar — NavSheet.astro (hamburger + breadcrumb pill) takes over. */
+	@media (max-width: 767px) {
+		.sidebar-rail {
+			display: none;
+		}
 	}
 
 	@media (min-width: 1920px) {
@@ -132,25 +175,26 @@ const sections = headings.filter((heading) => heading.depth === 2);
 			font-size: 14px;
 		}
 
-		.sidebar-nav__group-label {
+		.sidebar-label {
 			padding: 22px 36px 10px;
 		}
 
-		.sidebar-nav > .sidebar-nav__group:first-child .sidebar-nav__group-label {
-			padding-top: 0;
-		}
-
-		.sidebar-nav__item {
+		.sidebar-item {
 			padding: 6px 36px;
 		}
 
-		.sidebar-nav__subitems {
+		.sidebar-list.is-nested {
 			margin: 4px 0 6px 48px;
 		}
 
-		.sidebar-nav__subitem {
+		.sidebar-list.is-nested .sidebar-item {
 			padding: 4px 16px;
 			font-size: 13px;
+		}
+
+		.sidebar-list.is-nested .sidebar-label {
+			padding: 11px 16px 5px;
+			font-size: 12px;
 		}
 	}
 </style>

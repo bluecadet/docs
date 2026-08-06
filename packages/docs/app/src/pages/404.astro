@@ -1,110 +1,83 @@
 ---
 // 404 page — route "/404". Astro emits this as /404.html, which GitHub Pages serves automatically
-// for any unmatched path (no extra astro.config.mjs wiring needed). Reuses the landing's 2-column
-// shape (index rail + content column), not the doc page's 3-column layout, per the design spec.
+// for any unmatched path (no extra astro.config.mjs wiring needed). Uses the shared page shell
+// (BaseLayout) with the landing's header/footer variants and a full-bleed main.
 //
 // The "did you mean" suggestions are computed client-side: the server has no idea what URL 404'd
 // (GitHub Pages serves this same static file for every miss), so we serialize every real doc route
 // into an inline JSON payload and let not-found-client.ts fuzzy-match against `location.pathname`.
-import "../styles/index.css";
+import BaseLayout from "../layouts/BaseLayout.astro";
 import LandingHeader from "../components/landing/LandingHeader.astro";
 import LandingFooter from "../components/landing/LandingFooter.astro";
-import IndexRail from "../components/landing/IndexRail.astro";
-import { getNavSections } from "../components/landing/nav-tree";
-import SearchModal from "../components/SearchModal.astro";
 import { getNavTree } from "../lib/nav";
 
 const base = import.meta.env.BASE_URL;
 const siteTitle = process.env.DOCS_TITLE ?? "Docs";
 const repoUrl = process.env.DOCS_REPO_URL;
 
-const sections = await getNavSections();
 const { flat } = await getNavTree();
 
 const routesPayload = {
 	base,
-	routes: flat.map((item) => ({ id: item.id, href: item.href, title: item.label })),
+	routes: flat.map((page) => ({ id: page.id, href: page.href, title: page.label })),
 };
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1" />
-		<title>404 — {siteTitle}</title>
-		<meta name="robots" content="noindex" />
-		<link rel="icon" href={`${base}favicon.svg`} type="image/svg+xml" />
-	</head>
-	<body>
-		<div class="notfound">
-			<LandingHeader title={siteTitle} docsHref={base} repoUrl={repoUrl} />
-			<div class="notfound-body">
-				<IndexRail sections={sections} base={base} />
-				<main class="notfound-main">
-					<div class="notfound-eyebrow">404 — no page here</div>
-					<h1 class="notfound-h1">
-						This page moved,<br />
-						<span class="notfound-h1-accent">or never existed.</span>
-					</h1>
-					<p class="notfound-lead">
-						The page you were looking for could not be found. Try one of the suggestions below, or
-						search from scratch.
-					</p>
+<BaseLayout title={`404 — ${siteTitle}`} main="full" appendSiteTitle={false} robots="noindex">
+	<LandingHeader slot="header" title={siteTitle} docsHref={base} repoUrl={repoUrl} />
+	<LandingFooter slot="footer" title={siteTitle} docsHref={base} repoUrl={repoUrl} />
 
-					<div class="notfound-grid">
-						<div class="notfound-col">
-							<div class="requested-panel">
-								<div class="requested-panel-header">requested</div>
-								<pre class="requested-panel-body"><span class="requested-line" data-requested-path>…</span><span class="requested-line"><span class="dim">status  </span>404</span><span class="requested-line requested-closest" data-requested-closest hidden><span class="dim">closest </span><span data-closest-path></span> <span class="sage" data-closest-pct></span></span></pre>
-							</div>
+	<div class="notfound-main">
+		<div class="notfound-eyebrow">404 — no page here</div>
+		<h1 class="notfound-h1">
+			This page moved,<br />
+			<span class="notfound-h1-accent">or never existed.</span>
+		</h1>
+		<p class="notfound-lead">
+			The page you were looking for could not be found. Try one of the suggestions below, or search
+			from scratch.
+		</p>
 
-							<div class="dym-label" data-dym-label hidden>DID YOU MEAN</div>
-							<div class="dym-list" data-dym-list hidden></div>
+		<div class="notfound-grid">
+			<div class="notfound-col">
+				<div class="requested-panel">
+					<div class="requested-panel-header">requested</div>
+					<pre class="requested-panel-body"><span class="requested-line" data-requested-path>…</span><span class="requested-line"><span class="dim">status  </span>404</span><span class="requested-line requested-closest" data-requested-closest hidden><span class="dim">closest </span><span data-closest-path></span> <span class="sage" data-closest-pct></span></span></pre>
+				</div>
 
-							<div class="notfound-cta">
-								<a class="btn btn-primary" href={base}>back to docs →</a>
-								<button type="button" class="btn btn-ghost" data-search-trigger>
-									search everything <span class="kbd">/</span>
-								</button>
-							</div>
-						</div>
+				<div class="dym-label" data-dym-label hidden>DID YOU MEAN</div>
+				<div class="dym-list" data-dym-list hidden></div>
 
-						{repoUrl && (
-							<div class="margin-note">
-								↖ if you followed a link from our own docs, that is our bug —{" "}
-								<a href={`${repoUrl}/issues`} rel="noopener noreferrer" target="_blank">
-									report it ↗
-								</a>{" "}
-								and we will add the redirect.
-							</div>
-						)}
-					</div>
-				</main>
+				<div class="notfound-cta">
+					<a class="btn btn-primary" href={base}>back to docs →</a>
+					<button type="button" class="btn btn-ghost" data-search-trigger>
+						search everything <span class="kbd">/</span>
+					</button>
+				</div>
 			</div>
-			<LandingFooter title={siteTitle} docsHref={base} repoUrl={repoUrl} />
+
+			{
+				repoUrl && (
+					<div class="margin-note">
+						↖ if you followed a link from our own docs, that is our bug —{" "}
+						<a href={`${repoUrl}/issues`} rel="noopener noreferrer" target="_blank">
+							report it ↗
+						</a>{" "}
+						and we will add the redirect.
+					</div>
+				)
+			}
 		</div>
+	</div>
 
-		<SearchModal />
-
-		<script type="application/json" id="notfound-routes-data" set:html={JSON.stringify(routesPayload)} />
-		<script>
-			import { initNotFound } from "../components/notfound/not-found-client";
-			initNotFound();
-		</script>
-	</body>
-</html>
+	<script type="application/json" id="notfound-routes-data" set:html={JSON.stringify(routesPayload)} />
+	<script>
+		import { initNotFound } from "../components/notfound/not-found-client";
+		initNotFound();
+	</script>
+</BaseLayout>
 
 <style>
-	.notfound {
-		--rail-width: 240px;
-	}
-
-	.notfound-body {
-		display: grid;
-		grid-template-columns: var(--rail-width) 1fr;
-		align-items: start;
-	}
-
 	.notfound-main {
 		min-width: 0;
 		padding: 88px 56px 96px;
@@ -303,10 +276,6 @@ const routesPayload = {
 	}
 
 	@media (min-width: 1920px) {
-		.notfound {
-			--rail-width: 300px;
-		}
-
 		.notfound-main {
 			padding: 96px 80px 104px;
 		}
@@ -317,10 +286,6 @@ const routesPayload = {
 	}
 
 	@media (max-width: 1023px) {
-		.notfound-body {
-			grid-template-columns: 1fr;
-		}
-
 		.notfound-main {
 			padding: 40px 20px 48px;
 		}

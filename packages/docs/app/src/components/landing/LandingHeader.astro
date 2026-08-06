@@ -1,6 +1,8 @@
 ---
 // Landing-only header variant: 240px rail column + wordmark, search trigger pill (visual only —
 // no search implementation lives on this page), and a right nav of "docs" + optional "github ↗".
+// Reused as-is on the 404 page. Tablet/mobile behavior mirrors Header.astro's doc-page header —
+// see the media queries below — including the hamburger opening NavSheet.astro.
 interface Props {
 	title: string;
 	docsHref: string;
@@ -28,14 +30,31 @@ const { title, docsHref, repoUrl } = Astro.props;
 				</a>
 			)}
 		</nav>
+		<button
+			type="button"
+			class="nav-toggle"
+			data-nav-sheet-trigger
+			aria-label="Open navigation"
+			aria-haspopup="dialog"
+		>
+			<span class="nav-toggle__bar" />
+			<span class="nav-toggle__bar" />
+			<span class="nav-toggle__bar" />
+		</button>
 	</div>
 </header>
 
 <style>
+	/* Sticky at every breakpoint, matching Header.astro — the sidebar rail sticks below it. */
 	.landing-header {
+		position: sticky;
+		top: 0;
+		z-index: 20;
 		display: grid;
 		grid-template-columns: var(--rail-width) 1fr;
+		height: var(--header-height);
 		border-bottom: 1px solid var(--hairline-08);
+		background: var(--bg);
 	}
 
 	.landing-header-brand {
@@ -43,7 +62,7 @@ const { title, docsHref, repoUrl } = Astro.props;
 		align-items: center;
 		gap: 10px;
 		padding: 0 28px;
-		height: 58px;
+		height: 100%;
 		border-right: 1px solid var(--hairline-08);
 		font: 500 15px var(--font-mono);
 		white-space: nowrap;
@@ -106,9 +125,37 @@ const { title, docsHref, repoUrl } = Astro.props;
 		color: var(--accent-2);
 	}
 
+	.nav-toggle {
+		display: none;
+		flex-direction: column;
+		align-items: flex-end;
+		justify-content: center;
+		gap: 4px;
+		min-height: 44px;
+		min-width: 24px;
+		padding: 0;
+		background: none;
+		border: none;
+		cursor: pointer;
+	}
+
+	.nav-toggle__bar {
+		display: block;
+		height: 1.5px;
+		background: var(--text-muted);
+	}
+
+	.nav-toggle__bar:nth-child(1),
+	.nav-toggle__bar:nth-child(2) {
+		width: 20px;
+	}
+
+	.nav-toggle__bar:nth-child(3) {
+		width: 13px;
+	}
+
 	@media (min-width: 1920px) {
 		.landing-header-brand {
-			height: 62px;
 			padding: 0 36px;
 			font-size: 15.5px;
 		}
@@ -124,25 +171,72 @@ const { title, docsHref, repoUrl } = Astro.props;
 		}
 	}
 
+	/* Tablet: rail column collapses (IndexRail hides entirely below 1024, see IndexRail.astro),
+	   so this becomes a plain flex row like Header.astro's doc-page variant — logo, search,
+	   repo link, hamburger. The "docs" text link is dropped in favor of the hamburger + nav sheet
+	   (which also lists every section) and the hero/CTA buttons already on the page. */
 	@media (max-width: 1023px) {
 		.landing-header {
-			grid-template-columns: 1fr;
-			row-gap: 0;
+			display: flex;
+			align-items: center;
+			gap: 18px;
+			padding: 0 26px;
 		}
 
 		.landing-header-brand {
+			padding: 0;
 			border-right: none;
-			border-bottom: 1px solid var(--hairline-08);
 		}
 
 		.landing-header-nav {
-			flex-wrap: wrap;
-			row-gap: 10px;
-			padding: 14px 20px;
+			margin-left: auto;
+			padding: 0;
+			gap: 20px;
 		}
 
 		.search-trigger {
-			width: 100%;
+			width: 230px;
+		}
+
+		.landing-nav a:not(.repo-link) {
+			display: none;
+		}
+
+		.nav-toggle {
+			display: flex;
+		}
+	}
+
+	@media (max-width: 767px) {
+		.landing-header {
+			gap: 12px;
+			padding: 0 18px;
+		}
+
+		.landing-header-nav {
+			gap: 16px;
+		}
+
+		.search-trigger {
+			width: auto;
+			padding: 8px;
+			border: none;
+			background: none;
+		}
+
+		.search-label,
+		.search-kbd {
+			display: none;
+		}
+
+		.search-icon {
+			opacity: 1;
+			font-size: 17px;
+			color: var(--text-muted);
+		}
+
+		.landing-nav {
+			display: none;
 		}
 	}
 </style>

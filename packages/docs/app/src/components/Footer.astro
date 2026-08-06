@@ -74,4 +74,17 @@ const base = import.meta.env.BASE_URL;
 			border-bottom: 1px solid var(--hairline-08);
 		}
 	}
+
+	@media (max-width: 767px) {
+		.site-footer__right {
+			flex-wrap: wrap;
+			padding: 10px 18px;
+		}
+
+		.site-footer__link {
+			display: flex;
+			align-items: center;
+			min-height: 48px;
+		}
+	}
 </style>

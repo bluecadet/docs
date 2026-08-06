@@ -78,7 +78,15 @@ const { firstSectionTitle, firstHref, repoUrl } = Astro.props;
 		}
 	}
 
+	/* Tablet keeps the flex row (it already wraps via flex-wrap above, just with less padding);
+	   only mobile stacks into a column. */
 	@media (max-width: 1023px) {
+		.closing-cta {
+			padding: 40px 26px;
+		}
+	}
+
+	@media (max-width: 767px) {
 		.closing-cta {
 			padding: 40px 20px;
 			flex-direction: column;
@@ -88,6 +96,13 @@ const { firstSectionTitle, firstHref, repoUrl } = Astro.props;
 
 		.closing-cta-actions {
 			margin-left: 0;
+		}
+
+		.btn {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			min-height: 48px;
 		}
 	}
 </style>

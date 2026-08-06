@@ -11,6 +11,7 @@ interface RecentEntry {
 interface StartHereEntry {
 	href: string;
 	label: string;
+	description?: string;
 }
 
 interface PagefindResultData {
@@ -31,6 +32,7 @@ interface PagefindModule {
 const RECENT_KEY = "docs:recent-pages";
 const RECENT_CAP = 5;
 const DEBOUNCE_MS = 120;
+const TRY_INSTEAD_CAP = 3;
 
 function escapeHtml(value: string): string {
 	return value
@@ -38,6 +40,26 @@ function escapeHtml(value: string): string {
 		.replace(/</g, "&lt;")
 		.replace(/>/g, "&gt;")
 		.replace(/"/g, "&quot;");
+}
+
+// Escapes regex metacharacters so a raw query term can be dropped into a `RegExp` source without
+// being interpreted as a pattern (avoids both a syntax-error crash on terms like "a(b" and any
+// pathological-backtracking shape, since the escaped term can only ever match itself literally).
+function escapeRegExp(value: string): string {
+	return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+// Wraps every case-insensitive occurrence of any whitespace-separated query term inside `text`
+// with the same `<mark>` markup Pagefind's own excerpt HTML uses, so titles get the same
+// query-match highlight the description line already had. `text` is escaped FIRST, then marks are
+// spliced into the escaped string — the regex only ever matches literal (escaped) query terms, so
+// this can't reintroduce an HTML-injection hole even if `text` or `query` contains `<`/`>`/`&`.
+function highlightMatches(text: string, query: string): string {
+	const escaped = escapeHtml(text);
+	const terms = Array.from(new Set(query.trim().split(/\s+/).filter(Boolean).map(escapeRegExp)));
+	if (terms.length === 0) return escaped;
+	const pattern = new RegExp(`(${terms.join("|")})`, "gi");
+	return escaped.replace(pattern, "<mark>$1</mark>");
 }
 
 function readJson<T>(elementId: string, fallback: T): T {
@@ -79,6 +101,7 @@ export function initSearchModal(): void {
 	const icon = document.querySelector<HTMLElement>("[data-search-icon]");
 	const status = document.querySelector<HTMLElement>("[data-search-status]");
 	const hints = document.querySelector<HTMLElement>("[data-search-hints]");
+	const cancelButton = document.querySelector<HTMLElement>("[data-search-cancel]");
 	if (!dialog || !input || !body || !icon || !status || !hints) return;
 
 	const startHere = readJson<StartHereEntry[]>("search-start-here-data", []);
@@ -112,23 +135,42 @@ export function initSearchModal(): void {
 	function setHintsIndexing(indexing: boolean): void {
 		hints.classList.toggle("is-indexing", indexing);
 		hints.innerHTML = indexing
-			? `<span>▞ indexing…</span>`
+			? "<span>▞ indexing…</span>"
 			: `<span class="kbd-hint"><kbd>↑↓</kbd> navigate</span>` +
 				`<span class="kbd-hint"><kbd>↵</kbd> open</span>` +
 				`<span class="kbd-hint"><kbd>esc</kbd> close</span>`;
 	}
 
-	function rowHtml(item: { href: string; title: string; description?: string; icon: string }, id: string): string {
+	// `description` is plain text (escaped here) — curated copy from nav frontmatter or a recent
+	// entry's title. `descriptionHtml` is pre-sanitized HTML (Pagefind's own excerpt, which already
+	// contains its `<mark>` matches) and is trusted as-is. `query`, when given, highlights matches
+	// inside the (escaped) title the same way Pagefind highlights its excerpts.
+	function rowHtml(
+		item: {
+			href: string;
+			title: string;
+			description?: string;
+			descriptionHtml?: string;
+			icon: string;
+			query?: string;
+		},
+		id: string,
+	): string {
+		const titleHtml = item.query
+			? highlightMatches(item.title, item.query)
+			: escapeHtml(item.title);
+		const descHtml =
+			item.descriptionHtml ?? (item.description ? escapeHtml(item.description) : undefined);
 		return (
 			`<a class="search-row" id="${id}" role="option" data-href="${escapeHtml(item.href)}" ` +
 			`data-title="${escapeHtml(item.title)}" href="${escapeHtml(item.href)}">` +
 			`<span class="search-row__bullet" aria-hidden="true">${item.icon}</span>` +
 			`<span class="search-row__text">` +
-			`<span class="search-row__title">${escapeHtml(item.title)}</span>` +
-			(item.description ? `<span class="search-row__desc">${item.description}</span>` : "") +
-			`</span>` +
+			`<span class="search-row__title">${titleHtml}</span>` +
+			(descHtml ? `<span class="search-row__desc">${descHtml}</span>` : "") +
+			"</span>" +
 			`<span class="search-row__enter" aria-hidden="true">↵</span>` +
-			`</a>`
+			"</a>"
 		);
 	}
 
@@ -181,7 +223,10 @@ export function initSearchModal(): void {
 			rowHtml({ href: entry.href, title: entry.title, icon: "↩" }, `search-option-${idCounter++}`),
 		);
 		const startHereRows = startHere.map((entry) =>
-			rowHtml({ href: entry.href, title: entry.label, icon: "▸" }, `search-option-${idCounter++}`),
+			rowHtml(
+				{ href: entry.href, title: entry.label, description: entry.description, icon: "▸" },
+				`search-option-${idCounter++}`,
+			),
 		);
 
 		const html = groupHtml("RECENT", recentRows) + groupHtml("START HERE", startHereRows);
@@ -208,7 +253,11 @@ export function initSearchModal(): void {
 		clearRows();
 	}
 
-	function renderResultsState(grouped: Map<string, { href: string; title: string; description: string }[]>, total: number): void {
+	function renderResultsState(
+		grouped: Map<string, { href: string; title: string; description: string }[]>,
+		total: number,
+		query: string,
+	): void {
 		setIcon(false);
 		setStatus(`${total} result${total === 1 ? "" : "s"}`);
 		setHintsIndexing(false);
@@ -218,7 +267,13 @@ export function initSearchModal(): void {
 		for (const [label, items] of grouped) {
 			const itemsHtml = items.map((item) =>
 				rowHtml(
-					{ href: item.href, title: item.title, description: item.description, icon: "▸" },
+					{
+						href: item.href,
+						title: item.title,
+						descriptionHtml: item.description,
+						icon: "▸",
+						query,
+					},
 					`search-option-${idCounter++}`,
 				),
 			);
@@ -232,6 +287,16 @@ export function initSearchModal(): void {
 		setIcon(true);
 		setStatus("0 results", true);
 		setHintsIndexing(false);
+
+		let idCounter = 0;
+		const tryInsteadRows = startHere
+			.slice(0, TRY_INSTEAD_CAP)
+			.map((entry) =>
+				rowHtml(
+					{ href: entry.href, title: entry.label, description: entry.description, icon: "▸" },
+					`search-option-${idCounter++}`,
+				),
+			);
 
 		const pills: string[] = [];
 		if (repoUrl) {
@@ -247,9 +312,10 @@ export function initSearchModal(): void {
 			`<div class="search-callout">` +
 			`<span class="search-callout__label">Not found</span>` +
 			`No matches for “${escapeHtml(query)}”. Try a different term, or browse a section from the sidebar.` +
-			`</div>` +
+			"</div>" +
+			groupHtml("TRY INSTEAD", tryInsteadRows) +
 			(pills.length > 0 ? `<div class="search-pills">${pills.join("")}</div>` : "");
-		clearRows();
+		afterRender();
 	}
 
 	function renderDevNoticeState(): void {
@@ -259,8 +325,8 @@ export function initSearchModal(): void {
 		body.innerHTML =
 			`<div class="search-callout">` +
 			`<span class="search-callout__label">Not found</span>` +
-			`Search index is built at build time — run a production build to enable search.` +
-			`</div>`;
+			"Search index is built at build time — run a production build to enable search." +
+			"</div>";
 		clearRows();
 	}
 
@@ -329,7 +395,7 @@ export function initSearchModal(): void {
 		}
 
 		const grouped = groupResultsByTopSegment(data);
-		renderResultsState(grouped, data.length);
+		renderResultsState(grouped, data.length, query);
 	}
 
 	function onInput(): void {
@@ -382,6 +448,10 @@ export function initSearchModal(): void {
 	dialog.addEventListener("click", (event) => {
 		if (event.target === dialog) dialog.close();
 	});
+
+	// Mobile full-screen variant's "cancel" button — replaces the desktop "esc close" hint, since
+	// the footer's kbd hints are hidden on touch (see SearchModal.astro's mobile media query).
+	cancelButton?.addEventListener("click", () => dialog.close());
 
 	dialog.addEventListener("close", () => {
 		lastTrigger?.focus();

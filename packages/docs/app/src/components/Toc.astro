@@ -1,8 +1,15 @@
 ---
-// Right-hand "on this page" rail (desktop/wide only — tablet/mobile drop it, see BaseLayout).
-// Scroll-spy is the one bit of real interactivity this component owns; everything else here is
-// static markup. The 1920 "updated for / edit this page" metadata and "related" links blocks are
-// deliberately omitted: no data source for either.
+// "On this page" — the per-page H2 list. This is the ONLY place headings appear in navigation
+// (the sidebar lists pages, not headings).
+//
+// Two variants, deliberately mounted in different places:
+//   `aside`      — the right-hand rail column, desktop/wide only. Mounted by BaseLayout.astro as a
+//                  sibling of the content column. Sticky, scrolls independently, scroll-spied.
+//   `disclosure` — a native <details> for tablet/mobile. Mounted INSIDE the article content by the
+//                  doc page template so it sits in the article flow rather than above the
+//                  breadcrumb. No JS: <details>/<summary> is the whole interaction.
+// The 1920 "updated for / edit this page" metadata and "related" links blocks are deliberately
+// omitted: no data source for either.
 interface Heading {
 	depth: number;
 	slug: string;
@@ -11,32 +18,80 @@ interface Heading {
 
 interface Props {
 	headings: Heading[];
+	variant: "aside" | "disclosure";
 }
 
-const { headings } = Astro.props;
+const { headings, variant } = Astro.props;
 const sections = headings.filter((heading) => heading.depth === 2);
 ---
 
 {
-	sections.length > 0 && (
-		<aside class="toc-aside" aria-label="Table of contents">
-			<div class="toc-aside__label">on this page</div>
-			<nav class="toc-aside__rail">
-				{sections.map((section, index) => (
-					<a class="toc-aside__link" class:list={{ "is-active": index === 0 }} href={`#${section.slug}`}>
-						{section.text}
-					</a>
-				))}
-			</nav>
-		</aside>
-	)
+	sections.length > 0 &&
+		(variant === "aside" ? (
+			<div class="toc-rail">
+				<aside class="toc-aside" aria-label="Table of contents">
+					<div class="toc-aside__label">on this page</div>
+					<nav class="toc-aside__links">
+						{sections.map((section, index) => (
+							<a
+								class="toc-aside__link"
+								class:list={{ "is-active": index === 0 }}
+								href={`#${section.slug}`}
+							>
+								{section.text}
+							</a>
+						))}
+					</nav>
+				</aside>
+			</div>
+		) : (
+			<details class="toc-disclosure">
+				<summary class="toc-disclosure__summary">
+					on this page
+					<span class="toc-disclosure__caret" aria-hidden="true">
+						▾
+					</span>
+				</summary>
+				<div class="toc-disclosure__links">
+					{sections.map((section) => (
+						<a class="toc-disclosure__link" href={`#${section.slug}`}>
+							{section.text}
+						</a>
+					))}
+				</div>
+			</details>
+		))
 }
 
 <style>
-	.toc-aside {
+	/* The rail is the grid cell — it owns the hairline so the border runs the full page height;
+	   the aside inside it is what sticks and scrolls. */
+	.toc-rail {
 		border-left: 1px solid var(--hairline-08);
+		min-width: 0;
+	}
+
+	.toc-aside {
+		position: sticky;
+		top: var(--header-height);
+		max-height: calc(100vh - var(--header-height));
+		max-height: calc(100dvh - var(--header-height));
+		overflow-y: auto;
+		overscroll-behavior: contain;
+		scrollbar-gutter: stable;
+		scrollbar-width: thin;
+		scrollbar-color: var(--hairline-14) transparent;
 		padding: 32px 22px;
 		font-size: 12.5px;
+	}
+
+	.toc-aside::-webkit-scrollbar {
+		width: 6px;
+	}
+
+	.toc-aside::-webkit-scrollbar-thumb {
+		background: var(--hairline-12);
+		border-radius: var(--radius-sm);
 	}
 
 	.toc-aside__label {
@@ -45,7 +100,7 @@ const sections = headings.filter((heading) => heading.depth === 2);
 		margin-bottom: 14px;
 	}
 
-	.toc-aside__rail {
+	.toc-aside__links {
 		display: flex;
 		flex-direction: column;
 		gap: 10px;
@@ -68,14 +123,82 @@ const sections = headings.filter((heading) => heading.depth === 2);
 		border-left: 1px solid var(--accent);
 	}
 
+	/* -- <details> disclosure variant (tablet/mobile) --------------------------------------- */
+
+	.toc-disclosure {
+		display: none;
+		border: 1px solid var(--hairline-10);
+		border-radius: var(--radius-md);
+		margin: 0 0 24px;
+		background: var(--white-02);
+	}
+
+	.toc-disclosure__summary {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		min-height: 44px;
+		padding: 0 14px;
+		font: 400 11.5px var(--font-mono);
+		color: var(--text-muted);
+		cursor: pointer;
+		list-style: none;
+	}
+
+	.toc-disclosure__summary::-webkit-details-marker {
+		display: none;
+	}
+
+	.toc-disclosure__caret {
+		margin-left: auto;
+		color: var(--text-dim);
+		font-size: 10px;
+	}
+
+	.toc-disclosure__links {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 2px 20px;
+		padding: 2px 14px 12px;
+		font-size: 13px;
+	}
+
+	.toc-disclosure__link {
+		display: flex;
+		align-items: center;
+		min-height: 40px;
+		color: var(--text-muted);
+	}
+
+	/* Tablet/mobile: the persistent aside column drops (see BaseLayout.astro's .page-main grid)
+	   and the inline disclosure takes over. */
+	@media (max-width: 1023px) {
+		.toc-rail {
+			display: none;
+		}
+
+		.toc-disclosure {
+			display: block;
+		}
+	}
+
+	@media (max-width: 767px) {
+		.toc-disclosure__links {
+			grid-template-columns: 1fr;
+		}
+	}
+
 	@media (min-width: 1920px) {
-		.toc-aside {
+		.toc-rail {
 			border-left: none;
+		}
+
+		.toc-aside {
 			padding: 66px 0 0;
 			font-size: 13px;
 		}
 
-		.toc-aside__rail {
+		.toc-aside__links {
 			gap: 11px;
 		}
 
@@ -87,7 +210,7 @@ const sections = headings.filter((heading) => heading.depth === 2);
 
 <script>
 	// Scroll-spy: highlight the TOC link whose heading is currently nearest the top of the
-	// viewport. Colocated per-instance — safe to run once per page load.
+	// viewport. Runs once per page load (hoisted + bundled by Astro even with two instances).
 	function setupTocScrollSpy() {
 		const asides = document.querySelectorAll<HTMLElement>(".toc-aside");
 		for (const aside of asides) {

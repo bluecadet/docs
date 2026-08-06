@@ -6,18 +6,17 @@
 //
 // Opened by any [data-search-trigger] button (see Header.astro / LandingHeader.astro) or the
 // `/` key. Included once per page from BaseLayout.astro and index.astro.
-import { getNavTree } from "../lib/nav";
+import { firstPageOf, getNavTree } from "../lib/nav";
 
 const repoUrl = process.env.DOCS_REPO_URL;
 
-const { topLevel, groups } = await getNavTree();
-const startHere = [
-	...topLevel.map((item) => ({ label: item.label, href: item.href })),
-	...groups
-		.map((group) => group.items[0])
-		.filter((item): item is NonNullable<typeof item> => Boolean(item))
-		.map((item) => ({ label: item.label, href: item.href })),
-].slice(0, 8);
+// "START HERE" = the entry point of each top-level section, in sidebar order, topped up from the
+// full page list when there are fewer than 8 sections.
+const { nodes, flat } = await getNavTree();
+const entryPoints = nodes.map((node) => firstPageOf(node)).filter((page) => page !== undefined);
+const startHere = [...new Map([...entryPoints, ...flat].map((page) => [page.id, page])).values()]
+	.slice(0, 8)
+	.map((page) => ({ label: page.label, href: page.href, description: page.description }));
 ---
 
 <dialog id="search-modal" class="search-modal" aria-label="Search documentation">
@@ -37,6 +36,7 @@ const startHere = [
 			spellcheck="false"
 		/>
 		<span class="search-modal__status" data-search-status></span>
+		<button type="button" class="search-modal__cancel" data-search-cancel>cancel</button>
 	</div>
 	<div id="search-results" class="search-modal__body" data-search-body role="listbox" aria-label="Search results">
 	</div>
@@ -125,6 +125,15 @@ const startHere = [
 
 	.search-modal__status.is-attention {
 		color: var(--accent-2);
+	}
+
+	.search-modal__cancel {
+		display: none;
+		background: none;
+		border: none;
+		color: var(--text-muted);
+		font: 400 12px var(--font-mono);
+		cursor: pointer;
 	}
 
 	.search-modal__body {
@@ -229,7 +238,8 @@ const startHere = [
 		-webkit-box-orient: vertical;
 	}
 
-	:global(.search-row__desc mark) {
+	:global(.search-row__desc mark),
+	:global(.search-row__title mark) {
 		color: var(--accent-2);
 		background: var(--amber-tint-14);
 		border-radius: 2px;
@@ -313,6 +323,8 @@ const startHere = [
 	}
 
 	:global(.search-skeleton-bar) {
+		display: block;
+		width: 75%;
 		height: 10px;
 		border-radius: 2px;
 		background: var(--white-07);
@@ -344,5 +356,62 @@ const startHere = [
 		padding: 24px 18px;
 		font-size: 13px;
 		color: var(--text-dim);
+	}
+
+	/* -- Mobile: full-screen view instead of a centered modal ------------------------------- */
+	@media (max-width: 767px) {
+		.search-modal {
+			width: 100vw;
+			max-width: 100vw;
+			height: 100vh;
+			max-height: 100vh;
+			border: none;
+			border-radius: 0;
+			box-shadow: none;
+		}
+
+		.search-modal::backdrop {
+			backdrop-filter: none;
+		}
+
+		.search-modal__header {
+			flex-wrap: wrap;
+			height: auto;
+			min-height: 56px;
+			padding: 10px 14px 10px 18px;
+			gap: 8px 10px;
+		}
+
+		.search-modal__icon {
+			order: 1;
+		}
+
+		.search-modal__input {
+			order: 2;
+			flex: 1 1 auto;
+			min-width: 0;
+		}
+
+		.search-modal__cancel {
+			order: 3;
+			display: block;
+			min-height: 44px;
+			padding: 0 4px;
+		}
+
+		.search-modal__status {
+			order: 4;
+			flex-basis: 100%;
+			display: flex;
+			justify-content: space-between;
+			padding-top: 8px;
+			border-top: 1px solid var(--hairline-06);
+		}
+
+		/* Kbd hints (↑↓ / ↵ / esc) don't apply to touch input — "cancel" already covers dismissal,
+		   and results are opened by tapping. */
+		.search-modal__footer {
+			display: none;
+		}
 	}
 </style>

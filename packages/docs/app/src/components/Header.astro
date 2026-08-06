@@ -2,6 +2,12 @@
 // Doc-page header: logo cell aligned with the sidebar rail, search trigger pill (visual only —
 // a later agent wires the modal behind data-search-trigger), and a github link when configured.
 // No version chip: no data source for one.
+//
+// Tablet (<=1023px) collapses this from a grid (rail-aligned brand column + content column) into
+// a single flex row — the left index/sidebar rail disappears at that width, so there's no longer
+// a column to align with — and adds a hamburger button opening NavSheet.astro. Mobile (<=767px)
+// further hides the repo link and reduces the search trigger to an icon (full search UI lives in
+// NavSheet's own search trigger, and in the mobile full-screen search view itself).
 const siteTitle = process.env.DOCS_TITLE ?? "docs";
 const repoUrl = process.env.DOCS_REPO_URL;
 const base = import.meta.env.BASE_URL;
@@ -26,15 +32,32 @@ const base = import.meta.env.BASE_URL;
 				</nav>
 			)
 		}
+		<button
+			type="button"
+			class="nav-toggle"
+			data-nav-sheet-trigger
+			aria-label="Open navigation"
+			aria-haspopup="dialog"
+		>
+			<span class="nav-toggle__bar" />
+			<span class="nav-toggle__bar" />
+			<span class="nav-toggle__bar" />
+		</button>
 	</div>
 </header>
 
 <style>
+	/* Sticky at every breakpoint: the sidebar and TOC rails stick to `top: var(--header-height)`
+	   (see SidebarNav/Toc), so the header has to stay put for them to tuck under it. */
 	.site-header {
+		position: sticky;
+		top: 0;
+		z-index: 20;
 		display: grid;
 		grid-template-columns: var(--rail-width) 1fr;
-		height: 58px;
+		height: var(--header-height);
 		border-bottom: 1px solid var(--hairline-08);
+		background: var(--bg);
 	}
 
 	.site-header__brand {
@@ -113,11 +136,36 @@ const base = import.meta.env.BASE_URL;
 		color: color-mix(in srgb, var(--accent-2) 80%, white);
 	}
 
-	@media (min-width: 1920px) {
-		.site-header {
-			height: 62px;
-		}
+	.nav-toggle {
+		display: none;
+		flex-direction: column;
+		align-items: flex-end;
+		justify-content: center;
+		gap: 4px;
+		min-height: 44px;
+		min-width: 24px;
+		padding: 0;
+		background: none;
+		border: none;
+		cursor: pointer;
+	}
 
+	.nav-toggle__bar {
+		display: block;
+		height: 1.5px;
+		background: var(--text-muted);
+	}
+
+	.nav-toggle__bar:nth-child(1),
+	.nav-toggle__bar:nth-child(2) {
+		width: 20px;
+	}
+
+	.nav-toggle__bar:nth-child(3) {
+		width: 13px;
+	}
+
+	@media (min-width: 1920px) {
 		.site-header__brand {
 			padding: 0 36px;
 		}
@@ -138,6 +186,72 @@ const base = import.meta.env.BASE_URL;
 
 		.site-header__nav {
 			font-size: 13.5px;
+		}
+	}
+
+	/* Tablet: the left rail column is gone (SidebarNav narrows in place, but nothing needs to
+	   align with it up here), so the header becomes a plain flex row: logo, search, repo link,
+	   hamburger. */
+	@media (max-width: 1023px) {
+		.site-header {
+			display: flex;
+			align-items: center;
+			gap: 18px;
+			padding: 0 26px;
+		}
+
+		.site-header__brand {
+			padding: 0;
+			border-right: none;
+		}
+
+		.site-header__right {
+			margin-left: auto;
+			padding: 0;
+			gap: 20px;
+		}
+
+		.search-trigger {
+			width: 220px;
+		}
+
+		.nav-toggle {
+			display: flex;
+		}
+	}
+
+	@media (max-width: 767px) {
+		.site-header {
+			gap: 12px;
+			padding: 0 18px;
+		}
+
+		.site-header__right {
+			gap: 16px;
+		}
+
+		.search-trigger {
+			width: auto;
+			padding: 8px;
+			border: none;
+			background: none;
+		}
+
+		.search-trigger__label,
+		.search-trigger__kbd {
+			display: none;
+		}
+
+		.search-trigger__icon {
+			opacity: 1;
+			font-size: 17px;
+			color: var(--text-muted);
+		}
+
+		/* Repo link moves to NavSheet's footer + the doc-page Footer at this width; no room for it
+		   in a 52px header alongside the search icon and hamburger. */
+		.site-header__nav {
+			display: none;
 		}
 	}
 </style>

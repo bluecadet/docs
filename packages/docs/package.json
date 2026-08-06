@@ -23,6 +23,11 @@
   "bin": {
     "docs": "./dist/cli.js"
   },
+  "exports": {
+    ".": "./dist/cli.js",
+    "./package.json": "./package.json",
+    "./components/*": "./app/src/components/*"
+  },
   "files": [
     "dist",
     "app/astro.config.mjs",

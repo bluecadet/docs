@@ -1,8 +1,17 @@
 ---
-// Doc-page chrome: header / sidebar / main / TOC / footer grid. Prose styling inside
-// <slot /> (the rendered article) belongs to another pass — this layout only places the grid.
+// The one page shell — used by every route (doc pages, landing, 404) so the header/rail/footer
+// columns are derived from the same custom properties everywhere and can't drift.
+//
+// Structure: a `min-height: 100dvh` grid of `auto 1fr auto` rows, so the body row always grows to
+// fill a short page (no dead space under the footer) and the sidebar's hairline runs to the bottom.
+// `--rail-width` and `--header-height` are declared here, once, and consumed by Header/Footer/
+// SidebarNav/Toc and by the landing's own header/footer variants.
+//
+// Pages that need a different header/footer (landing, 404) pass them through the named slots;
+// doc pages get the defaults.
 import "../styles/index.css";
 import Header from "../components/Header.astro";
+import NavSheet from "../components/NavSheet.astro";
 import SearchModal from "../components/SearchModal.astro";
 import SidebarNav from "../components/SidebarNav.astro";
 import Toc from "../components/Toc.astro";
@@ -17,14 +26,36 @@ interface Heading {
 interface Props {
 	title: string;
 	description?: string;
+	/** Article headings — renders the right-hand TOC column when there are any H2s. */
 	headings?: Heading[];
+	/** Active nav entry id. */
 	currentId?: string;
+	/**
+	 * `article` = doc-page main (padded content column + TOC rail).
+	 * `full` = full-bleed main, for pages that own their own section padding (landing, 404).
+	 */
+	main?: "article" | "full";
+	/** Append " — <site title>" to the document title. */
+	appendSiteTitle?: boolean;
+	robots?: string;
 }
 
-const { title, description, headings = [], currentId } = Astro.props;
+const {
+	title,
+	description,
+	headings = [],
+	currentId,
+	main = "article",
+	appendSiteTitle = true,
+	robots,
+} = Astro.props;
+
 const siteTitle = process.env.DOCS_TITLE ?? "docs";
-const pageTitle = title ? `${title} — ${siteTitle}` : siteTitle;
+const pageTitle = appendSiteTitle && title ? `${title} — ${siteTitle}` : title || siteTitle;
 const base = import.meta.env.BASE_URL;
+
+// Only reserve the TOC column when there is actually something to put in it.
+const hasToc = main === "article" && headings.some((heading) => heading.depth === 2);
 ---
 
 <html lang="en">
@@ -33,34 +64,44 @@ const base = import.meta.env.BASE_URL;
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<title>{pageTitle}</title>
 		{description && <meta name="description" content={description} />}
+		{robots && <meta name="robots" content={robots} />}
 		<link rel="icon" href={`${base}favicon.svg`} type="image/svg+xml" />
 	</head>
 	<body>
 		<div class="page">
-			<Header />
+			<slot name="header"><Header /></slot>
 			<div class="page-body">
-				<SidebarNav currentId={currentId} headings={headings} />
-				<main class="page-main">
+				<SidebarNav currentId={currentId} />
+				<main
+					class="page-main"
+					class:list={{ "page-main--full": main === "full", "page-main--toc": hasToc }}
+				>
 					<div class="page-main-content">
 						<slot />
 					</div>
-					<Toc headings={headings} />
+					{hasToc && <Toc variant="aside" headings={headings} />}
 				</main>
 			</div>
-			<Footer />
+			<slot name="footer"><Footer /></slot>
 		</div>
+		<NavSheet currentId={currentId} />
 		<SearchModal />
 	</body>
 </html>
 
 <style>
 	.page {
-		/* Left rail width, shared by header/sidebar/footer so their columns stay aligned.
-		   250px desktop, 300px at 1920 (see breakpoint below). */
+		/* Left rail width and header height, shared by header/sidebar/TOC/footer so their columns
+		   and sticky offsets stay aligned on every route. */
 		--rail-width: 250px;
+		--header-height: 58px;
+		--toc-width: 220px;
 		display: grid;
 		grid-template-rows: auto 1fr auto;
+		/* dvh keeps mobile browsers' collapsing toolbars from over-sizing the shell; the vh line
+		   above it is the fallback for engines without dvh. */
 		min-height: 100vh;
+		min-height: 100dvh;
 	}
 
 	.page-body {
@@ -71,8 +112,16 @@ const base = import.meta.env.BASE_URL;
 
 	.page-main {
 		display: grid;
-		grid-template-columns: 1fr 220px;
+		grid-template-columns: 1fr;
 		min-width: 0;
+	}
+
+	.page-main--toc {
+		grid-template-columns: 1fr var(--toc-width);
+	}
+
+	.page-main--full {
+		display: block;
 	}
 
 	.page-main-content {
@@ -80,38 +129,63 @@ const base = import.meta.env.BASE_URL;
 		padding: 32px 52px 52px;
 	}
 
-	/* Mobile/tablet: below ~1024px, drop the sidebar/TOC columns entirely. A later pass owns
-	   real mobile nav (hamburger sheet, breadcrumb-pill trigger, <details> TOC); this is a
-	   placeholder so content doesn't visually break in the meantime. */
+	.page-main--full .page-main-content {
+		padding: 0;
+	}
+
+	/* Tablet: rail narrows to 212px (SidebarNav stays visible); the TOC column drops in favor of
+	   the inline <details> disclosure the doc page renders inside its own content column. */
 	@media (max-width: 1023px) {
-		.page-body {
-			grid-template-columns: 1fr;
+		.page {
+			--rail-width: 212px;
+			--header-height: 56px;
 		}
 
-		.page-main {
+		.page-main--toc {
 			grid-template-columns: 1fr;
 		}
 
 		.page-main-content {
-			padding: 24px 20px 40px;
+			padding: 28px 36px 44px;
+		}
+	}
+
+	/* Mobile: no persistent sidebar at all — SidebarNav hides itself; the hamburger's NavSheet and
+	   the breadcrumb pill (Breadcrumb.astro) take over wayfinding. */
+	@media (max-width: 767px) {
+		.page {
+			--header-height: 52px;
 		}
 
-		.page-body :global(.sidebar-nav),
-		.page-main :global(.toc-aside) {
-			display: none;
+		.page-body {
+			grid-template-columns: 1fr;
+		}
+
+		.page-main-content {
+			padding: 26px 18px 40px;
 		}
 	}
 
 	@media (min-width: 1920px) {
 		.page {
 			--rail-width: 300px;
+			--header-height: 62px;
+			--toc-width: 300px;
 		}
 
 		.page-main {
-			grid-template-columns: minmax(0, 760px) 300px;
+			grid-template-columns: minmax(0, 760px);
 			gap: 64px;
 			justify-content: center;
 			padding: 40px 0 64px;
+		}
+
+		.page-main--toc {
+			grid-template-columns: minmax(0, 760px) var(--toc-width);
+		}
+
+		.page-main--full {
+			padding: 0;
 		}
 
 		.page-main-content {

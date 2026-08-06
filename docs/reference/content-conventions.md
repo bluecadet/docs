@@ -40,6 +40,62 @@ Checked in order, first match wins:
 [MDX passthrough](#mdx-passthrough) below) and title extraction is a best-effort regex rather than
 a full markdown parse.
 
+## Frontmatter
+
+Two fields are read by the site, both optional:
+
+| Field | Effect |
+| --- | --- |
+| `title` | The page title. If omitted, derived per [Title derivation](#title-derivation) above. |
+| `description` | Rendered as the page's `<meta name="description">`. On `docs/index.mdx` specifically, it's also the landing page's hero lead paragraph, under the `title`-driven headline. |
+
+No other frontmatter fields are read — the content schema is just `{ title, description? }`.
+
+Sidebar navigation and full-text search — see [Search](/reference/search/) — are both generated
+from the published file tree, not from frontmatter; there's no separate nav or search config.
+
+## Markdown features
+
+Beyond standard GitHub-flavored markdown, the site renders a few things specially.
+
+### Alerts
+
+GitHub-style alert blockquotes render as designed callouts:
+
+```md
+> [!NOTE]
+> Neutral, informational.
+
+> [!TIP]
+> Neutral, a suggestion.
+
+> [!IMPORTANT]
+> Attention — something the reader needs to know.
+
+> [!WARNING]
+> Attention — something that could go wrong.
+
+> [!CAUTION]
+> Attention — something that will break.
+```
+
+`NOTE` and `TIP` render as a neutral callout labeled with the keyword itself. `IMPORTANT`,
+`WARNING`, and `CAUTION` all render as a single attention-styled callout labeled "HEADS UP" — the
+design system reserves its amber accent for attention (what changed, what's required, what will
+break), so all three attention-level keywords share that one treatment rather than three separate
+colors. A blockquote without a `[!KEYWORD]` marker renders as a plain quote.
+
+### Code blocks
+
+Fenced code blocks with a language tag (` ```sh `, ` ```ts `, etc.) get a header bar showing that
+language and a copy button — no configuration needed, this applies automatically to every fenced
+block.
+
+### Tables
+
+Standard markdown tables render in a bordered, horizontally-scrollable container. No extra syntax
+required.
+
 ## Link and asset rewriting
 
 Every published `.md` file (not `.mdx` — see below) is parsed into a markdown AST and rewritten
