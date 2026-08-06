@@ -1,10 +1,12 @@
 ---
-// Semantic skeleton only. Plumbing for the design pass to style later — no component colors,
-// no component fonts here; global.css/tokens.css/fonts.css establish the base only.
+// Doc-page chrome: header / sidebar / main / TOC / footer grid. Prose styling inside
+// <slot /> (the rendered article) belongs to another pass — this layout only places the grid.
 import "../styles/index.css";
 import Header from "../components/Header.astro";
+import SearchModal from "../components/SearchModal.astro";
 import SidebarNav from "../components/SidebarNav.astro";
 import Toc from "../components/Toc.astro";
+import Footer from "../components/Footer.astro";
 
 interface Heading {
 	depth: number;
@@ -16,10 +18,11 @@ interface Props {
 	title: string;
 	description?: string;
 	headings?: Heading[];
+	currentId?: string;
 }
 
-const { title, description, headings = [] } = Astro.props;
-const siteTitle = process.env.DOCS_TITLE ?? "Docs";
+const { title, description, headings = [], currentId } = Astro.props;
+const siteTitle = process.env.DOCS_TITLE ?? "docs";
 const pageTitle = title ? `${title} — ${siteTitle}` : siteTitle;
 const base = import.meta.env.BASE_URL;
 ---
@@ -33,55 +36,86 @@ const base = import.meta.env.BASE_URL;
 		<link rel="icon" href={`${base}favicon.svg`} type="image/svg+xml" />
 	</head>
 	<body>
-		<div class="page-grid">
-			<div class="page-grid-header">
-				<Header />
+		<div class="page">
+			<Header />
+			<div class="page-body">
+				<SidebarNav currentId={currentId} headings={headings} />
+				<main class="page-main">
+					<div class="page-main-content">
+						<slot />
+					</div>
+					<Toc headings={headings} />
+				</main>
 			</div>
-			<div class="page-grid-sidebar">
-				<SidebarNav />
-			</div>
-			<main class="page-grid-main">
-				<slot />
-			</main>
-			<div class="page-grid-toc">
-				<Toc headings={headings} />
-			</div>
-			<footer class="page-grid-footer">
-				<slot name="footer" />
-			</footer>
+			<Footer />
 		</div>
+		<SearchModal />
 	</body>
 </html>
 
 <style>
-	.page-grid {
+	.page {
+		/* Left rail width, shared by header/sidebar/footer so their columns stay aligned.
+		   250px desktop, 300px at 1920 (see breakpoint below). */
+		--rail-width: 250px;
 		display: grid;
-		grid-template-areas:
-			"header header header"
-			"sidebar main toc"
-			"footer footer footer";
-		grid-template-columns: minmax(0, 16rem) minmax(0, 1fr) minmax(0, 16rem);
 		grid-template-rows: auto 1fr auto;
 		min-height: 100vh;
 	}
 
-	.page-grid-header {
-		grid-area: header;
+	.page-body {
+		display: grid;
+		grid-template-columns: var(--rail-width) 1fr;
+		min-width: 0;
 	}
 
-	.page-grid-sidebar {
-		grid-area: sidebar;
+	.page-main {
+		display: grid;
+		grid-template-columns: 1fr 220px;
+		min-width: 0;
 	}
 
-	.page-grid-main {
-		grid-area: main;
+	.page-main-content {
+		min-width: 0;
+		padding: 32px 52px 52px;
 	}
 
-	.page-grid-toc {
-		grid-area: toc;
+	/* Mobile/tablet: below ~1024px, drop the sidebar/TOC columns entirely. A later pass owns
+	   real mobile nav (hamburger sheet, breadcrumb-pill trigger, <details> TOC); this is a
+	   placeholder so content doesn't visually break in the meantime. */
+	@media (max-width: 1023px) {
+		.page-body {
+			grid-template-columns: 1fr;
+		}
+
+		.page-main {
+			grid-template-columns: 1fr;
+		}
+
+		.page-main-content {
+			padding: 24px 20px 40px;
+		}
+
+		.page-body :global(.sidebar-nav),
+		.page-main :global(.toc-aside) {
+			display: none;
+		}
 	}
 
-	.page-grid-footer {
-		grid-area: footer;
+	@media (min-width: 1920px) {
+		.page {
+			--rail-width: 300px;
+		}
+
+		.page-main {
+			grid-template-columns: minmax(0, 760px) 300px;
+			gap: 64px;
+			justify-content: center;
+			padding: 40px 0 64px;
+		}
+
+		.page-main-content {
+			padding: 0;
+		}
 	}
 </style>

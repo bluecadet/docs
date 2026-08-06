@@ -1,0 +1,126 @@
+---
+// Landing page — route "/". Self-contained (own header/footer markup) per the landing design
+// variant; does not use BaseLayout/Header/SidebarNav/Toc/Footer, which are a concurrent agent's
+// doc-page namespace. All landing copy is derived from real synced content + frontmatter + env,
+// not the design canvas's fictional "lathe" CLI copy.
+import { getCollection, render } from "astro:content";
+import "../styles/index.css";
+import CtaCards from "../components/landing/CtaCards.astro";
+import ClosingCta from "../components/landing/ClosingCta.astro";
+import IndexRail from "../components/landing/IndexRail.astro";
+import LandingFooter from "../components/landing/LandingFooter.astro";
+import LandingHeader from "../components/landing/LandingHeader.astro";
+import LandingHero from "../components/landing/LandingHero.astro";
+import { getNavSections } from "../components/landing/nav-tree";
+import SearchModal from "../components/SearchModal.astro";
+
+const base = import.meta.env.BASE_URL;
+const siteTitle = process.env.DOCS_TITLE ?? "Docs";
+const repoUrl = process.env.DOCS_REPO_URL;
+
+const entries = await getCollection("docs");
+const indexEntry = entries.find((entry) => entry.id === "index");
+const { Content } = indexEntry
+	? await render(indexEntry)
+	: { Content: undefined };
+
+const sections = await getNavSections();
+const firstSection = sections[0];
+const docsHref = firstSection ? `${base}${firstSection.firstEntry.id}/` : base;
+
+const pageTitle = indexEntry?.data.title ?? siteTitle;
+const pageDescription = indexEntry?.data.description;
+---
+
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>{pageTitle}</title>
+		{pageDescription && <meta name="description" content={pageDescription} />}
+		<link rel="icon" href={`${base}favicon.svg`} type="image/svg+xml" />
+	</head>
+	<body>
+		<div class="landing">
+			<LandingHeader title={siteTitle} docsHref={docsHref} repoUrl={repoUrl} />
+			<div class="landing-body">
+				<IndexRail sections={sections} base={base} note={pageDescription} />
+				<main class="landing-main">
+					<LandingHero title={pageTitle} lead={pageDescription} />
+					{Content && (
+						<article class="prose landing-content">
+							<Content />
+						</article>
+					)}
+					{sections.length > 0 && (
+						<section class="landing-section">
+							<CtaCards sections={sections} base={base} />
+						</section>
+					)}
+					{firstSection && (
+						<ClosingCta
+							firstSectionTitle={firstSection.title}
+							firstHref={docsHref}
+							repoUrl={repoUrl}
+						/>
+					)}
+				</main>
+			</div>
+			<LandingFooter title={siteTitle} docsHref={docsHref} repoUrl={repoUrl} />
+		</div>
+		<SearchModal />
+	</body>
+</html>
+
+<style>
+	.landing {
+		--rail-width: 240px;
+	}
+
+	.landing-body {
+		display: grid;
+		grid-template-columns: var(--rail-width) 1fr;
+		align-items: start;
+	}
+
+	.landing-main {
+		min-width: 0;
+	}
+
+	.landing-content {
+		padding: 44px 56px;
+		max-width: 880px;
+	}
+
+	.landing-section {
+		padding: 0 56px 56px;
+	}
+
+	@media (min-width: 1920px) {
+		.landing {
+			--rail-width: 300px;
+		}
+
+		.landing-content {
+			padding: 48px 80px;
+		}
+
+		.landing-section {
+			padding: 0 80px 64px;
+		}
+	}
+
+	@media (max-width: 1023px) {
+		.landing-body {
+			grid-template-columns: 1fr;
+		}
+
+		.landing-content {
+			padding: 32px 20px;
+		}
+
+		.landing-section {
+			padding: 0 20px 40px;
+		}
+	}
+</style>

@@ -1,0 +1,88 @@
+---
+// Landing-only hero: index entry's title in the hero H1 treatment, description as the lead
+// paragraph. Eyebrow chips, the install-command chip, and 1920px marginalia are skipped — the
+// design's copy for all three is lathe-specific CLI marketing with no equivalent real data.
+interface Props {
+	title: string;
+	lead?: string;
+}
+
+const { title, lead } = Astro.props;
+
+// Only split into the design's two-clause hero treatment (plain line + italic accent line) when
+// the title has a natural clause break; a bare title (the common case for real doc collections)
+// renders as a single plain line rather than faking one.
+const splitAt = title.indexOf(", ");
+const firstClause = splitAt === -1 ? title : title.slice(0, splitAt + 1);
+const secondClause = splitAt === -1 ? null : title.slice(splitAt + 2);
+---
+
+<div class="hero">
+	<h1>
+		{firstClause}
+		{secondClause && (
+			<>
+				<br />
+				<span class="hero-accent">{secondClause}</span>
+			</>
+		)}
+	</h1>
+	{lead && <p class="hero-lead">{lead}</p>}
+</div>
+
+<style>
+	.hero {
+		padding: 76px 56px 0;
+	}
+
+	h1 {
+		margin: 0;
+		font: 300 64px/1.05 var(--font-serif);
+		max-width: 840px;
+		letter-spacing: -0.02em;
+		color: var(--ink);
+	}
+
+	.hero-accent {
+		font-style: italic;
+		color: var(--accent);
+	}
+
+	.hero-lead {
+		margin: 26px 0 0;
+		max-width: 640px;
+		color: var(--text-muted);
+		font-size: 17px;
+		text-wrap: pretty;
+	}
+
+	@media (min-width: 1920px) {
+		.hero {
+			padding: 96px 80px 0;
+			max-width: 880px;
+		}
+
+		h1 {
+			font-size: 76px;
+			line-height: 1.03;
+			letter-spacing: -0.025em;
+			max-width: none;
+		}
+
+		.hero-lead {
+			margin-top: 28px;
+			font-size: 17px;
+		}
+	}
+
+	@media (max-width: 1023px) {
+		.hero {
+			padding: 44px 20px 0;
+		}
+
+		h1 {
+			font-size: 40px;
+			max-width: none;
+		}
+	}
+</style>

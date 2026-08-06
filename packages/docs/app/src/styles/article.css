@@ -1,0 +1,359 @@
+/*
+ * Article typography — everything inside the rendered markdown content (`<article class="prose">`,
+ * owned by a concurrent agent; this file only ever reaches inside that scope).
+ *
+ * Desktop values only. A later agent handles responsive behavior, including the mobile
+ * card-style degradation of `.table-wrap`/`table` — do not add breakpoints here.
+ */
+
+.prose {
+	color: var(--text-body);
+	font-size: 14.5px;
+	line-height: 1.7;
+}
+
+/* ---- Headings --------------------------------------------------------- */
+
+.prose h1 {
+	margin: 0 0 10px;
+	font: 400 38px/1.15 var(--font-serif);
+	letter-spacing: -0.01em;
+	color: var(--ink);
+}
+
+/* The paragraph immediately following the H1 reads as the page's lead/subtitle. Content markdown
+   never contains the H1 itself (the sync step lifts it into frontmatter — see
+   packages/docs/src/links.ts), so this targets whatever heading the article shell renders. */
+.prose h1 + p,
+.prose .lead {
+	margin: 0 0 24px;
+	font-size: 16px;
+	color: var(--text-muted);
+}
+
+.prose h2 {
+	margin: 32px 0 4px;
+	padding-bottom: 9px;
+	font: 400 24px/1.2 var(--font-serif);
+	color: var(--ink);
+	border-bottom: 1px solid var(--hairline-08);
+}
+
+.prose h2::before {
+	content: "#";
+	margin-right: 9px;
+	font-size: 20px;
+	color: var(--accent);
+}
+
+.prose > h2:first-child {
+	margin-top: 0;
+}
+
+.prose h3 {
+	margin: 28px 0 8px;
+	font: 500 20px var(--font-serif);
+	color: var(--ink);
+}
+
+.prose h4 {
+	margin: 22px 0 6px;
+	font: 500 14px var(--font-mono);
+	letter-spacing: 0.04em;
+	color: var(--text-muted);
+	text-transform: uppercase;
+}
+
+/* ---- Body text --------------------------------------------------------- */
+
+.prose p {
+	margin: 14px 0;
+	color: var(--text-body);
+}
+
+.prose strong {
+	color: var(--ink);
+	font-weight: 600;
+}
+
+.prose ul,
+.prose ol {
+	margin: 14px 0;
+	padding-left: 22px;
+	color: var(--text-body);
+	line-height: 1.7;
+}
+
+.prose li + li {
+	margin-top: 6px;
+}
+
+.prose li::marker {
+	color: var(--text-dim);
+}
+
+.prose blockquote {
+	margin: 16px 0;
+	padding: 2px 0 2px 14px;
+	border-left: 2px solid var(--hairline-14);
+	color: var(--text-muted);
+	font-style: normal;
+}
+
+.prose blockquote > :first-child {
+	margin-top: 0;
+}
+
+.prose blockquote > :last-child {
+	margin-bottom: 0;
+}
+
+.prose hr {
+	margin: 32px 0;
+	border: 0;
+	border-top: 1px solid var(--hairline-10);
+}
+
+.prose del {
+	color: var(--text-dim);
+	text-decoration: line-through;
+}
+
+/* ---- Links --------------------------------------------------------------
+   Inline links inherit the surrounding text color at rest (no default blue, matching every link
+   treatment in the source design) and pick up sage + an underline on hover — the one `:hover`
+   color used everywhere in the canvas (pagination, sidebar, index-rail links all hover to sage). */
+
+.prose a {
+	color: inherit;
+	text-decoration: underline;
+	text-decoration-color: var(--hairline-14);
+	text-underline-offset: 2px;
+	transition:
+		color 0.15s ease,
+		text-decoration-color 0.15s ease;
+}
+
+.prose a:hover {
+	color: var(--accent);
+	text-decoration-color: currentColor;
+}
+
+/* ---- Inline code, kbd, badges ------------------------------------------ */
+
+.prose code {
+	font: 400 12.5px var(--font-mono);
+	background: var(--white-07);
+	border-radius: var(--radius-sm);
+	padding: 2px 5px;
+}
+
+.prose pre code {
+	background: none;
+	padding: 0;
+	border-radius: 0;
+	font-size: inherit;
+	color: inherit;
+}
+
+.prose kbd {
+	display: inline-block;
+	font: 400 11px var(--font-mono);
+	color: var(--text-muted);
+	border: 1px solid var(--hairline-14);
+	border-radius: var(--radius-sm);
+	padding: 0 5px;
+}
+
+.prose .badge {
+	display: inline-block;
+	font: 500 9.5px var(--font-mono);
+	letter-spacing: 0.06em;
+	color: var(--accent-2);
+	border: 1px solid var(--amber-border-40);
+	border-radius: var(--radius-sm);
+	padding: 1px 5px;
+}
+
+/* ---- Code blocks --------------------------------------------------------
+   `<pre class="astro-code" data-language="...">` (Shiki's output, renamed by Astro from its
+   "shiki" class — see @astrojs/internal-helpers/dist/shiki.js) is wrapped by
+   `rehype-code-blocks.ts` in this `.code-block` header-bar + copy-button chrome. */
+
+.prose .code-block {
+	margin: 16px 0;
+	border: 1px solid var(--hairline-10);
+	border-radius: var(--radius-md);
+	background: var(--surface-code);
+	overflow: hidden;
+}
+
+.prose .code-block-header {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 8px 14px;
+	border-bottom: 1px solid var(--hairline-08);
+	font: 400 11px var(--font-mono);
+	color: var(--text-dim);
+}
+
+.prose .code-block-lang {
+	text-transform: lowercase;
+}
+
+.prose .code-copy {
+	margin-left: auto;
+	background: none;
+	border: 1px solid var(--hairline-14);
+	border-radius: var(--radius-sm);
+	color: var(--text-muted);
+	font: 400 10.5px var(--font-mono);
+	padding: 2px 8px;
+	cursor: pointer;
+	transition:
+		color 0.15s ease,
+		border-color 0.15s ease;
+}
+
+.prose .code-copy:hover {
+	color: var(--ink);
+	border-color: color-mix(in srgb, white 22%, transparent);
+}
+
+.prose .code-copy--copied {
+	color: var(--accent);
+	border-color: var(--sage-border-30);
+}
+
+.prose .code-block pre {
+	margin: 0;
+	padding: 14px 18px;
+	font: 400 13px/1.8 var(--font-mono);
+}
+
+/* Shiki's `css-variables` theme (astro.config.mjs `markdown.shikiConfig.theme`) reads token colors
+   from `--astro-code-*` custom properties instead of baking in hex values — see
+   createCssVariablesTheme() in @shikijs/core. Mapped onto the article palette: restrained and
+   mostly monochrome, sage for strings/success values, amber used sparingly (links only). */
+.prose {
+	--astro-code-foreground: var(--text-code);
+	--astro-code-background: var(--surface-code);
+	--astro-code-token-comment: var(--text-dim);
+	--astro-code-token-string: var(--accent);
+	--astro-code-token-string-expression: var(--accent);
+	--astro-code-token-constant: var(--accent);
+	--astro-code-token-keyword: var(--ink);
+	--astro-code-token-function: var(--ink);
+	--astro-code-token-parameter: var(--text-code);
+	--astro-code-token-punctuation: var(--text-muted);
+	--astro-code-token-link: var(--accent-2);
+	--astro-code-token-inserted: var(--accent);
+	--astro-code-token-deleted: var(--accent-2);
+	--astro-code-token-changed: var(--accent-2);
+}
+
+/* ---- Callouts (GitHub-style markdown alerts, see remark-alerts.ts) ----- */
+
+.prose .callout {
+	display: grid;
+	grid-template-columns: auto 1fr;
+	gap: 14px;
+	margin: 16px 0;
+	padding: 14px 18px;
+	border-radius: var(--radius-md);
+	font-size: 13.5px;
+}
+
+.prose .callout-label {
+	padding-top: 2px;
+	font: 500 11px var(--font-mono);
+	letter-spacing: 0.08em;
+}
+
+.prose .callout-body {
+	line-height: 1.6;
+}
+
+.prose .callout-body > :first-child {
+	margin-top: 0;
+}
+
+.prose .callout-body > :last-child {
+	margin-bottom: 0;
+}
+
+.prose .callout--neutral {
+	border: 1px solid var(--hairline-10);
+	border-left: 2px solid color-mix(in srgb, white 25%, transparent);
+	background: var(--white-02);
+	color: var(--text-body);
+}
+
+.prose .callout--neutral .callout-label {
+	color: var(--text-muted);
+}
+
+.prose .callout--amber {
+	border: 1px solid var(--amber-border-22);
+	border-left: 2px solid var(--accent-2);
+	background: var(--amber-tint-06);
+	color: var(--amber-callout-body);
+}
+
+.prose .callout--amber .callout-label {
+	color: var(--accent-2);
+}
+
+.prose .callout--amber code {
+	background: var(--amber-tint-12);
+	color: var(--accent-2);
+}
+
+/* ---- Tables -------------------------------------------------------------
+   `<table>` is wrapped in `.table-wrap` by rehype-tables.ts: the border/radius/overflow lives on
+   the wrapper, not the table itself, so border-radius doesn't fight border-collapse. */
+
+.prose .table-wrap {
+	margin: 16px 0;
+	border: 1px solid var(--hairline-10);
+	border-radius: var(--radius-md);
+	overflow-x: auto;
+}
+
+.prose table {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 13.5px;
+}
+
+.prose thead tr {
+	background: var(--white-03);
+}
+
+.prose th {
+	padding: 9px 18px;
+	text-align: left;
+	font: 400 11px var(--font-mono);
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	color: var(--text-dim);
+	border-bottom: 1px solid var(--hairline-08);
+	white-space: nowrap;
+}
+
+.prose td {
+	padding: 11px 18px;
+	color: var(--text-muted);
+	border-bottom: 1px solid var(--hairline-06);
+	vertical-align: top;
+}
+
+.prose tbody tr:last-child td {
+	border-bottom: none;
+}
+
+.prose td:first-child {
+	font: 400 12.5px var(--font-mono);
+	color: var(--text-code);
+}

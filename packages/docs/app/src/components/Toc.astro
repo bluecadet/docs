@@ -1,6 +1,8 @@
 ---
-// Stub: page table-of-contents rail. Renders the rendered entry's real headings. Design pass
-// will style this later.
+// Right-hand "on this page" rail (desktop/wide only — tablet/mobile drop it, see BaseLayout).
+// Scroll-spy is the one bit of real interactivity this component owns; everything else here is
+// static markup. The 1920 "updated for / edit this page" metadata and "related" links blocks are
+// deliberately omitted: no data source for either.
 interface Heading {
 	depth: number;
 	slug: string;
@@ -12,24 +14,115 @@ interface Props {
 }
 
 const { headings } = Astro.props;
+const sections = headings.filter((heading) => heading.depth === 2);
 ---
 
-{headings.length > 0 && (
-	<nav class="toc" aria-label="Table of contents">
-		<ul>
-			{headings.map((heading) => (
-				<li class={`toc-depth-${heading.depth}`}>
-					<a href={`#${heading.slug}`}>{heading.text}</a>
-				</li>
-			))}
-		</ul>
-	</nav>
-)}
+{
+	sections.length > 0 && (
+		<aside class="toc-aside" aria-label="Table of contents">
+			<div class="toc-aside__label">on this page</div>
+			<nav class="toc-aside__rail">
+				{sections.map((section, index) => (
+					<a class="toc-aside__link" class:list={{ "is-active": index === 0 }} href={`#${section.slug}`}>
+						{section.text}
+					</a>
+				))}
+			</nav>
+		</aside>
+	)
+}
 
 <style>
-	.toc ul {
-		list-style: none;
-		margin: 0;
-		padding: 0;
+	.toc-aside {
+		border-left: 1px solid var(--hairline-08);
+		padding: 32px 22px;
+		font-size: 12.5px;
+	}
+
+	.toc-aside__label {
+		font: 400 12px var(--font-mono);
+		color: var(--text-dim);
+		margin-bottom: 14px;
+	}
+
+	.toc-aside__rail {
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+		border-left: 1px solid var(--hairline-10);
+	}
+
+	.toc-aside__link {
+		padding-left: 14px;
+		color: var(--text-muted);
+		transition: color 0.15s ease;
+	}
+
+	.toc-aside__link:hover {
+		color: var(--accent);
+	}
+
+	.toc-aside__link.is-active {
+		color: var(--accent);
+		margin-left: -1px;
+		border-left: 1px solid var(--accent);
+	}
+
+	@media (min-width: 1920px) {
+		.toc-aside {
+			border-left: none;
+			padding: 66px 0 0;
+			font-size: 13px;
+		}
+
+		.toc-aside__rail {
+			gap: 11px;
+		}
+
+		.toc-aside__link {
+			padding-left: 15px;
+		}
 	}
 </style>
+
+<script>
+	// Scroll-spy: highlight the TOC link whose heading is currently nearest the top of the
+	// viewport. Colocated per-instance — safe to run once per page load.
+	function setupTocScrollSpy() {
+		const asides = document.querySelectorAll<HTMLElement>(".toc-aside");
+		for (const aside of asides) {
+			const links = Array.from(aside.querySelectorAll<HTMLAnchorElement>(".toc-aside__link"));
+			if (links.length === 0) continue;
+
+			const targets = links
+				.map((link) => {
+					const id = link.getAttribute("href")?.slice(1);
+					const el = id ? document.getElementById(id) : null;
+					return el ? { link, el } : null;
+				})
+				.filter((entry): entry is { link: HTMLAnchorElement; el: HTMLElement } => entry !== null);
+
+			if (targets.length === 0) continue;
+
+			const setActive = (activeLink: HTMLAnchorElement) => {
+				for (const link of links) link.classList.toggle("is-active", link === activeLink);
+			};
+
+			const observer = new IntersectionObserver(
+				(entries) => {
+					const visible = entries
+						.filter((entry) => entry.isIntersecting)
+						.sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+					if (visible.length === 0) return;
+					const match = targets.find((target) => target.el === visible[0].target);
+					if (match) setActive(match.link);
+				},
+				{ rootMargin: "0px 0px -70% 0px", threshold: 0 },
+			);
+
+			for (const target of targets) observer.observe(target.el);
+		}
+	}
+
+	setupTocScrollSpy();
+</script>

@@ -1,7 +1,7 @@
 {
   "name": "@bluecadet/docs",
   "version": "0.0.1",
-  "description": "Turn any repo's colocated markdown docs into a branded static Starlight site with near-zero config.",
+  "description": "Turn any repo's colocated markdown docs into a branded static Astro site with near-zero config.",
   "type": "module",
   "license": "ISC",
   "repository": {

@@ -1,0 +1,93 @@
+---
+// Landing-only closing CTA band: points at the first doc section, plus an outbound repo link
+// when one is configured.
+interface Props {
+	firstSectionTitle: string;
+	firstHref: string;
+	repoUrl?: string;
+}
+
+const { firstSectionTitle, firstHref, repoUrl } = Astro.props;
+---
+
+<div class="closing-cta">
+	<h2>Start with the {firstSectionTitle.toLowerCase()}.</h2>
+	<div class="closing-cta-actions">
+		<a class="btn btn-primary" href={firstHref}>read the docs →</a>
+		{repoUrl && (
+			<a class="btn btn-secondary" href={repoUrl} rel="noopener noreferrer" target="_blank">
+				github ↗
+			</a>
+		)}
+	</div>
+</div>
+
+<style>
+	.closing-cta {
+		padding: 56px 56px 62px;
+		background: var(--surface-panel-1);
+		display: flex;
+		align-items: baseline;
+		gap: 40px;
+		flex-wrap: wrap;
+	}
+
+	h2 {
+		margin: 0;
+		font: 300 36px/1.15 var(--font-serif);
+		max-width: 620px;
+		color: var(--ink);
+	}
+
+	.closing-cta-actions {
+		display: flex;
+		gap: 14px;
+		margin-left: auto;
+	}
+
+	.btn {
+		font: 400 13px var(--font-mono);
+		padding: 10px 18px;
+		border-radius: var(--radius-md);
+	}
+
+	.btn-primary {
+		color: var(--bg);
+		background: var(--accent);
+	}
+
+	.btn-secondary {
+		color: var(--accent-2);
+		border: 1px solid var(--amber-border-40);
+	}
+
+	@media (min-width: 1920px) {
+		.closing-cta {
+			padding: 64px 80px 72px;
+			gap: 48px;
+		}
+
+		h2 {
+			font-size: 42px;
+			max-width: 760px;
+		}
+
+		.btn {
+			font-size: 13.5px;
+			padding: 12px 20px;
+		}
+	}
+
+	@media (max-width: 1023px) {
+		.closing-cta {
+			padding: 40px 20px;
+			flex-direction: column;
+			align-items: flex-start;
+			gap: 20px;
+		}
+
+		.closing-cta-actions {
+			margin-left: 0;
+		}
+	}
+</style>

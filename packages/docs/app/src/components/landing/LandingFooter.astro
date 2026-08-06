@@ -1,0 +1,81 @@
+---
+// Landing-only footer variant, mirroring the header's rail grid.
+interface Props {
+	title: string;
+	docsHref: string;
+	repoUrl?: string;
+}
+
+const { title, docsHref, repoUrl } = Astro.props;
+---
+
+<footer class="landing-footer">
+	<div class="landing-footer-brand">▞ {title}</div>
+	<div class="landing-footer-links">
+		<a href={docsHref}>docs</a>
+		{repoUrl && (
+			<a href={repoUrl} rel="noopener noreferrer" target="_blank">
+				github
+			</a>
+		)}
+	</div>
+</footer>
+
+<style>
+	.landing-footer {
+		display: grid;
+		grid-template-columns: var(--rail-width) 1fr;
+		border-top: 1px solid var(--hairline-08);
+		background: var(--surface-footer);
+	}
+
+	.landing-footer-brand {
+		border-right: 1px solid var(--hairline-08);
+		padding: 26px 28px;
+		font: 400 12px var(--font-mono);
+		color: var(--text-faint);
+	}
+
+	.landing-footer-links {
+		display: flex;
+		gap: 28px;
+		padding: 26px 56px;
+		font: 400 12px var(--font-mono);
+		color: var(--text-dim);
+	}
+
+	.landing-footer-links a {
+		color: var(--text-muted);
+	}
+
+	.landing-footer-links a:hover {
+		color: var(--accent);
+	}
+
+	@media (min-width: 1920px) {
+		.landing-footer-brand {
+			padding: 28px 36px;
+		}
+
+		.landing-footer-links {
+			gap: 30px;
+			padding: 28px 80px;
+		}
+	}
+
+	@media (max-width: 1023px) {
+		.landing-footer {
+			grid-template-columns: 1fr;
+		}
+
+		.landing-footer-brand {
+			border-right: none;
+			border-bottom: 1px solid var(--hairline-08);
+		}
+
+		.landing-footer-links {
+			padding: 18px 20px;
+			flex-wrap: wrap;
+		}
+	}
+</style>

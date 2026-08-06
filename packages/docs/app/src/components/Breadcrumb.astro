@@ -1,0 +1,54 @@
+---
+// Above-H1 breadcrumb: docs / <section> / <page>. Section segment is plain text (not a link —
+// directories don't have their own index pages in this system).
+interface Props {
+	id: string;
+	title: string;
+}
+
+const { id, title } = Astro.props;
+const base = import.meta.env.BASE_URL;
+const parts = id.split("/");
+const section = parts.length > 1 ? parts[0] : null;
+---
+
+<nav class="breadcrumb" aria-label="Breadcrumb">
+	<a class="breadcrumb__segment" href={base}>docs</a>
+	{
+		section && (
+			<>
+				<span class="breadcrumb__sep">/</span>
+				<span class="breadcrumb__segment">{section}</span>
+			</>
+		)
+	}
+	<span class="breadcrumb__sep">/</span>
+	<span class="breadcrumb__current">{title}</span>
+</nav>
+
+<style>
+	.breadcrumb {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		font: 400 12px var(--font-mono);
+		color: var(--text-dim);
+		margin-bottom: 22px;
+	}
+
+	.breadcrumb__segment {
+		color: var(--text-muted);
+	}
+
+	a.breadcrumb__segment {
+		transition: color 0.15s ease;
+	}
+
+	a.breadcrumb__segment:hover {
+		color: var(--accent);
+	}
+
+	.breadcrumb__current {
+		color: var(--accent);
+	}
+</style>

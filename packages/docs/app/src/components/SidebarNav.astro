@@ -1,89 +1,156 @@
 ---
-// Stub: sidebar navigation. Builds a real nav tree from the docs collection, grouped by
-// top-level directory. Design pass will style this later.
-import { getCollection } from "astro:content";
+// Doc-page left rail. Groups mirror the docs/ directory tree (see ../lib/nav.ts). The active
+// entry gets the "you are here" treatment and, under it only, an indented list of that page's
+// own H2 sections (scroll-spy for those sub-items is Toc's job, not this component's).
+import { getNavTree } from "../lib/nav";
 
-interface NavItem {
-	label: string;
-	href: string;
+interface Heading {
+	depth: number;
+	slug: string;
+	text: string;
 }
 
-interface NavGroup {
-	label: string;
-	items: NavItem[];
+interface Props {
+	currentId?: string;
+	headings?: Heading[];
 }
 
-function labelFromSlug(slug: string): string {
-	return slug.replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-}
-
-const base = import.meta.env.BASE_URL;
-const entries = await getCollection("docs", ({ id }) => id !== "index");
-
-const topLevel: NavItem[] = [];
-const groupsByKey = new Map<string, NavGroup>();
-
-for (const entry of entries) {
-	const parts = entry.id.split("/");
-	const href = `${base}${entry.id}/`;
-	const label = entry.data.title;
-
-	if (parts.length === 1) {
-		topLevel.push({ label, href });
-		continue;
-	}
-
-	const key = parts[0];
-	let group = groupsByKey.get(key);
-	if (!group) {
-		group = { label: labelFromSlug(key), items: [] };
-		groupsByKey.set(key, group);
-	}
-	group.items.push({ label, href });
-}
-
-topLevel.sort((a, b) => a.label.localeCompare(b.label));
-const groups = [...groupsByKey.values()].sort((a, b) => a.label.localeCompare(b.label));
-for (const group of groups) group.items.sort((a, b) => a.label.localeCompare(b.label));
+const { currentId, headings = [] } = Astro.props;
+const { topLevel, groups } = await getNavTree();
+const sections = headings.filter((heading) => heading.depth === 2);
 ---
 
 <nav class="sidebar-nav" aria-label="Docs navigation">
-	<ul>
-		<li>
-			<a href={base}>Home</a>
-		</li>
-		{topLevel.map((item) => (
-			<li>
-				<a href={item.href}>{item.label}</a>
-			</li>
-		))}
-		{groups.map((group) => (
-			<li>
-				<span class="nav-group-label">{group.label}</span>
-				<ul>
-					{group.items.map((item) => (
-						<li>
-							<a href={item.href}>{item.label}</a>
-						</li>
-					))}
-				</ul>
-			</li>
-		))}
-	</ul>
+	{
+		topLevel.length > 0 && (
+			<div class="sidebar-nav__list">
+				{topLevel.map((item) => (
+					<a
+						class="sidebar-nav__item"
+						class:list={{ "is-active": item.id === currentId }}
+						href={item.href}
+					>
+						{item.label}
+					</a>
+				))}
+			</div>
+		)
+	}
+	{
+		groups.map((group) => (
+			<div class="sidebar-nav__group">
+				<div class="sidebar-nav__group-label">{group.label}</div>
+				<div class="sidebar-nav__list">
+					{group.items.map((item) => {
+						const isActive = item.id === currentId;
+						return (
+							<>
+								<a class="sidebar-nav__item" class:list={{ "is-active": isActive }} href={item.href}>
+									{item.label}
+								</a>
+								{isActive && sections.length > 0 && (
+									<div class="sidebar-nav__subitems">
+										{sections.map((section) => (
+											<a class="sidebar-nav__subitem" href={`#${section.slug}`}>
+												{section.text}
+											</a>
+										))}
+									</div>
+								)}
+							</>
+						);
+					})}
+				</div>
+			</div>
+		))
+	}
 </nav>
 
 <style>
-	.sidebar-nav ul {
-		list-style: none;
-		margin: 0;
-		padding: 0;
+	.sidebar-nav {
+		border-right: 1px solid var(--hairline-08);
+		padding: 26px 0 48px;
+		font-size: 13.5px;
 	}
 
-	.sidebar-nav ul ul {
-		padding-inline-start: 1rem;
+	.sidebar-nav__list {
+		display: flex;
+		flex-direction: column;
 	}
 
-	.nav-group-label {
-		display: block;
+	.sidebar-nav__group-label {
+		padding: 20px 26px 9px;
+		font: 400 12px var(--font-mono);
+		color: var(--text-dim);
+	}
+
+	.sidebar-nav > .sidebar-nav__group:first-child .sidebar-nav__group-label {
+		padding-top: 0;
+	}
+
+	.sidebar-nav__item {
+		padding: 5px 26px;
+		color: var(--text-muted);
+		transition: color 0.15s ease;
+	}
+
+	.sidebar-nav__item:hover {
+		color: var(--accent);
+	}
+
+	.sidebar-nav__item.is-active {
+		color: var(--ink);
+		background: var(--sage-tint-08);
+		box-shadow: inset 2px 0 var(--accent);
+	}
+
+	.sidebar-nav__item.is-active:hover {
+		color: var(--ink);
+	}
+
+	.sidebar-nav__subitems {
+		display: flex;
+		flex-direction: column;
+		margin: 3px 0 5px 38px;
+		border-left: 1px solid var(--hairline-10);
+	}
+
+	.sidebar-nav__subitem {
+		padding: 4px 14px;
+		font-size: 12.5px;
+		color: var(--text-muted);
+		transition: color 0.15s ease;
+	}
+
+	.sidebar-nav__subitem:hover {
+		color: var(--accent);
+	}
+
+	@media (min-width: 1920px) {
+		.sidebar-nav {
+			padding: 32px 0 56px;
+			font-size: 14px;
+		}
+
+		.sidebar-nav__group-label {
+			padding: 22px 36px 10px;
+		}
+
+		.sidebar-nav > .sidebar-nav__group:first-child .sidebar-nav__group-label {
+			padding-top: 0;
+		}
+
+		.sidebar-nav__item {
+			padding: 6px 36px;
+		}
+
+		.sidebar-nav__subitems {
+			margin: 4px 0 6px 48px;
+		}
+
+		.sidebar-nav__subitem {
+			padding: 4px 16px;
+			font-size: 13px;
+		}
 	}
 </style>

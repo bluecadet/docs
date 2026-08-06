@@ -1,0 +1,348 @@
+---
+// Search modal: a native <dialog> overlay driven by pagefind (index written by the
+// astro:build:done hook in astro.config.mjs, see app/src/scripts/search.ts for the client
+// behavior). Markup here covers all four designed states — empty/recent+start-here, results,
+// no-results, loading — the client script swaps state by rewriting .search-modal__body.
+//
+// Opened by any [data-search-trigger] button (see Header.astro / LandingHeader.astro) or the
+// `/` key. Included once per page from BaseLayout.astro and index.astro.
+import { getNavTree } from "../lib/nav";
+
+const repoUrl = process.env.DOCS_REPO_URL;
+
+const { topLevel, groups } = await getNavTree();
+const startHere = [
+	...topLevel.map((item) => ({ label: item.label, href: item.href })),
+	...groups
+		.map((group) => group.items[0])
+		.filter((item): item is NonNullable<typeof item> => Boolean(item))
+		.map((item) => ({ label: item.label, href: item.href })),
+].slice(0, 8);
+---
+
+<dialog id="search-modal" class="search-modal" aria-label="Search documentation">
+	<div class="search-modal__header">
+		<span class="search-modal__icon" data-search-icon aria-hidden="true">⌕</span>
+		<input
+			type="text"
+			class="search-modal__input"
+			data-search-input
+			placeholder="search docs"
+			aria-label="Search documentation"
+			role="combobox"
+			aria-expanded="true"
+			aria-controls="search-results"
+			aria-autocomplete="list"
+			autocomplete="off"
+			spellcheck="false"
+		/>
+		<span class="search-modal__status" data-search-status></span>
+	</div>
+	<div id="search-results" class="search-modal__body" data-search-body role="listbox" aria-label="Search results">
+	</div>
+	<div class="search-modal__footer">
+		<div class="search-modal__hints" data-search-hints>
+			<span class="kbd-hint"><kbd>↑↓</kbd> navigate</span>
+			<span class="kbd-hint"><kbd>↵</kbd> open</span>
+			<span class="kbd-hint"><kbd>esc</kbd> close</span>
+		</div>
+	</div>
+</dialog>
+
+<script type="application/json" id="search-start-here-data" set:html={JSON.stringify(startHere)} />
+<script type="application/json" id="search-repo-url-data" set:html={JSON.stringify(repoUrl ?? null)} />
+
+<script>
+	import { initSearchModal } from "../scripts/search";
+	initSearchModal();
+</script>
+
+<style>
+	.search-modal {
+		width: 680px;
+		max-width: calc(100vw - 40px);
+		max-height: calc(100vh - 80px);
+		padding: 0;
+		margin: auto;
+		border: 1px solid var(--hairline-14);
+		border-radius: var(--radius-lg);
+		background: var(--surface-code);
+		color: var(--ink);
+		box-shadow: 0 24px 70px rgba(0, 0, 0, 0.6);
+		display: flex;
+		flex-direction: column;
+	}
+
+	.search-modal::backdrop {
+		background: var(--overlay-scrim);
+		backdrop-filter: blur(1.5px);
+	}
+
+	.search-modal:not([open]) {
+		display: none;
+	}
+
+	.search-modal__header {
+		display: grid;
+		grid-template-columns: 20px 1fr auto;
+		align-items: center;
+		gap: 12px;
+		height: 60px;
+		padding: 0 18px;
+		border-bottom: 1px solid var(--hairline-10);
+		flex-shrink: 0;
+	}
+
+	.search-modal__icon {
+		font-size: 16px;
+		color: var(--accent);
+		transition: color 0.15s ease;
+	}
+
+	.search-modal__icon.is-attention {
+		color: var(--accent-2);
+	}
+
+	.search-modal__input {
+		width: 100%;
+		border: none;
+		outline: none;
+		background: transparent;
+		font: 400 16px var(--font-mono);
+		color: var(--ink);
+		caret-color: var(--accent);
+	}
+
+	.search-modal__input::placeholder {
+		color: var(--text-dim);
+	}
+
+	.search-modal__status {
+		font: 400 12px var(--font-mono);
+		color: var(--text-dim);
+		white-space: nowrap;
+	}
+
+	.search-modal__status.is-attention {
+		color: var(--accent-2);
+	}
+
+	.search-modal__body {
+		overflow-y: auto;
+		padding: 6px 0;
+		flex: 1 1 auto;
+		min-height: 80px;
+	}
+
+	.search-modal__footer {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		height: 44px;
+		padding: 0 18px;
+		border-top: 1px solid var(--hairline-10);
+		flex-shrink: 0;
+	}
+
+	.search-modal__hints {
+		display: flex;
+		gap: 16px;
+	}
+
+	.search-modal__hints.is-indexing {
+		color: var(--accent);
+		font: 400 11.5px var(--font-mono);
+	}
+
+	.kbd-hint {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		font: 400 11px var(--font-mono);
+		color: var(--text-dim);
+	}
+
+	.kbd-hint kbd {
+		border: 1px solid var(--hairline-14);
+		border-radius: var(--radius-sm);
+		padding: 1px 5px;
+		font: inherit;
+	}
+
+	/* -- Groups / rows (shared by recent, start-here, and result states) -- */
+	:global(.search-group) {
+		border-top: 1px solid var(--hairline-06);
+		padding-top: 4px;
+		margin-top: 4px;
+	}
+
+	:global(.search-group:first-child) {
+		border-top: none;
+		margin-top: 0;
+		padding-top: 0;
+	}
+
+	:global(.search-group__label) {
+		padding: 10px 18px 6px;
+		font: 400 11px var(--font-mono);
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--text-dim);
+	}
+
+	:global(.search-row) {
+		display: grid;
+		grid-template-columns: 22px 1fr auto;
+		align-items: start;
+		gap: 4px;
+		padding: 11px 18px;
+		color: inherit;
+		text-decoration: none;
+		cursor: pointer;
+	}
+
+	:global(.search-row__bullet) {
+		color: var(--text-faint);
+		font-size: 13px;
+		line-height: 1.6;
+	}
+
+	:global(.search-row__text) {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+		min-width: 0;
+	}
+
+	:global(.search-row__title) {
+		font-size: 14.5px;
+		color: var(--ink);
+	}
+
+	:global(.search-row__desc) {
+		font-size: 12.5px;
+		color: var(--text-muted);
+		overflow: hidden;
+		text-overflow: ellipsis;
+		display: -webkit-box;
+		-webkit-line-clamp: 2;
+		-webkit-box-orient: vertical;
+	}
+
+	:global(.search-row__desc mark) {
+		color: var(--accent-2);
+		background: var(--amber-tint-14);
+		border-radius: 2px;
+		padding: 0 3px;
+	}
+
+	:global(.search-row__enter) {
+		visibility: hidden;
+		color: var(--accent);
+		font-size: 12px;
+		line-height: 1.6;
+	}
+
+	:global(.search-row.is-active) {
+		background: var(--sage-tint-09);
+		box-shadow: inset 2px 0 var(--accent);
+	}
+
+	:global(.search-row.is-active .search-row__bullet) {
+		color: var(--accent);
+	}
+
+	:global(.search-row.is-active .search-row__enter) {
+		visibility: visible;
+	}
+
+	/* -- No-results / dev-notice callout -- */
+	:global(.search-callout) {
+		margin: 10px 18px;
+		padding: 14px 16px;
+		border: 1px solid var(--amber-border-22);
+		border-left: 2px solid var(--accent-2);
+		border-radius: var(--radius-md);
+		background: var(--amber-tint-06);
+		color: var(--amber-callout-body);
+		font-size: 13.5px;
+		line-height: 1.6;
+	}
+
+	:global(.search-callout__label) {
+		display: block;
+		margin-bottom: 6px;
+		font: 500 11px var(--font-mono);
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--accent-2);
+	}
+
+	:global(.search-pills) {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 10px;
+		padding: 4px 18px 16px;
+	}
+
+	:global(.search-pill) {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		padding: 7px 12px;
+		border-radius: var(--radius-md);
+		font: 400 12px var(--font-mono);
+		text-decoration: none;
+	}
+
+	:global(.search-pill--neutral) {
+		border: 1px solid var(--hairline-14);
+		color: var(--text-muted);
+	}
+
+	:global(.search-pill--amber) {
+		border: 1px solid var(--amber-border-40);
+		color: var(--accent-2);
+	}
+
+	/* -- Loading skeleton -- */
+	:global(.search-skeleton-row) {
+		display: grid;
+		grid-template-columns: 22px 1fr;
+		padding: 11px 18px;
+	}
+
+	:global(.search-skeleton-bar) {
+		height: 10px;
+		border-radius: 2px;
+		background: var(--white-07);
+		animation: search-skeleton-pulse 1.4s ease-in-out infinite;
+	}
+
+	:global(.search-skeleton-bar + .search-skeleton-bar) {
+		margin-top: 8px;
+		width: 60%;
+	}
+
+	@keyframes search-skeleton-pulse {
+		0%,
+		100% {
+			opacity: 0.5;
+		}
+		50% {
+			opacity: 1;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		:global(.search-skeleton-bar) {
+			animation: none;
+		}
+	}
+
+	:global(.search-empty-note) {
+		padding: 24px 18px;
+		font-size: 13px;
+		color: var(--text-dim);
+	}
+</style>

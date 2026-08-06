@@ -1,0 +1,59 @@
+---
+// Prev/next pagination, ordered by the flattened nav tree (see ../lib/nav.ts) — same order as
+// the sidebar.
+import { getNavTree } from "../lib/nav";
+
+interface Props {
+	currentId: string;
+}
+
+const { currentId } = Astro.props;
+const { flat } = await getNavTree();
+const index = flat.findIndex((item) => item.id === currentId);
+const prev = index > 0 ? flat[index - 1] : null;
+const next = index >= 0 && index < flat.length - 1 ? flat[index + 1] : null;
+---
+
+{
+	(prev || next) && (
+		<nav class="pagination" aria-label="Pagination">
+			{prev ? (
+				<a class="pagination__link pagination__link--prev" href={prev.href}>
+					← {prev.label}
+				</a>
+			) : (
+				<span />
+			)}
+			{next && (
+				<a class="pagination__link pagination__link--next" href={next.href}>
+					{next.label} →
+				</a>
+			)}
+		</nav>
+	)
+}
+
+<style>
+	.pagination {
+		display: flex;
+		justify-content: space-between;
+		gap: 16px;
+		margin-top: 48px;
+		padding-top: 18px;
+		border-top: 1px solid var(--hairline-08);
+		font: 400 13px var(--font-mono);
+	}
+
+	.pagination__link {
+		color: var(--text-muted);
+		transition: color 0.15s ease;
+	}
+
+	.pagination__link:hover {
+		color: var(--accent);
+	}
+
+	.pagination__link--next {
+		margin-left: auto;
+	}
+</style>

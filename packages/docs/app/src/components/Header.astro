@@ -1,23 +1,143 @@
 ---
-// Stub: site header. Design pass will style this later.
-const siteTitle = process.env.DOCS_TITLE ?? "Docs";
+// Doc-page header: logo cell aligned with the sidebar rail, search trigger pill (visual only —
+// a later agent wires the modal behind data-search-trigger), and a github link when configured.
+// No version chip: no data source for one.
+const siteTitle = process.env.DOCS_TITLE ?? "docs";
 const repoUrl = process.env.DOCS_REPO_URL;
 const base = import.meta.env.BASE_URL;
 ---
 
 <header class="site-header">
-	<a class="site-title" href={base}>{siteTitle}</a>
-	{repoUrl && (
-		<a class="repo-link" href={repoUrl} rel="noopener noreferrer" target="_blank">
-			GitHub
-		</a>
-	)}
+	<div class="site-header__brand">
+		<a href={base}><span class="glyph">▞</span>{siteTitle}</a>
+	</div>
+	<div class="site-header__right">
+		<button type="button" class="search-trigger" data-search-trigger>
+			<span class="search-trigger__icon">⌕</span>
+			<span class="search-trigger__label">search docs</span>
+			<span class="search-trigger__kbd">/</span>
+		</button>
+		{
+			repoUrl && (
+				<nav class="site-header__nav">
+					<a class="repo-link" href={repoUrl} rel="noopener noreferrer" target="_blank">
+						github ↗
+					</a>
+				</nav>
+			)
+		}
+	</div>
 </header>
 
 <style>
 	.site-header {
+		display: grid;
+		grid-template-columns: var(--rail-width) 1fr;
+		height: 58px;
+		border-bottom: 1px solid var(--hairline-08);
+	}
+
+	.site-header__brand {
 		display: flex;
 		align-items: center;
-		justify-content: space-between;
+		padding: 0 28px;
+		border-right: 1px solid var(--hairline-08);
+		min-width: 0;
+	}
+
+	.site-header__brand a {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		font: 500 15px var(--font-mono);
+		text-transform: lowercase;
+		color: var(--ink);
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	.glyph {
+		color: var(--accent);
+	}
+
+	.site-header__right {
+		display: flex;
+		align-items: center;
+		gap: 24px;
+		padding: 0 32px;
+		min-width: 0;
+	}
+
+	.search-trigger {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		width: 320px;
+		padding: 7px 12px;
+		border: 1px solid var(--hairline-12);
+		border-radius: var(--radius-md);
+		background: var(--white-02);
+		color: var(--text-muted);
+		font: 400 12.5px var(--font-mono);
+		white-space: nowrap;
+		cursor: pointer;
+	}
+
+	.search-trigger__icon {
+		opacity: 0.6;
+	}
+
+	.search-trigger__kbd {
+		margin-left: auto;
+		border: 1px solid var(--hairline-14);
+		border-radius: var(--radius-sm);
+		padding: 0 5px;
+		font-size: 11px;
+	}
+
+	.site-header__nav {
+		margin-left: auto;
+		display: flex;
+		align-items: center;
+		gap: 22px;
+		font-size: 13px;
+	}
+
+	.repo-link {
+		color: var(--accent-2);
+		transition: color 0.15s ease;
+	}
+
+	.repo-link:hover {
+		color: color-mix(in srgb, var(--accent-2) 80%, white);
+	}
+
+	@media (min-width: 1920px) {
+		.site-header {
+			height: 62px;
+		}
+
+		.site-header__brand {
+			padding: 0 36px;
+		}
+
+		.site-header__brand a {
+			font-size: 15.5px;
+		}
+
+		.site-header__right {
+			gap: 26px;
+			padding: 0 44px;
+		}
+
+		.search-trigger {
+			width: 420px;
+			padding: 8px 13px;
+		}
+
+		.site-header__nav {
+			font-size: 13.5px;
+		}
 	}
 </style>

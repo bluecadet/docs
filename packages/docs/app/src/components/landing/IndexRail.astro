@@ -1,0 +1,97 @@
+---
+// Landing-only left index rail: numbered links to each top-level doc section, plus an optional
+// amber note box sourced from the index entry's own description (the closest real substitute for
+// the design's fictional "no daemon / no account / no telemetry" callout).
+import type { NavSection } from "./nav-tree";
+
+interface Props {
+	sections: NavSection[];
+	base: string;
+	note?: string;
+}
+
+const { sections, base, note } = Astro.props;
+
+function pad(n: number): string {
+	return String(n).padStart(2, "0");
+}
+---
+
+<div class="index-rail">
+	<span class="index-label">index</span>
+	{sections.map((section, i) => (
+		<a href={`${base}${section.firstEntry.id}/`}>
+			<span class="index-num">{pad(i + 1)} —</span> {section.title.toLowerCase()}
+		</a>
+	))}
+	{note && <div class="index-note">{note}</div>}
+</div>
+
+<style>
+	.index-rail {
+		border-right: 1px solid var(--hairline-08);
+		padding: 28px;
+		font: 400 12px var(--font-mono);
+		color: var(--text-dim);
+		display: flex;
+		flex-direction: column;
+		gap: 14px;
+	}
+
+	.index-label {
+		color: var(--text-muted);
+	}
+
+	.index-rail a {
+		color: var(--text-dim);
+		transition: color 0.15s ease;
+	}
+
+	.index-rail a:hover {
+		color: var(--accent);
+	}
+
+	.index-num {
+		color: var(--text-dim);
+	}
+
+	.index-note {
+		margin-top: 30px;
+		border: 1px solid var(--amber-border-30);
+		border-radius: var(--radius-sm);
+		padding: 10px 12px;
+		color: var(--accent-2);
+		line-height: 1.7;
+		background: var(--amber-tint-05);
+		font-size: 12px;
+	}
+
+	@media (min-width: 1920px) {
+		.index-rail {
+			padding: 36px;
+			font-size: 12.5px;
+			gap: 15px;
+		}
+
+		.index-note {
+			padding: 11px 13px;
+		}
+	}
+
+	@media (max-width: 1023px) {
+		.index-rail {
+			border-right: none;
+			border-bottom: 1px solid var(--hairline-08);
+			flex-direction: row;
+			flex-wrap: wrap;
+			align-items: center;
+			padding: 18px 20px;
+			gap: 16px 24px;
+		}
+
+		.index-note {
+			margin-top: 0;
+			flex-basis: 100%;
+		}
+	}
+</style>

@@ -1,0 +1,148 @@
+---
+// Landing-only header variant: 240px rail column + wordmark, search trigger pill (visual only —
+// no search implementation lives on this page), and a right nav of "docs" + optional "github ↗".
+interface Props {
+	title: string;
+	docsHref: string;
+	repoUrl?: string;
+}
+
+const { title, docsHref, repoUrl } = Astro.props;
+---
+
+<header class="landing-header">
+	<div class="landing-header-brand">
+		<span class="glyph">▞</span>{title}
+	</div>
+	<div class="landing-header-nav">
+		<button type="button" class="search-trigger" data-search-trigger>
+			<span class="search-icon">⌕</span>
+			<span class="search-label">search docs</span>
+			<span class="search-kbd">/</span>
+		</button>
+		<nav class="landing-nav" aria-label="Primary">
+			<a href={docsHref}>docs</a>
+			{repoUrl && (
+				<a class="repo-link" href={repoUrl} rel="noopener noreferrer" target="_blank">
+					github ↗
+				</a>
+			)}
+		</nav>
+	</div>
+</header>
+
+<style>
+	.landing-header {
+		display: grid;
+		grid-template-columns: var(--rail-width) 1fr;
+		border-bottom: 1px solid var(--hairline-08);
+	}
+
+	.landing-header-brand {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		padding: 0 28px;
+		height: 58px;
+		border-right: 1px solid var(--hairline-08);
+		font: 500 15px var(--font-mono);
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	.glyph {
+		color: var(--accent);
+	}
+
+	.landing-header-nav {
+		display: flex;
+		align-items: center;
+		gap: 24px;
+		padding: 0 32px;
+		min-width: 0;
+	}
+
+	.search-trigger {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		width: 320px;
+		max-width: 100%;
+		padding: 7px 12px;
+		border: 1px solid var(--hairline-12);
+		border-radius: var(--radius-md);
+		background: var(--white-02);
+		color: var(--text-muted);
+		font: 400 12.5px var(--font-mono);
+		cursor: pointer;
+	}
+
+	.search-icon {
+		opacity: 0.6;
+	}
+
+	.search-label {
+		white-space: nowrap;
+	}
+
+	.search-kbd {
+		margin-left: auto;
+		border: 1px solid var(--hairline-14);
+		border-radius: var(--radius-sm);
+		padding: 0 5px;
+		font-size: 11px;
+	}
+
+	.landing-nav {
+		display: flex;
+		gap: 22px;
+		font-size: 13.5px;
+		color: var(--text-muted);
+		margin-left: auto;
+	}
+
+	.repo-link {
+		color: var(--accent-2);
+	}
+
+	@media (min-width: 1920px) {
+		.landing-header-brand {
+			height: 62px;
+			padding: 0 36px;
+			font-size: 15.5px;
+		}
+
+		.landing-header-nav {
+			gap: 26px;
+			padding: 0 44px;
+		}
+
+		.search-trigger {
+			width: 420px;
+			padding: 8px 13px;
+		}
+	}
+
+	@media (max-width: 1023px) {
+		.landing-header {
+			grid-template-columns: 1fr;
+			row-gap: 0;
+		}
+
+		.landing-header-brand {
+			border-right: none;
+			border-bottom: 1px solid var(--hairline-08);
+		}
+
+		.landing-header-nav {
+			flex-wrap: wrap;
+			row-gap: 10px;
+			padding: 14px 20px;
+		}
+
+		.search-trigger {
+			width: 100%;
+		}
+	}
+</style>
