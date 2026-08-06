@@ -4,9 +4,11 @@ interface Props {
 	title: string;
 	docsHref: string;
 	repoUrl?: string;
+	/** Optional right-aligned meta string from landing frontmatter, e.g. `MIT · no telemetry`. */
+	meta?: string;
 }
 
-const { title, docsHref, repoUrl } = Astro.props;
+const { title, docsHref, repoUrl, meta } = Astro.props;
 ---
 
 <footer class="landing-footer">
@@ -18,6 +20,7 @@ const { title, docsHref, repoUrl } = Astro.props;
 				github
 			</a>
 		)}
+		{meta && <span class="landing-footer-meta">{meta}</span>}
 	</div>
 </footer>
 
@@ -52,6 +55,11 @@ const { title, docsHref, repoUrl } = Astro.props;
 		color: var(--accent);
 	}
 
+	.landing-footer-meta {
+		margin-left: auto;
+		color: var(--text-faint);
+	}
+
 	@media (min-width: 1920px) {
 		.landing-footer-brand {
 			padding: 28px 36px;
@@ -84,6 +92,11 @@ const { title, docsHref, repoUrl } = Astro.props;
 			display: flex;
 			align-items: center;
 			min-height: 48px;
+		}
+
+		.landing-footer-meta {
+			margin-left: 0;
+			flex-basis: 100%;
 		}
 	}
 </style>

@@ -1,0 +1,89 @@
+---
+// Shared search-trigger pill (visual only — SearchModal.astro's script wires the modal behind
+// `data-search-trigger`), reused by Header.astro and LandingHeader.astro so the two never drift on
+// markup or class names again.
+interface Props {
+	/** Pill width at tablet widths (<=1023px) — the two headers agree on every other breakpoint. */
+	tabletWidth?: string;
+}
+
+const { tabletWidth = "220px" } = Astro.props;
+---
+
+<button
+	type="button"
+	class="search-trigger"
+	data-search-trigger
+	style={`--search-trigger-tablet-width: ${tabletWidth}`}
+>
+	<span class="search-trigger__icon">⌕</span>
+	<span class="search-trigger__label">search docs</span>
+	<span class="search-trigger__kbd">/</span>
+</button>
+
+<style>
+	.search-trigger {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		width: 320px;
+		max-width: 100%;
+		padding: 7px 12px;
+		border: 1px solid var(--hairline-12);
+		border-radius: var(--radius-md);
+		background: var(--white-02);
+		color: var(--text-muted);
+		font: 400 12.5px var(--font-mono);
+		white-space: nowrap;
+		cursor: pointer;
+	}
+
+	.search-trigger__icon {
+		opacity: 0.6;
+	}
+
+	.search-trigger__label {
+		white-space: nowrap;
+	}
+
+	.search-trigger__kbd {
+		margin-left: auto;
+		border: 1px solid var(--hairline-14);
+		border-radius: var(--radius-sm);
+		padding: 0 5px;
+		font-size: 11px;
+	}
+
+	@media (min-width: 1920px) {
+		.search-trigger {
+			width: 420px;
+			padding: 8px 13px;
+		}
+	}
+
+	@media (max-width: 1023px) {
+		.search-trigger {
+			width: var(--search-trigger-tablet-width, 220px);
+		}
+	}
+
+	@media (max-width: 767px) {
+		.search-trigger {
+			width: auto;
+			padding: 8px;
+			border: none;
+			background: none;
+		}
+
+		.search-trigger__label,
+		.search-trigger__kbd {
+			display: none;
+		}
+
+		.search-trigger__icon {
+			opacity: 1;
+			font-size: 17px;
+			color: var(--text-muted);
+		}
+	}
+</style>

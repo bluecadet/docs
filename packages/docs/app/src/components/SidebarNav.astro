@@ -32,11 +32,16 @@ function childrenAreNested(node: NavNode): boolean {
 
 {
 	isRoot ? (
-		<div class="sidebar-rail">
-			<nav class="sidebar-nav" aria-label="Docs navigation">
-				<Astro.self nodes={items} currentId={currentId} />
-			</nav>
-		</div>
+		// A consumer with no nav-worthy pages (e.g. a single README) yields zero nodes — render
+		// nothing rather than an empty rail. BaseLayout.astro collapses the now-unoccupied grid
+		// column via `.page-body:not(:has(.sidebar-rail))`.
+		items.length > 0 && (
+			<div class="sidebar-rail">
+				<nav class="sidebar-nav" aria-label="Docs navigation">
+					<Astro.self nodes={items} currentId={currentId} />
+				</nav>
+			</div>
+		)
 	) : (
 		<div class="sidebar-list" class:list={{ "is-nested": nested }}>
 			{items.map((node) => (

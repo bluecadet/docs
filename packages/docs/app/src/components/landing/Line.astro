@@ -1,0 +1,43 @@
+---
+// One line of a <Terminal> transcript.
+//
+//   <Line prompt>npx @bluecadet/docs build</Line>   →  $ npx @bluecadet/docs build
+//   <Line label="reading">README.md <Ok>✓</Ok></Line>  →    reading      README.md ✓
+//   <Line />                                        →  a blank spacer row
+//
+// `label` renders a dim, fixed-measure first column so aligned transcripts don't depend on the
+// author counting spaces (which markdown would collapse anyway).
+interface Props {
+	/** Prefix the line with a dim `$ ` shell prompt. */
+	prompt?: boolean;
+	/** Dim label column, indented and padded to a fixed mono measure. */
+	label?: string;
+}
+
+const { prompt, label } = Astro.props;
+---
+
+<span class="terminal-line">
+	{prompt && <span class="terminal-prompt">$ </span>}
+	{label && <span class="terminal-line-label">{label}</span>}
+	<slot />
+</span>
+
+<style>
+	.terminal-line {
+		display: block;
+		white-space: pre;
+		min-height: 1lh;
+	}
+
+	.terminal-prompt,
+	.terminal-line-label {
+		color: var(--text-dim);
+	}
+
+	.terminal-line-label {
+		display: inline-block;
+		min-width: 15ch;
+		padding-left: 2ch;
+	}
+</style>

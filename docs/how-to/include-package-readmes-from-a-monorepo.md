@@ -1,3 +1,7 @@
+---
+description: Publishes per-package README files from a monorepo alongside your docs tree.
+---
+
 # Include package READMEs from a monorepo
 
 If your repo has multiple packages, each with its own `README.md`, publish them alongside your

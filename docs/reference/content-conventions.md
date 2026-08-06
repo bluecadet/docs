@@ -1,3 +1,7 @@
+---
+description: Details which files get published, how routes and titles are derived, and how links get rewritten.
+---
+
 # Content conventions
 
 ## What gets published

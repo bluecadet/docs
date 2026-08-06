@@ -1,3 +1,7 @@
+---
+description: Lists every CLI flag for build and dev, their defaults, and when the build hard-errors.
+---
+
 # CLI
 
 ```sh

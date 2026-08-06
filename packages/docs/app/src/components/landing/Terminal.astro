@@ -1,0 +1,174 @@
+---
+// Full-bleed terminal transcript band for the landing page's MDX body:
+//
+//   <Terminal cwd="~/my-repo" caption="a full build" duration="3.4s">
+//     <Line prompt>npx @bluecadet/docs build</Line>
+//     <Line label="reading">README.md + docs/ <Ok>✓</Ok></Line>
+//   </Terminal>
+//
+// Lines are <Line> elements rather than raw indented text because MDX parses the children of a
+// JSX block as markdown, which would collapse the leading whitespace that a transcript depends
+// on. <Line label> restores the aligned label column with a mono `ch` measure instead.
+interface Props {
+	/** Working-directory label in the terminal's title bar. */
+	cwd?: string;
+	/** Small caption above the terminal. */
+	caption?: string;
+	/** Amber figure at the end of the caption row, e.g. a wall-clock duration. */
+	duration?: string;
+}
+
+const { cwd, caption, duration } = Astro.props;
+---
+
+<div class="landing-band terminal-band">
+	{
+		(caption || duration) && (
+			<div class="terminal-caption">
+				{caption && <span>{caption}</span>}
+				{duration && <span class="terminal-duration">{duration}</span>}
+			</div>
+		)
+	}
+	<div class="terminal">
+		<div class="terminal-bar">
+			<span class="terminal-dots" aria-hidden="true">
+				<span class="terminal-dot terminal-dot-1"></span>
+				<span class="terminal-dot terminal-dot-2"></span>
+				<span class="terminal-dot terminal-dot-3"></span>
+			</span>
+			{cwd && <span class="terminal-cwd">{cwd}</span>}
+		</div>
+		<pre class="terminal-body"><slot /></pre>
+	</div>
+</div>
+
+<style>
+	.terminal-band {
+		padding: 36px 56px 44px;
+		border-bottom: 1px solid var(--hairline-08);
+		background: var(--surface-panel-2);
+	}
+
+	.terminal-caption {
+		display: flex;
+		align-items: baseline;
+		gap: 14px;
+		margin-bottom: 16px;
+		font: 400 11.5px var(--font-mono);
+		color: var(--text-dim);
+	}
+
+	.terminal-duration {
+		color: var(--accent-2);
+	}
+
+	.terminal {
+		max-width: 880px;
+		border: 1px solid var(--hairline-10);
+		border-radius: var(--radius-md);
+		background: var(--surface-code);
+		overflow: hidden;
+	}
+
+	.terminal-bar {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		padding: 8px 14px;
+		border-bottom: 1px solid var(--hairline-08);
+		font: 400 11px var(--font-mono);
+		color: var(--text-dim);
+	}
+
+	.terminal-dots {
+		display: flex;
+		gap: 5px;
+	}
+
+	.terminal-dot {
+		width: 8px;
+		height: 8px;
+		border-radius: 50%;
+	}
+
+	.terminal-dot-1 {
+		background: var(--accent);
+	}
+
+	.terminal-dot-2 {
+		background: var(--accent-2);
+	}
+
+	.terminal-dot-3 {
+		background: var(--terminal-dot-3);
+	}
+
+	/* `white-space: normal` on the <pre> itself, `pre` on each <Line> (see Line.astro): the lines
+	   are block boxes, so the newlines and indentation MDX leaves between them collapse away
+	   instead of printing as blank rows. */
+	.terminal-body {
+		margin: 0;
+		padding: 16px 18px;
+		font: 400 13px/1.85 var(--font-mono);
+		color: var(--text-code);
+		white-space: normal;
+		overflow-x: auto;
+	}
+
+	@media (min-width: 1920px) {
+		.terminal-band {
+			padding: 44px 80px 50px;
+		}
+
+		.terminal-body {
+			padding: 18px 20px;
+			font-size: 13.5px;
+			line-height: 1.9;
+		}
+	}
+
+	@media (max-width: 1023px) {
+		.terminal-band {
+			padding: 30px 40px 36px;
+		}
+
+		.terminal-caption {
+			gap: 12px;
+			margin-bottom: 14px;
+		}
+
+		.terminal-body {
+			padding: 15px 16px;
+			font-size: 12px;
+		}
+	}
+
+	@media (max-width: 767px) {
+		.terminal-band {
+			padding: 26px 18px 30px;
+		}
+
+		.terminal-caption {
+			gap: 10px;
+			margin-bottom: 12px;
+			font-size: 11px;
+		}
+
+		.terminal-bar {
+			gap: 8px;
+			padding: 7px 12px;
+			font-size: 10.5px;
+		}
+
+		.terminal-dot {
+			width: 7px;
+			height: 7px;
+		}
+
+		.terminal-body {
+			padding: 13px 14px;
+			font-size: 10.5px;
+		}
+	}
+</style>

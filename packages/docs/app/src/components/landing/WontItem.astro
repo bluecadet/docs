@@ -1,0 +1,88 @@
+---
+// One row of a <WillNotDo> list. Default is a dim ✕ ("no, and that's deliberate"); `status="yes"`
+// flips it to a sage ✓ for the affirmative row the design closes the list with.
+interface Props {
+	/** Bold ink lead-in sentence. */
+	lead: string;
+	status?: "no" | "yes";
+}
+
+const { lead, status = "no" } = Astro.props;
+---
+
+<div class:list={["wont-item", `wont-item-${status}`]}>
+	<span class="wont-icon" aria-hidden="true">{status === "yes" ? "✓" : "✕"}</span>
+	<span class="wont-text"><span class="wont-lead">{lead}</span> <slot /></span>
+</div>
+
+<style>
+	.wont-item {
+		display: grid;
+		grid-template-columns: 24px minmax(0, 1fr);
+		gap: 16px;
+		padding: 14px 0;
+		/* --hairline-07 isn't in the token set; this is the design's row rule, one step below the
+		   band hairlines so a list of rows never reads as a table. */
+		border-bottom: 1px solid color-mix(in srgb, white 7%, transparent);
+		font-size: 14.5px;
+		color: var(--text-muted);
+		text-wrap: pretty;
+	}
+
+	.wont-item:last-child {
+		border-bottom: none;
+	}
+
+	.wont-icon {
+		font: 400 12px var(--font-mono);
+		color: var(--text-faint);
+	}
+
+	.wont-item-yes .wont-icon {
+		color: var(--accent);
+	}
+
+	.wont-lead {
+		color: var(--ink);
+	}
+
+	/* `color` here isn't decorative — without it, `.prose p` (article.css, tied on specificity
+	   with any bare `p` selector) would set this row's body text to the article's body color
+	   instead of inheriting `.wont-item`'s dimmer `--text-muted`. */
+	.wont-text :global(p) {
+		display: inline;
+		margin: 0;
+		color: inherit;
+	}
+
+	@media (min-width: 1920px) {
+		.wont-item {
+			grid-template-columns: 26px minmax(0, 1fr);
+			gap: 18px;
+			padding: 15px 0;
+			font-size: 15px;
+		}
+	}
+
+	@media (max-width: 1023px) {
+		.wont-item {
+			grid-template-columns: 22px minmax(0, 1fr);
+			gap: 14px;
+			padding: 13px 0;
+			font-size: 14px;
+		}
+	}
+
+	@media (max-width: 767px) {
+		.wont-item {
+			grid-template-columns: 20px minmax(0, 1fr);
+			gap: 12px;
+			font-size: 13.5px;
+		}
+
+		.wont-icon {
+			padding-top: 2px;
+			font-size: 11px;
+		}
+	}
+</style>

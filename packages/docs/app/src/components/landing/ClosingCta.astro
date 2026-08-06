@@ -5,13 +5,18 @@ interface Props {
 	firstSectionTitle: string;
 	firstHref: string;
 	repoUrl?: string;
+	/** Optional italic amber second clause from landing frontmatter (`closingAccent`). */
+	accent?: string;
 }
 
-const { firstSectionTitle, firstHref, repoUrl } = Astro.props;
+const { firstSectionTitle, firstHref, repoUrl, accent } = Astro.props;
 ---
 
 <div class="closing-cta">
-	<h2>Start with the {firstSectionTitle.toLowerCase()}.</h2>
+	<h2 class="closing-cta-title">
+		Start with the {firstSectionTitle.toLowerCase()}.{" "}
+		{accent && <span class="closing-cta-accent">{accent}</span>}
+	</h2>
 	<div class="closing-cta-actions">
 		<a class="btn btn-primary" href={firstHref}>read the docs →</a>
 		{repoUrl && (
@@ -32,11 +37,16 @@ const { firstSectionTitle, firstHref, repoUrl } = Astro.props;
 		flex-wrap: wrap;
 	}
 
-	h2 {
+	.closing-cta-title {
 		margin: 0;
 		font: 300 36px/1.15 var(--font-serif);
 		max-width: 620px;
 		color: var(--ink);
+	}
+
+	.closing-cta-accent {
+		font-style: italic;
+		color: var(--accent-2);
 	}
 
 	.closing-cta-actions {
@@ -67,7 +77,7 @@ const { firstSectionTitle, firstHref, repoUrl } = Astro.props;
 			gap: 48px;
 		}
 
-		h2 {
+		.closing-cta-title {
 			font-size: 42px;
 			max-width: 760px;
 		}

@@ -110,6 +110,8 @@ const hasToc = main === "article" && headings.some((heading) => heading.depth ==
 		min-width: 0;
 	}
 
+	.page-body:not(:has(.sidebar-rail)) { grid-template-columns: 1fr; } /* SidebarNav.astro renders nothing when there are no nav-worthy pages; collapse the empty rail column */
+
 	.page-main {
 		display: grid;
 		grid-template-columns: 1fr;

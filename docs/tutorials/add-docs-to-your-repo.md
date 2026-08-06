@@ -1,3 +1,7 @@
+---
+description: Turns a bare repo into a built, browsable static site and deploys it through CI.
+---
+
 # Add docs to your repo
 
 This tutorial takes a repo with no docs at all to a built, browsable static site, using

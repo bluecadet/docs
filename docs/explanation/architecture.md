@@ -1,3 +1,7 @@
+---
+description: Explains why docs are synced into a bundled Astro app and rewritten, not read in place.
+---
+
 # Architecture and design decisions
 
 ## Copy-with-transform, not in-place

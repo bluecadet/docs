@@ -1,8 +1,19 @@
 ---
-// Landing-only header variant: 240px rail column + wordmark, search trigger pill (visual only —
-// no search implementation lives on this page), and a right nav of "docs" + optional "github ↗".
-// Reused as-is on the 404 page. Tablet/mobile behavior mirrors Header.astro's doc-page header —
-// see the media queries below — including the hamburger opening NavSheet.astro.
+// Landing-only header variant: 240px rail column + wordmark, search trigger pill (SearchModal.astro
+// is mounted on this route too, via BaseLayout.astro — same shared `data-search-trigger`), and a
+// right nav of "docs" + optional "github ↗". Reused as-is on the 404 page.
+//
+// The shell (sticky positioning, grid/flex layout, translucent+blurred background, hairline
+// border) and the brand/search/hamburger pieces are shared with Header.astro via components/header/*
+// so the two variants can't drift apart — see HeaderShell.astro for the tablet/mobile breakpoint
+// behavior both headers follow. SidebarNav stays visible down to 768px; only below that (mobile)
+// does it hide in favor of the hamburger + NavSheet.astro.
+import HeaderShell from "../header/HeaderShell.astro";
+import Wordmark from "../header/Wordmark.astro";
+import SearchTrigger from "../header/SearchTrigger.astro";
+import RepoLink from "../header/RepoLink.astro";
+import NavToggle from "../header/NavToggle.astro";
+
 interface Props {
 	title: string;
 	docsHref: string;
@@ -10,107 +21,28 @@ interface Props {
 }
 
 const { title, docsHref, repoUrl } = Astro.props;
+const base = import.meta.env.BASE_URL;
 ---
 
-<header class="landing-header">
-	<div class="landing-header-brand">
-		<span class="glyph">▞</span>{title}
-	</div>
+<HeaderShell>
+	<Wordmark title={title} href={base} />
 	<div class="landing-header-nav">
-		<button type="button" class="search-trigger" data-search-trigger>
-			<span class="search-icon">⌕</span>
-			<span class="search-label">search docs</span>
-			<span class="search-kbd">/</span>
-		</button>
+		<SearchTrigger tabletWidth="230px" />
 		<nav class="landing-nav" aria-label="Primary">
 			<a href={docsHref}>docs</a>
-			{repoUrl && (
-				<a class="repo-link" href={repoUrl} rel="noopener noreferrer" target="_blank">
-					github ↗
-				</a>
-			)}
+			{repoUrl && <RepoLink href={repoUrl} />}
 		</nav>
-		<button
-			type="button"
-			class="nav-toggle"
-			data-nav-sheet-trigger
-			aria-label="Open navigation"
-			aria-haspopup="dialog"
-		>
-			<span class="nav-toggle__bar" />
-			<span class="nav-toggle__bar" />
-			<span class="nav-toggle__bar" />
-		</button>
+		<NavToggle />
 	</div>
-</header>
+</HeaderShell>
 
 <style>
-	/* Sticky at every breakpoint, matching Header.astro — the sidebar rail sticks below it. */
-	.landing-header {
-		position: sticky;
-		top: 0;
-		z-index: 20;
-		display: grid;
-		grid-template-columns: var(--rail-width) 1fr;
-		height: var(--header-height);
-		border-bottom: 1px solid var(--hairline-08);
-		background: var(--bg);
-	}
-
-	.landing-header-brand {
-		display: flex;
-		align-items: center;
-		gap: 10px;
-		padding: 0 28px;
-		height: 100%;
-		border-right: 1px solid var(--hairline-08);
-		font: 500 15px var(--font-mono);
-		white-space: nowrap;
-		overflow: hidden;
-		text-overflow: ellipsis;
-	}
-
-	.glyph {
-		color: var(--accent);
-	}
-
 	.landing-header-nav {
 		display: flex;
 		align-items: center;
 		gap: 24px;
 		padding: 0 32px;
 		min-width: 0;
-	}
-
-	.search-trigger {
-		display: flex;
-		align-items: center;
-		gap: 8px;
-		width: 320px;
-		max-width: 100%;
-		padding: 7px 12px;
-		border: 1px solid var(--hairline-12);
-		border-radius: var(--radius-md);
-		background: var(--white-02);
-		color: var(--text-muted);
-		font: 400 12.5px var(--font-mono);
-		cursor: pointer;
-	}
-
-	.search-icon {
-		opacity: 0.6;
-	}
-
-	.search-label {
-		white-space: nowrap;
-	}
-
-	.search-kbd {
-		margin-left: auto;
-		border: 1px solid var(--hairline-14);
-		border-radius: var(--radius-sm);
-		padding: 0 5px;
-		font-size: 11px;
 	}
 
 	.landing-nav {
@@ -121,118 +53,31 @@ const { title, docsHref, repoUrl } = Astro.props;
 		margin-left: auto;
 	}
 
-	.repo-link {
-		color: var(--accent-2);
-	}
-
-	.nav-toggle {
-		display: none;
-		flex-direction: column;
-		align-items: flex-end;
-		justify-content: center;
-		gap: 4px;
-		min-height: 44px;
-		min-width: 24px;
-		padding: 0;
-		background: none;
-		border: none;
-		cursor: pointer;
-	}
-
-	.nav-toggle__bar {
-		display: block;
-		height: 1.5px;
-		background: var(--text-muted);
-	}
-
-	.nav-toggle__bar:nth-child(1),
-	.nav-toggle__bar:nth-child(2) {
-		width: 20px;
-	}
-
-	.nav-toggle__bar:nth-child(3) {
-		width: 13px;
-	}
-
 	@media (min-width: 1920px) {
-		.landing-header-brand {
-			padding: 0 36px;
-			font-size: 15.5px;
-		}
-
 		.landing-header-nav {
 			gap: 26px;
 			padding: 0 44px;
 		}
-
-		.search-trigger {
-			width: 420px;
-			padding: 8px 13px;
-		}
 	}
 
-	/* Tablet: rail column collapses (IndexRail hides entirely below 1024, see IndexRail.astro),
-	   so this becomes a plain flex row like Header.astro's doc-page variant — logo, search,
-	   repo link, hamburger. The "docs" text link is dropped in favor of the hamburger + nav sheet
-	   (which also lists every section) and the hero/CTA buttons already on the page. */
+	/* Tablet: HeaderShell collapses to a flex row. The "docs" text link is dropped in favor of the
+	   hamburger + nav sheet (which also lists every section) and the hero/CTA buttons already on
+	   the page. */
 	@media (max-width: 1023px) {
-		.landing-header {
-			display: flex;
-			align-items: center;
-			gap: 18px;
-			padding: 0 26px;
-		}
-
-		.landing-header-brand {
-			padding: 0;
-			border-right: none;
-		}
-
 		.landing-header-nav {
 			margin-left: auto;
 			padding: 0;
 			gap: 20px;
 		}
 
-		.search-trigger {
-			width: 230px;
-		}
-
 		.landing-nav a:not(.repo-link) {
 			display: none;
-		}
-
-		.nav-toggle {
-			display: flex;
 		}
 	}
 
 	@media (max-width: 767px) {
-		.landing-header {
-			gap: 12px;
-			padding: 0 18px;
-		}
-
 		.landing-header-nav {
 			gap: 16px;
-		}
-
-		.search-trigger {
-			width: auto;
-			padding: 8px;
-			border: none;
-			background: none;
-		}
-
-		.search-label,
-		.search-kbd {
-			display: none;
-		}
-
-		.search-icon {
-			opacity: 1;
-			font-size: 17px;
-			color: var(--text-muted);
 		}
 
 		.landing-nav {

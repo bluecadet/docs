@@ -176,7 +176,19 @@ export function initSearchModal(): void {
 
 	function groupHtml(label: string, items: string[]): string {
 		if (items.length === 0) return "";
-		return `<div class="search-group"><div class="search-group__label">${label}</div>${items.join("")}</div>`;
+		const labelId = `search-group-label-${label.toLowerCase().replace(/\s+/g, "-")}`;
+		return (
+			`<div class="search-group" role="group" aria-labelledby="${labelId}">` +
+			`<div class="search-group__label" id="${labelId}">${label}</div>${items.join("")}</div>`
+		);
+	}
+
+	// Wraps option groups (never callouts/pills/notes) so `[role=listbox]` only ever owns
+	// `[role=option]` descendants (via `[role=group]` wrappers) — non-option content must sit
+	// outside this wrapper as a sibling.
+	function optionsListHtml(groupsHtml: string): string {
+		if (!groupsHtml) return "";
+		return `<div id="search-results" role="listbox" aria-label="Search results">${groupsHtml}</div>`;
 	}
 
 	function afterRender(): void {
@@ -229,8 +241,10 @@ export function initSearchModal(): void {
 			),
 		);
 
-		const html = groupHtml("RECENT", recentRows) + groupHtml("START HERE", startHereRows);
-		body.innerHTML = html || `<p class="search-empty-note">Start typing to search the docs.</p>`;
+		const groupsHtml = groupHtml("RECENT", recentRows) + groupHtml("START HERE", startHereRows);
+		body.innerHTML = groupsHtml
+			? optionsListHtml(groupsHtml)
+			: `<p class="search-empty-note">Start typing to search the docs.</p>`;
 		afterRender();
 	}
 
@@ -263,7 +277,7 @@ export function initSearchModal(): void {
 		setHintsIndexing(false);
 
 		let idCounter = 0;
-		let html = "";
+		let groupsHtml = "";
 		for (const [label, items] of grouped) {
 			const itemsHtml = items.map((item) =>
 				rowHtml(
@@ -277,9 +291,9 @@ export function initSearchModal(): void {
 					`search-option-${idCounter++}`,
 				),
 			);
-			html += groupHtml(label, itemsHtml);
+			groupsHtml += groupHtml(label, itemsHtml);
 		}
-		body.innerHTML = html;
+		body.innerHTML = optionsListHtml(groupsHtml);
 		afterRender();
 	}
 
@@ -301,10 +315,10 @@ export function initSearchModal(): void {
 		const pills: string[] = [];
 		if (repoUrl) {
 			pills.push(
-				`<a class="search-pill search-pill--neutral" href="${escapeHtml(repoUrl)}/issues?q=${encodeURIComponent(query)}" target="_blank" rel="noopener noreferrer">search github issues ↗</a>`,
+				`<a class="search-pill search-pill--neutral" href="${escapeHtml(`${repoUrl}/issues?q=${encodeURIComponent(query)}`)}" target="_blank" rel="noopener noreferrer">search github issues ↗</a>`,
 			);
 			pills.push(
-				`<a class="search-pill search-pill--amber" href="${escapeHtml(repoUrl)}" target="_blank" rel="noopener noreferrer">open github ↗</a>`,
+				`<a class="search-pill search-pill--amber" href="${escapeHtml(`${repoUrl}/issues/new?title=${encodeURIComponent(query)}`)}" target="_blank" rel="noopener noreferrer">open an issue ↗</a>`,
 			);
 		}
 
@@ -313,7 +327,7 @@ export function initSearchModal(): void {
 			`<span class="search-callout__label">Not found</span>` +
 			`No matches for “${escapeHtml(query)}”. Try a different term, or browse a section from the sidebar.` +
 			"</div>" +
-			groupHtml("TRY INSTEAD", tryInsteadRows) +
+			optionsListHtml(groupHtml("TRY INSTEAD", tryInsteadRows)) +
 			(pills.length > 0 ? `<div class="search-pills">${pills.join("")}</div>` : "");
 		afterRender();
 	}
@@ -366,14 +380,23 @@ export function initSearchModal(): void {
 
 	async function runSearch(query: string): Promise<void> {
 		const token = ++searchToken;
+		// The Pagefind module is only ever dynamically imported once per page load (cached in
+		// `pagefindPromise` afterwards) — that first import is the one honest "index is warming up"
+		// moment we have, since Pagefind's static-index architecture has no other init phase and no
+		// real page count to report. Surface it via the footer's existing `is-indexing` treatment.
+		const isFirstLoad = pagefindPromise === null;
+		if (isFirstLoad) setHintsIndexing(true);
+
 		let pagefind: PagefindModule;
 		try {
 			pagefind = await loadPagefind();
 		} catch {
+			if (isFirstLoad) setHintsIndexing(false);
 			if (token !== searchToken) return;
 			renderDevNoticeState();
 			return;
 		}
+		if (isFirstLoad) setHintsIndexing(false);
 
 		let searchResult: { results: PagefindResult[] };
 		try {
@@ -432,7 +455,11 @@ export function initSearchModal(): void {
 		recordRecent(row.dataset.href ?? "", row.dataset.title ?? "");
 	});
 
+	// Only hijack these keys while the search input itself is focused — otherwise a keyboard user
+	// tabbed to a no-results pill or the mobile cancel button couldn't activate it with Enter, and
+	// arrow keys would fight with whatever focus they moved to.
 	dialog.addEventListener("keydown", (event) => {
+		if (document.activeElement !== input) return;
 		if (event.key === "ArrowDown") {
 			event.preventDefault();
 			moveActive(1);

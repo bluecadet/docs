@@ -1,3 +1,7 @@
+---
+description: Describes how the built-in Pagefind search index is built, used, and its known limits.
+---
+
 # Search
 
 The built site ships full-text search over every published page, powered by

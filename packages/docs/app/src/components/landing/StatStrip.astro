@@ -1,0 +1,52 @@
+---
+// Full-bleed stat band for the landing page's MDX body. Wraps a row of <Stat> children:
+//
+//   <StatStrip>
+//     <Stat value="14" label="pages in this site" />
+//     <Stat value="0" label="config files required" />
+//   </StatStrip>
+//
+// The `landing-band` class is what tells src/pages/index.astro to let this run edge to edge
+// instead of sitting inside the article measure.
+---
+
+<div class="landing-band stat-strip">
+	<slot />
+</div>
+
+<style>
+	.stat-strip {
+		display: grid;
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+		gap: 32px;
+		padding: 26px 56px;
+		border-top: 1px solid var(--hairline-08);
+		border-bottom: 1px solid var(--hairline-08);
+		background: var(--surface-panel-1);
+	}
+
+	@media (min-width: 1920px) {
+		.stat-strip {
+			grid-template-columns: repeat(4, minmax(0, 300px));
+			gap: 40px;
+			padding: 30px 80px;
+		}
+	}
+
+	/* Tablet and mobile both go two-up; four stat cells in one row stops reading as a row well
+	   below 1024. */
+	@media (max-width: 1023px) {
+		.stat-strip {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+			gap: 20px 40px;
+			padding: 24px 40px;
+		}
+	}
+
+	@media (max-width: 767px) {
+		.stat-strip {
+			gap: 18px 24px;
+			padding: 20px 18px;
+		}
+	}
+</style>

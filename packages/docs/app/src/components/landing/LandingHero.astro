@@ -1,13 +1,27 @@
 ---
-// Landing-only hero: index entry's title in the hero H1 treatment, description as the lead
-// paragraph. Eyebrow chips, the install-command chip, and 1920px marginalia are skipped — the
-// design's copy for all three is lathe-specific CLI marketing with no equivalent real data.
+// Landing-only hero. The headline + lead come from the landing entry's title/description; the
+// eyebrow chips, install-command chip and marginalia notes come from optional landing frontmatter
+// (see src/content.config.ts). Each of those three renders nothing when its field is absent, so a
+// repo with a plain README still gets the plain headline-and-lead hero.
+interface Eyebrow {
+	label: string;
+	tone: "sage" | "amber" | "neutral";
+}
+
 interface Props {
 	title: string;
 	lead?: string;
+	/** Up to 3 chips above the headline. */
+	eyebrows?: Eyebrow[];
+	/** Copyable shell command, e.g. `npx @bluecadet/docs build`. */
+	installCommand?: string;
+	/** Marginalia beside the lead. First is amber, a second is neutral. */
+	notes?: string[];
+	/** Target for the "read the quickstart" link beside the install chip. */
+	quickstartHref?: string;
 }
 
-const { title, lead } = Astro.props;
+const { title, lead, eyebrows, installCommand, notes, quickstartHref } = Astro.props;
 
 // Only split into the design's two-clause hero treatment (plain line + italic accent line) when
 // the title has a natural clause break; a bare title (the common case for real doc collections)
@@ -15,9 +29,22 @@ const { title, lead } = Astro.props;
 const splitAt = title.indexOf(", ");
 const firstClause = splitAt === -1 ? title : title.slice(0, splitAt + 1);
 const secondClause = splitAt === -1 ? null : title.slice(splitAt + 2);
+
+const chips = eyebrows?.slice(0, 3) ?? [];
+const marginalia = notes?.filter((note) => note.trim().length > 0).slice(0, 2) ?? [];
 ---
 
 <div class="hero">
+	{
+		chips.length > 0 && (
+			<div class="hero-eyebrows">
+				{chips.map((chip) => (
+					<span class:list={["eyebrow", `eyebrow-${chip.tone}`]}>{chip.label}</span>
+				))}
+			</div>
+		)
+	}
+
 	<h1>
 		{firstClause}
 		{secondClause && (
@@ -27,15 +54,112 @@ const secondClause = splitAt === -1 ? null : title.slice(splitAt + 2);
 			</>
 		)}
 	</h1>
+
 	{lead && <p class="hero-lead">{lead}</p>}
+
+	{
+		marginalia.length > 0 && (
+			<div class="hero-notes">
+				{marginalia.map((note, i) => (
+					<p class:list={["hero-note", i === 0 ? "hero-note-amber" : "hero-note-neutral"]}>{note}</p>
+				))}
+			</div>
+		)
+	}
+
+	{
+		installCommand && (
+			<div class="hero-actions">
+				<div class="install">
+					<span class="install-prompt">$</span>
+					<code class="install-command">{installCommand}</code>
+					<button
+						class="install-copy"
+						type="button"
+						aria-label="Copy install command"
+						data-install-copy={installCommand}
+					>
+						⧉
+					</button>
+				</div>
+				{quickstartHref && (
+					<a class="hero-quickstart" href={quickstartHref}>
+						read the quickstart →
+					</a>
+				)}
+			</div>
+		)
+	}
 </div>
 
+<script>
+	// Copy-to-clipboard for the hero install chip. Swaps the glyph for a checkmark for a beat so
+	// the click has visible feedback; falls back silently when the Clipboard API is unavailable
+	// (insecure origins), leaving the command selectable by hand.
+	for (const button of document.querySelectorAll<HTMLButtonElement>("[data-install-copy]")) {
+		button.addEventListener("click", async () => {
+			const command = button.dataset.installCopy;
+			if (!command) return;
+			try {
+				await navigator.clipboard.writeText(command);
+			} catch {
+				return;
+			}
+			button.textContent = "✓";
+			button.classList.add("install-copy--copied");
+			window.setTimeout(() => {
+				button.textContent = "⧉";
+				button.classList.remove("install-copy--copied");
+			}, 1400);
+		});
+	}
+</script>
+
 <style>
+	/* Named grid areas, rather than nested wrappers, are what let the marginalia column move
+	   between three positions without duplicating the markup: below the lead on mobile, beside
+	   the lead from tablet up, and beside the whole hero column at 1920. */
 	.hero {
+		display: grid;
+		grid-template-areas: "eyebrows" "title" "lead" "notes" "actions";
+		grid-template-columns: minmax(0, 1fr);
 		padding: 76px 56px 0;
 	}
 
+	.hero-eyebrows {
+		grid-area: eyebrows;
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 12px;
+		margin-bottom: 26px;
+	}
+
+	.eyebrow {
+		padding: 3px 8px;
+		border-radius: var(--radius-sm);
+		font: 400 11.5px var(--font-mono);
+		letter-spacing: 0.14em;
+		text-transform: uppercase;
+	}
+
+	.eyebrow-sage {
+		color: var(--bg);
+		background: var(--accent);
+	}
+
+	.eyebrow-amber {
+		color: var(--accent-2);
+		border: 1px solid var(--amber-border-40);
+	}
+
+	.eyebrow-neutral {
+		color: var(--text-dim);
+		border: 1px solid var(--hairline-12);
+	}
+
 	h1 {
+		grid-area: title;
 		margin: 0;
 		font: 300 64px/1.05 var(--font-serif);
 		max-width: 840px;
@@ -49,6 +173,7 @@ const secondClause = splitAt === -1 ? null : title.slice(splitAt + 2);
 	}
 
 	.hero-lead {
+		grid-area: lead;
 		margin: 26px 0 0;
 		max-width: 640px;
 		color: var(--text-muted);
@@ -56,10 +181,116 @@ const secondClause = splitAt === -1 ? null : title.slice(splitAt + 2);
 		text-wrap: pretty;
 	}
 
+	.hero-notes {
+		grid-area: notes;
+		display: flex;
+		flex-direction: column;
+		gap: 22px;
+		margin-top: 20px;
+	}
+
+	.hero-note {
+		margin: 0;
+		padding: 2px 0 2px 14px;
+		font: 400 12px/1.75 var(--font-mono);
+		text-wrap: pretty;
+	}
+
+	.hero-note-amber {
+		border-left: 2px solid var(--accent-2);
+		color: var(--amber-annotation);
+	}
+
+	.hero-note-neutral {
+		border-left: 2px solid var(--hairline-14);
+		color: var(--text-dim);
+	}
+
+	.hero-actions {
+		grid-area: actions;
+		display: flex;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: 16px;
+		margin: 36px 0 60px;
+	}
+
+	.install {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		padding: 11px 16px;
+		border: 1px solid var(--sage-border-30);
+		border-radius: var(--radius-md);
+		background: var(--sage-tint-05);
+		font: 400 13.5px var(--font-mono);
+		color: var(--text-code);
+	}
+
+	.install-prompt {
+		color: var(--accent);
+	}
+
+	.install-command {
+		font: inherit;
+		white-space: nowrap;
+	}
+
+	.install-copy {
+		background: none;
+		border: none;
+		color: var(--accent);
+		cursor: pointer;
+		font: 400 13px var(--font-mono);
+		padding: 0 0 0 8px;
+	}
+
+	.install-copy--copied {
+		color: var(--accent-2);
+	}
+
+	.hero-quickstart {
+		font: 400 13px var(--font-mono);
+		color: var(--accent);
+	}
+
+	/* Tablet up: the notes column moves alongside the lead paragraph. It spans the actions row too
+	   so a tall stack of notes pushes nothing down — the install chip still sits directly under
+	   the lead, as in the design. */
+	@media (min-width: 768px) {
+		.hero {
+			grid-template-areas: "eyebrows eyebrows" "title title" "lead notes" "actions notes";
+			grid-template-columns: minmax(0, 1fr) 200px;
+			column-gap: 36px;
+			align-items: start;
+		}
+
+		.hero-notes {
+			margin-top: 26px;
+			align-self: start;
+		}
+	}
+
+	@media (min-width: 1024px) {
+		.hero {
+			grid-template-columns: minmax(0, 1fr) 240px;
+			column-gap: 48px;
+		}
+	}
+
+	/* 1920: extra width goes to the margin apparatus, not the measure — the note column runs the
+	   full height of the hero instead of only beside the lead. */
 	@media (min-width: 1920px) {
 		.hero {
+			grid-template-areas: "eyebrows notes" "title notes" "lead notes" "actions notes";
+			grid-template-columns: minmax(0, 880px) 320px;
+			column-gap: 80px;
+			justify-content: start;
 			padding: 96px 80px 0;
-			max-width: 880px;
+		}
+
+		.hero-eyebrows {
+			margin-bottom: 28px;
 		}
 
 		h1 {
@@ -71,18 +302,120 @@ const secondClause = splitAt === -1 ? null : title.slice(splitAt + 2);
 
 		.hero-lead {
 			margin-top: 28px;
-			font-size: 17px;
+		}
+
+		.hero-notes {
+			margin-top: 0;
+			padding-top: 80px;
+			align-self: start;
+		}
+
+		.hero-note {
+			padding-left: 15px;
+			font-size: 12.5px;
+			line-height: 1.8;
+		}
+
+		.hero-actions {
+			gap: 18px;
+			margin: 38px 0 64px;
+		}
+
+		.install {
+			padding: 12px 17px;
+			font-size: 14px;
+		}
+
+		.hero-quickstart {
+			font-size: 13.5px;
 		}
 	}
 
 	@media (max-width: 1023px) {
 		.hero {
-			padding: 44px 20px 0;
+			padding: 52px 40px 0;
 		}
 
 		h1 {
-			font-size: 40px;
+			font-size: 52px;
 			max-width: none;
+		}
+
+		.hero-lead {
+			font-size: 15.5px;
+		}
+
+		.hero-actions {
+			gap: 14px;
+			margin: 30px 0 46px;
+		}
+	}
+
+	/* Mobile: the chip becomes a full-width 48px tap target and the quickstart link a button. */
+	@media (max-width: 767px) {
+		.hero {
+			padding: 38px 18px 0;
+		}
+
+		.hero-eyebrows {
+			gap: 7px;
+			margin-bottom: 20px;
+		}
+
+		.eyebrow {
+			padding: 3px 7px;
+			font-size: 10.5px;
+			letter-spacing: 0.12em;
+		}
+
+		h1 {
+			font-size: 38px;
+			line-height: 1.1;
+			letter-spacing: -0.015em;
+		}
+
+		.hero-lead {
+			margin-top: 18px;
+			font-size: 15px;
+		}
+
+		.hero-notes {
+			gap: 14px;
+			margin-top: 20px;
+		}
+
+		.hero-note {
+			padding-left: 12px;
+			font-size: 11.5px;
+			line-height: 1.7;
+		}
+
+		.hero-actions {
+			display: grid;
+			grid-template-columns: minmax(0, 1fr);
+			gap: 10px;
+			margin: 26px 0 34px;
+		}
+
+		.install {
+			min-height: 48px;
+			padding: 0 14px;
+			font-size: 12.5px;
+			overflow-x: auto;
+		}
+
+		.install-copy {
+			margin-left: auto;
+		}
+
+		.hero-quickstart {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			min-height: 48px;
+			border: 1px solid var(--hairline-14);
+			border-radius: var(--radius-md);
+			font-size: 12.5px;
 		}
 	}
 </style>

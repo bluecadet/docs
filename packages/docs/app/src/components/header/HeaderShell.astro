@@ -1,0 +1,58 @@
+---
+// Shared sticky shell for Header.astro (doc pages) and LandingHeader.astro (landing + 404): owns
+// the grid layout, translucent + blurred background, and hairline bottom border, so the two
+// page-specific headers can't drift on those properties again. Header-specific content (brand,
+// search, nav) is passed through the default slot.
+//
+// Sticky at every breakpoint: the sidebar and TOC rails stick to `top: var(--header-height)` (see
+// SidebarNav/Toc), so this has to stay put for them to tuck under it.
+//
+// Translucent + blurred so a code block or table scrolling underneath reads through softly rather
+// than vanishing behind a hard edge. `@supports` falls back to the previous opaque `var(--bg)` on
+// engines without backdrop-filter, where the see-through color alone would be unreadable against
+// busy content.
+---
+
+<header class="header-shell">
+	<slot />
+</header>
+
+<style>
+	.header-shell {
+		position: sticky;
+		top: 0;
+		z-index: 20;
+		display: grid;
+		grid-template-columns: var(--rail-width) 1fr;
+		height: var(--header-height);
+		border-bottom: 1px solid var(--hairline-08);
+		background: var(--bg);
+	}
+
+	@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+		.header-shell {
+			background: color-mix(in srgb, var(--bg) 72%, transparent);
+			-webkit-backdrop-filter: blur(12px) saturate(1.15);
+			backdrop-filter: blur(12px) saturate(1.15);
+		}
+	}
+
+	/* Tablet: the left rail column is gone (SidebarNav narrows in place, but nothing needs to
+	   align with it up here), so this becomes a plain flex row: logo, search, repo link,
+	   hamburger. */
+	@media (max-width: 1023px) {
+		.header-shell {
+			display: flex;
+			align-items: center;
+			gap: 18px;
+			padding: 0 26px;
+		}
+	}
+
+	@media (max-width: 767px) {
+		.header-shell {
+			gap: 12px;
+			padding: 0 18px;
+		}
+	}
+</style>

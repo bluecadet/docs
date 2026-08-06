@@ -1,3 +1,7 @@
+---
+description: "Covers when and how to add a docs.config.json to override the CLI's defaults."
+---
+
 # Configure docs.config.json
 
 Add an optional `docs.config.json` at your repo root when the defaults aren't enough — every field

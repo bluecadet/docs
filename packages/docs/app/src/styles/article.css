@@ -12,9 +12,12 @@
 	line-height: 1.7;
 
 	/* Vertical offset a jumped-to (or anchor-linked) heading scrolls to rest under, so the sticky
-	   header never covers it. The header (owned by a concurrent agent) is ~58px tall across
-	   breakpoints; the extra ~16px is breathing room so the heading doesn't sit flush against it. */
-	--heading-scroll-offset: 74px;
+	   header never covers it. Derived from `--header-height` (declared on `.page` in
+	   BaseLayout.astro, owned by a concurrent agent) rather than a fixed px value: that variable
+	   already changes per breakpoint (56px tablet, 52px mobile, 62px at 1920+), and `.prose` lives
+	   inside `.page` so it inherits whichever value is current. The extra 16px is breathing room
+	   so the heading doesn't sit flush against the header. */
+	--heading-scroll-offset: calc(var(--header-height) + 16px);
 }
 
 /* ---- Headings --------------------------------------------------------- */

@@ -1,0 +1,22 @@
+---
+// Shared "github ↗" link, reused by Header.astro and LandingHeader.astro so both get the same
+// color and hover treatment (the landing variant used to have neither).
+interface Props {
+	href: string;
+}
+
+const { href } = Astro.props;
+---
+
+<a class="repo-link" href={href} rel="noopener noreferrer" target="_blank"> github ↗ </a>
+
+<style>
+	.repo-link {
+		color: var(--accent-2);
+		transition: color 0.15s ease;
+	}
+
+	.repo-link:hover {
+		color: color-mix(in srgb, var(--accent-2) 80%, white);
+	}
+</style>

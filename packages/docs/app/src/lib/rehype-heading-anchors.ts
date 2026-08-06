@@ -19,7 +19,21 @@
 // heading's entire subtree — including whatever this plugin injects. A literal "#" text node here
 // would get swept into that walk, silently turning a TOC entry like "Install lathe" into
 // "#Install lathe". Keeping the anchor empty (id/label only, glyph via CSS) sidesteps that.
-import type { Element, Root } from "hast";
+//
+// The anchor's own `aria-label` ("Link to this section") is exactly what a screen reader user
+// needs when tabbing directly to it — but left alone, that same label also becomes part of the
+// HEADING's accessible name: accname computes a heading's name from its content by recursing into
+// descendants, and a labelled descendant contributes its label rather than its (empty) text. Every
+// H2/H3 would announce as "Link to this section, <heading text>" under heading-navigation. Rather
+// than trade that off against keyboard access (aria-hidden + tabindex="-1" would fix the heading's
+// name but make the anchor unreachable by keyboard, and a visually-hidden text label inside it
+// would reintroduce the same TOC "#" bug this file already works around), we pin the heading's own
+// accessible name with an explicit `aria-label` set to its own plain text, computed below BEFORE
+// the anchor is added as a child. Per the accname spec, an element's own `aria-label` fully
+// pre-empts "name from content", so whatever the anchor is labelled — now or later — can never
+// bleed into the heading's name again. The anchor stays a completely ordinary, fully
+// keyboard-focusable, properly-labelled link.
+import type { Element, Root, Text } from "hast";
 import { visit } from "unist-util-visit";
 
 /** H1 is the page title (lifted out of the article body entirely — see article.css) and never
@@ -28,6 +42,17 @@ import { visit } from "unist-util-visit";
     doesn't appear in the `Toc`/sidebar "on this page" lists (those only track depth-2 headings). */
 const ANCHORED_HEADINGS = new Set(["h2", "h3"]);
 
+/** Flattens a heading's children to plain text (dropping markup — code spans, emphasis, nested
+    links). Used only to compute the heading's pinned `aria-label` before the anchor is injected;
+    never rendered, so it doesn't need to match `text` metadata byte for byte. */
+function textContent(node: Element | Text): string {
+	if (node.type === "text") return node.value;
+	if ("children" in node) {
+		return node.children.map((child) => textContent(child as Element | Text)).join("");
+	}
+	return "";
+}
+
 export function rehypeHeadingAnchors() {
 	return (tree: Root): void => {
 		visit(tree, "element", (node: Element) => {
@@ -35,6 +60,11 @@ export function rehypeHeadingAnchors() {
 
 			const id = node.properties.id;
 			if (typeof id !== "string" || id.length === 0) return;
+
+			if (typeof node.properties.ariaLabel !== "string") {
+				const headingText = textContent(node).trim();
+				if (headingText.length > 0) node.properties.ariaLabel = headingText;
+			}
 
 			const anchor: Element = {
 				type: "element",

@@ -1,122 +1,45 @@
 ---
 // Doc-page header: logo cell aligned with the sidebar rail, search trigger pill (visual only —
-// a later agent wires the modal behind data-search-trigger), and a github link when configured.
-// No version chip: no data source for one.
+// SearchModal.astro's script wires the modal behind the shared `data-search-trigger`), and a
+// github link when configured. No version chip: no data source for one.
 //
-// Tablet (<=1023px) collapses this from a grid (rail-aligned brand column + content column) into
-// a single flex row — the left index/sidebar rail disappears at that width, so there's no longer
-// a column to align with — and adds a hamburger button opening NavSheet.astro. Mobile (<=767px)
-// further hides the repo link and reduces the search trigger to an icon (full search UI lives in
-// NavSheet's own search trigger, and in the mobile full-screen search view itself).
+// The shell (sticky positioning, grid/flex layout, translucent+blurred background, hairline
+// border) and the brand/search/hamburger pieces are shared with LandingHeader.astro via
+// components/header/* so the two variants can't drift apart — see HeaderShell.astro for the
+// tablet/mobile breakpoint behavior both headers follow.
+import HeaderShell from "./header/HeaderShell.astro";
+import Wordmark from "./header/Wordmark.astro";
+import SearchTrigger from "./header/SearchTrigger.astro";
+import RepoLink from "./header/RepoLink.astro";
+import NavToggle from "./header/NavToggle.astro";
+
 const siteTitle = process.env.DOCS_TITLE ?? "docs";
 const repoUrl = process.env.DOCS_REPO_URL;
 const base = import.meta.env.BASE_URL;
 ---
 
-<header class="site-header">
-	<div class="site-header__brand">
-		<a href={base}><span class="glyph">▞</span>{siteTitle}</a>
-	</div>
+<HeaderShell>
+	<Wordmark title={siteTitle} href={base} />
 	<div class="site-header__right">
-		<button type="button" class="search-trigger" data-search-trigger>
-			<span class="search-trigger__icon">⌕</span>
-			<span class="search-trigger__label">search docs</span>
-			<span class="search-trigger__kbd">/</span>
-		</button>
+		<SearchTrigger />
 		{
 			repoUrl && (
 				<nav class="site-header__nav">
-					<a class="repo-link" href={repoUrl} rel="noopener noreferrer" target="_blank">
-						github ↗
-					</a>
+					<RepoLink href={repoUrl} />
 				</nav>
 			)
 		}
-		<button
-			type="button"
-			class="nav-toggle"
-			data-nav-sheet-trigger
-			aria-label="Open navigation"
-			aria-haspopup="dialog"
-		>
-			<span class="nav-toggle__bar" />
-			<span class="nav-toggle__bar" />
-			<span class="nav-toggle__bar" />
-		</button>
+		<NavToggle />
 	</div>
-</header>
+</HeaderShell>
 
 <style>
-	/* Sticky at every breakpoint: the sidebar and TOC rails stick to `top: var(--header-height)`
-	   (see SidebarNav/Toc), so the header has to stay put for them to tuck under it. */
-	.site-header {
-		position: sticky;
-		top: 0;
-		z-index: 20;
-		display: grid;
-		grid-template-columns: var(--rail-width) 1fr;
-		height: var(--header-height);
-		border-bottom: 1px solid var(--hairline-08);
-		background: var(--bg);
-	}
-
-	.site-header__brand {
-		display: flex;
-		align-items: center;
-		padding: 0 28px;
-		border-right: 1px solid var(--hairline-08);
-		min-width: 0;
-	}
-
-	.site-header__brand a {
-		display: flex;
-		align-items: center;
-		gap: 10px;
-		font: 500 15px var(--font-mono);
-		text-transform: lowercase;
-		color: var(--ink);
-		white-space: nowrap;
-		overflow: hidden;
-		text-overflow: ellipsis;
-	}
-
-	.glyph {
-		color: var(--accent);
-	}
-
 	.site-header__right {
 		display: flex;
 		align-items: center;
 		gap: 24px;
 		padding: 0 32px;
 		min-width: 0;
-	}
-
-	.search-trigger {
-		display: flex;
-		align-items: center;
-		gap: 8px;
-		width: 320px;
-		padding: 7px 12px;
-		border: 1px solid var(--hairline-12);
-		border-radius: var(--radius-md);
-		background: var(--white-02);
-		color: var(--text-muted);
-		font: 400 12.5px var(--font-mono);
-		white-space: nowrap;
-		cursor: pointer;
-	}
-
-	.search-trigger__icon {
-		opacity: 0.6;
-	}
-
-	.search-trigger__kbd {
-		margin-left: auto;
-		border: 1px solid var(--hairline-14);
-		border-radius: var(--radius-sm);
-		padding: 0 5px;
-		font-size: 11px;
 	}
 
 	.site-header__nav {
@@ -127,61 +50,10 @@ const base = import.meta.env.BASE_URL;
 		font-size: 13px;
 	}
 
-	.repo-link {
-		color: var(--accent-2);
-		transition: color 0.15s ease;
-	}
-
-	.repo-link:hover {
-		color: color-mix(in srgb, var(--accent-2) 80%, white);
-	}
-
-	.nav-toggle {
-		display: none;
-		flex-direction: column;
-		align-items: flex-end;
-		justify-content: center;
-		gap: 4px;
-		min-height: 44px;
-		min-width: 24px;
-		padding: 0;
-		background: none;
-		border: none;
-		cursor: pointer;
-	}
-
-	.nav-toggle__bar {
-		display: block;
-		height: 1.5px;
-		background: var(--text-muted);
-	}
-
-	.nav-toggle__bar:nth-child(1),
-	.nav-toggle__bar:nth-child(2) {
-		width: 20px;
-	}
-
-	.nav-toggle__bar:nth-child(3) {
-		width: 13px;
-	}
-
 	@media (min-width: 1920px) {
-		.site-header__brand {
-			padding: 0 36px;
-		}
-
-		.site-header__brand a {
-			font-size: 15.5px;
-		}
-
 		.site-header__right {
 			gap: 26px;
 			padding: 0 44px;
-		}
-
-		.search-trigger {
-			width: 420px;
-			padding: 8px 13px;
 		}
 
 		.site-header__nav {
@@ -189,63 +61,18 @@ const base = import.meta.env.BASE_URL;
 		}
 	}
 
-	/* Tablet: the left rail column is gone (SidebarNav narrows in place, but nothing needs to
-	   align with it up here), so the header becomes a plain flex row: logo, search, repo link,
-	   hamburger. */
+	/* Tablet: HeaderShell collapses to a flex row; push this side to the far right. */
 	@media (max-width: 1023px) {
-		.site-header {
-			display: flex;
-			align-items: center;
-			gap: 18px;
-			padding: 0 26px;
-		}
-
-		.site-header__brand {
-			padding: 0;
-			border-right: none;
-		}
-
 		.site-header__right {
 			margin-left: auto;
 			padding: 0;
 			gap: 20px;
 		}
-
-		.search-trigger {
-			width: 220px;
-		}
-
-		.nav-toggle {
-			display: flex;
-		}
 	}
 
 	@media (max-width: 767px) {
-		.site-header {
-			gap: 12px;
-			padding: 0 18px;
-		}
-
 		.site-header__right {
 			gap: 16px;
-		}
-
-		.search-trigger {
-			width: auto;
-			padding: 8px;
-			border: none;
-			background: none;
-		}
-
-		.search-trigger__label,
-		.search-trigger__kbd {
-			display: none;
-		}
-
-		.search-trigger__icon {
-			opacity: 1;
-			font-size: 17px;
-			color: var(--text-muted);
 		}
 
 		/* Repo link moves to NavSheet's footer + the doc-page Footer at this width; no room for it

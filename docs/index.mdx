@@ -1,18 +1,88 @@
 ---
 title: bluecadet docs
 description: A CLI that turns a repo's colocated markdown into a static docs site — no Astro project, no config, no build pipeline to maintain.
+eyebrows:
+  - label: static output
+    tone: sage
+  - label: no config
+    tone: amber
+  - label: any repo
+    tone: neutral
+installCommand: npx @bluecadet/docs build
+heroNotes:
+  - "↖ one required input: a README.md, or a docs/index.md. everything else is optional."
+  - the repo you point it at needs no package.json, no dependencies and no astro config.
+footerMeta: ISC licensed · builds to static files
+closingAccent: It is one command.
 ---
 
-`@bluecadet/docs` reads a repo's `README.md` and `docs/` tree and builds a static site from it:
-sidebar navigation, full-text search, and a designed landing page, all generated from markdown
-you'd already write anyway.
+import Feature from "@bluecadet/docs/components/landing/Feature.astro";
+import Features from "@bluecadet/docs/components/landing/Features.astro";
+import Line from "@bluecadet/docs/components/landing/Line.astro";
+import Ok from "@bluecadet/docs/components/landing/Ok.astro";
+import Stat from "@bluecadet/docs/components/landing/Stat.astro";
+import StatStrip from "@bluecadet/docs/components/landing/StatStrip.astro";
+import Terminal from "@bluecadet/docs/components/landing/Terminal.astro";
+import Warn from "@bluecadet/docs/components/landing/Warn.astro";
+import WillNotDo from "@bluecadet/docs/components/landing/WillNotDo.astro";
+import WontItem from "@bluecadet/docs/components/landing/WontItem.astro";
 
-```sh
-npx @bluecadet/docs build
-```
+<StatStrip>
+  <Stat value="1" label="command to build the whole site" />
+  <Stat value="0" label="config files required" />
+  <Stat value="2" label="inputs read: README.md and docs/" />
+  <Stat value="0" label="dependencies added to your repo" />
+</StatStrip>
 
-No install step, no `package.json` in the consumer repo — the CLI bundles its own Astro app and
-`node_modules`. Run it from any repo (Go, C#, Node, whatever); it only ever reads markdown.
+<Terminal cwd="~/repos/docs" caption="a full build of this site" duration="449ms">
+  <Line prompt>npx @bluecadet/docs build</Line>
+  <Line label="reading">README.md + docs/</Line>
+  <Line label="syncing">11 page(s), 0 asset(s) <Ok>✓</Ok></Line>
+  <Line label="building">astro static output</Line>
+  <Line label="indexing">pagefind → <Warn>12 page(s)</Warn></Line>
+  <Line label="writing">./dist</Line>
+  <Line />
+  <Line><Ok>done</Ok> · 12 page(s) built in 449ms</Line>
+</Terminal>
+
+<Features>
+  <Feature title="Markdown you already wrote">
+    It reads the root README.md and the docs/ tree as-is. Titles come from frontmatter or the first
+    heading, relative links between files are rewritten to routes, and images beside a page are
+    copied along with it.
+  </Feature>
+  <Feature title="No project to maintain">
+    The CLI ships its own Astro app and its own node_modules. The repo you point it at keeps no
+    package.json, no lockfile and no build config — run it from a Go, C# or Rust repo just as
+    easily.
+  </Feature>
+  <Feature title="Navigation and search, derived">
+    The sidebar, breadcrumbs, prev/next links and a Pagefind full-text index are all built from the
+    file tree. There is no navigation file to keep in sync with reality.
+  </Feature>
+</Features>
+
+<WillNotDo
+  title="Things this will not do"
+  accent="will not"
+  intro="A short list, kept honest. If one of these is a dealbreaker, better you find out here than after you have moved your docs."
+>
+  <WontItem lead="Be a CMS.">
+    It builds from files on disk. Nothing to log in to, and no copy of your content stored anywhere
+    but your repo.
+  </WontItem>
+  <WontItem lead="Let you restyle it.">
+    The palette, typography and layout are the same for every repo that uses it. Configuration
+    covers the title, repo URL, base path and extra content globs — not design.
+  </WontItem>
+  <WontItem lead="Read your source code.">
+    There is no API-reference generator here. If you want types or CLI flags documented, write them
+    down as markdown like everything else.
+  </WontItem>
+  <WontItem status="yes" lead="Stay out of your repo.">
+    One command in, one output directory out. It never writes back into the tree it read.
+  </WontItem>
+</WillNotDo>
 
 > [!TIP]
 > First time here? [Add docs to your repo](tutorials/add-docs-to-your-repo/) walks through the

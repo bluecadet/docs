@@ -1,0 +1,119 @@
+---
+// Full-bleed "here is what this does not do" band for the landing page's MDX body:
+//
+//   <WillNotDo title="Things this will not do" accent="will not" intro="A short list…">
+//     <WontItem lead="Replace your site.">…</WontItem>
+//     <WontItem status="yes" lead="Get out of the way.">…</WontItem>
+//   </WillNotDo>
+//
+// `accent` is an optional substring of `title` that renders in italic amber — the design's
+// attention treatment on the one clause that carries the point.
+interface Props {
+	title: string;
+	/** Substring of `title` to italicise in amber. Ignored when it isn't found in `title`. */
+	accent?: string;
+	/** Dim paragraph under the heading. */
+	intro?: string;
+}
+
+const { title, accent, intro } = Astro.props;
+
+const at = accent ? title.indexOf(accent) : -1;
+const before = at === -1 ? title : title.slice(0, at);
+const after = at === -1 ? "" : title.slice(at + (accent?.length ?? 0));
+---
+
+<div class="landing-band wont">
+	<div class="wont-head">
+		<h2 class="wont-title">
+			{before}{at !== -1 && <span class="wont-accent">{accent}</span>}{after}
+		</h2>
+		{intro && <p class="wont-intro">{intro}</p>}
+	</div>
+	<div class="wont-items">
+		<slot />
+	</div>
+</div>
+
+<style>
+	.wont {
+		display: grid;
+		grid-template-columns: 340px minmax(0, 1fr);
+		gap: 56px;
+		padding: 48px 56px 54px;
+		border-bottom: 1px solid var(--hairline-08);
+		background: var(--surface-panel-2);
+	}
+
+	/* This band's own heading never wants article.css's `.prose h2` hairline treatment — but this
+	   div lives inside `.prose` (the landing MDX body), so `padding-bottom`/`border-bottom` must
+	   be reset explicitly rather than left unset, or `.prose h2` supplies them uncontested (a
+	   class selector beats an unset property regardless of specificity). */
+	.wont-title {
+		margin: 0 0 10px;
+		padding-bottom: 0;
+		font: 400 30px/1.15 var(--font-serif);
+		color: var(--ink);
+		border-bottom: none;
+	}
+
+	.wont-accent {
+		font-style: italic;
+		color: var(--accent-2);
+	}
+
+	.wont-intro {
+		margin: 0;
+		font-size: 14px;
+		color: var(--text-dim);
+		text-wrap: pretty;
+	}
+
+	.wont-items {
+		display: flex;
+		flex-direction: column;
+	}
+
+	@media (min-width: 1920px) {
+		.wont {
+			grid-template-columns: 400px minmax(0, 800px);
+			gap: 80px;
+			padding: 56px 80px 62px;
+			justify-content: start;
+		}
+
+		.wont-title {
+			font-size: 34px;
+		}
+	}
+
+	/* Tablet and mobile stack: the heading column sits above the list. */
+	@media (max-width: 1023px) {
+		.wont {
+			grid-template-columns: minmax(0, 1fr);
+			gap: 10px;
+			padding: 38px 40px 42px;
+		}
+
+		.wont-title {
+			margin-bottom: 8px;
+			font-size: 28px;
+		}
+
+		.wont-intro {
+			max-width: 520px;
+			font-size: 13.5px;
+		}
+	}
+
+	@media (max-width: 767px) {
+		.wont {
+			gap: 8px;
+			padding: 32px 18px 34px;
+		}
+
+		.wont-title {
+			font-size: 26px;
+		}
+	}
+</style>

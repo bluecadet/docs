@@ -1,8 +1,14 @@
 ---
 // Landing page — route "/". Uses the shared page shell (BaseLayout) so its header, sidebar rail
 // and footer columns are identical to every doc page; only the header/footer variants and the
-// full-bleed main differ. All landing copy is derived from real synced content + frontmatter +
-// env, not the design canvas's fictional "lathe" CLI copy.
+// full-bleed main differ.
+//
+// The hero, footer meta and closing CTA accent render from the landing entry's frontmatter (see
+// src/content.config.ts) because they sit outside the MDX body. The editorial bands the design
+// puts between the hero and the CTA cards — stat strip, terminal demo, feature pillars, the
+// "will not do" list — are MDX components the author drops into their own index.mdx instead, so
+// the shape of the page is theirs. Everything is optional: with none of it, this route is still
+// a headline, a lead, the CTA cards, and the closing band.
 import { getCollection, render } from "astro:content";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import CtaCards from "../components/landing/CtaCards.astro";
@@ -24,15 +30,29 @@ const { nodes } = await getNavTree();
 const firstSection = nodes[0];
 const docsHref = (firstSection && firstPageOf(firstSection)?.href) ?? base;
 
-const pageTitle = indexEntry?.data.title ?? siteTitle;
-const pageDescription = indexEntry?.data.description;
+const data = indexEntry?.data;
+const pageTitle = data?.title ?? siteTitle;
+const pageDescription = data?.description;
 ---
 
 <BaseLayout title={pageTitle} description={pageDescription} main="full" appendSiteTitle={false}>
 	<LandingHeader slot="header" title={siteTitle} docsHref={docsHref} repoUrl={repoUrl} />
-	<LandingFooter slot="footer" title={siteTitle} docsHref={docsHref} repoUrl={repoUrl} />
+	<LandingFooter
+		slot="footer"
+		title={siteTitle}
+		docsHref={docsHref}
+		repoUrl={repoUrl}
+		meta={data?.footerMeta}
+	/>
 
-	<LandingHero title={pageTitle} lead={pageDescription} />
+	<LandingHero
+		title={pageTitle}
+		lead={pageDescription}
+		eyebrows={data?.eyebrows}
+		installCommand={data?.installCommand}
+		notes={data?.heroNotes}
+		quickstartHref={docsHref}
+	/>
 	{
 		Content && (
 			<article class="prose landing-content">
@@ -49,15 +69,49 @@ const pageDescription = indexEntry?.data.description;
 	}
 	{
 		firstSection && (
-			<ClosingCta firstSectionTitle={firstSection.label} firstHref={docsHref} repoUrl={repoUrl} />
+			<ClosingCta
+				firstSectionTitle={firstSection.label}
+				firstHref={docsHref}
+				repoUrl={repoUrl}
+				accent={data?.closingAccent}
+			/>
 		)
 	}
 </BaseLayout>
 
 <style>
+	/* The MDX body mixes two kinds of block: ordinary prose, which wants the same measure and
+	   gutter as any doc page, and full-bleed landing bands (StatStrip, Terminal, Features,
+	   WillNotDo), which run edge to edge and carry their own padding. A named-column grid gives
+	   both without the bands having to break out with negative margins. */
 	.landing-content {
-		padding: 44px 56px;
-		max-width: 880px;
+		display: grid;
+		grid-template-columns:
+			[full-start] 56px
+			[content-start] minmax(0, 880px)
+			[content-end] 1fr
+			[full-end];
+		padding: 44px 0;
+	}
+
+	/* `:global` because `<Content />` output carries no scope attribute of this component's. */
+	.landing-content > :global(*) {
+		grid-column: content;
+	}
+
+	.landing-content > :global(.landing-band) {
+		grid-column: full;
+	}
+
+	/* Bands supply their own vertical rhythm and hairlines. A band that opens or closes the body
+	   cancels the article's padding on that edge so it butts straight against the hero / CTA
+	   cards, the way the design's bands do. */
+	.landing-content > :global(.landing-band:first-child) {
+		margin-top: -44px;
+	}
+
+	.landing-content > :global(.landing-band:last-child) {
+		margin-bottom: -44px;
 	}
 
 	.landing-section {
@@ -66,7 +120,20 @@ const pageDescription = indexEntry?.data.description;
 
 	@media (min-width: 1920px) {
 		.landing-content {
-			padding: 48px 80px;
+			grid-template-columns:
+				[full-start] 80px
+				[content-start] minmax(0, 880px)
+				[content-end] 1fr
+				[full-end];
+			padding: 48px 0;
+		}
+
+		.landing-content > :global(.landing-band:first-child) {
+			margin-top: -48px;
+		}
+
+		.landing-content > :global(.landing-band:last-child) {
+			margin-bottom: -48px;
 		}
 
 		.landing-section {
@@ -76,7 +143,20 @@ const pageDescription = indexEntry?.data.description;
 
 	@media (max-width: 1023px) {
 		.landing-content {
-			padding: 36px 40px;
+			grid-template-columns:
+				[full-start] 40px
+				[content-start] minmax(0, 1fr)
+				[content-end] 40px
+				[full-end];
+			padding: 36px 0;
+		}
+
+		.landing-content > :global(.landing-band:first-child) {
+			margin-top: -36px;
+		}
+
+		.landing-content > :global(.landing-band:last-child) {
+			margin-bottom: -36px;
 		}
 
 		.landing-section {
@@ -86,7 +166,20 @@ const pageDescription = indexEntry?.data.description;
 
 	@media (max-width: 767px) {
 		.landing-content {
-			padding: 28px 18px;
+			grid-template-columns:
+				[full-start] 18px
+				[content-start] minmax(0, 1fr)
+				[content-end] 18px
+				[full-end];
+			padding: 28px 0;
+		}
+
+		.landing-content > :global(.landing-band:first-child) {
+			margin-top: -28px;
+		}
+
+		.landing-content > :global(.landing-band:last-child) {
+			margin-bottom: -28px;
 		}
 
 		.landing-section {

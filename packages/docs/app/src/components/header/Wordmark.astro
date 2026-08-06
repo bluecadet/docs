@@ -1,0 +1,58 @@
+---
+// Shared brand cell — logo glyph + site title, linked to `href` — reused by Header.astro and
+// LandingHeader.astro so the two never drift on color/clickability again (the landing wordmark
+// used to render as inert, dimmed text).
+interface Props {
+	title: string;
+	href: string;
+}
+
+const { title, href } = Astro.props;
+---
+
+<div class="wordmark">
+	<a href={href}><span class="glyph">▞</span>{title}</a>
+</div>
+
+<style>
+	.wordmark {
+		display: flex;
+		align-items: center;
+		padding: 0 28px;
+		border-right: 1px solid var(--hairline-08);
+		min-width: 0;
+	}
+
+	.wordmark a {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		font: 500 15px var(--font-mono);
+		text-transform: lowercase;
+		color: var(--ink);
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	.glyph {
+		color: var(--accent);
+	}
+
+	@media (min-width: 1920px) {
+		.wordmark {
+			padding: 0 36px;
+		}
+
+		.wordmark a {
+			font-size: 15.5px;
+		}
+	}
+
+	@media (max-width: 1023px) {
+		.wordmark {
+			padding: 0;
+			border-right: none;
+		}
+	}
+</style>

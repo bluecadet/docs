@@ -1,0 +1,131 @@
+---
+// One numbered pillar inside <Features>. The numeral is not authored — it's a CSS counter, so
+// reordering or adding pillars never leaves a stale "03" behind.
+interface Props {
+	title: string;
+}
+
+const { title } = Astro.props;
+---
+
+<div class="feature">
+	<div class="feature-title">{title}</div>
+	<div class="feature-body"><slot /></div>
+</div>
+
+<style>
+	/* Dividers are expressed as "which cells are not on the outer edge" rather than as a fixed
+	   3-cell assumption, so a fourth or fifth pillar still rules correctly. */
+	.feature {
+		padding: 38px 32px 44px;
+		counter-increment: landing-feature;
+	}
+
+	.feature::before {
+		content: counter(landing-feature, decimal-leading-zero);
+		display: block;
+		margin-bottom: 16px;
+		font: 300 44px/1 var(--font-serif);
+		color: var(--accent);
+	}
+
+	/* Sage / amber / sage — state, attention, state. */
+	.feature:nth-child(even)::before {
+		color: var(--accent-2);
+	}
+
+	.feature-title {
+		margin-bottom: 8px;
+		font: 500 19px var(--font-serif);
+		color: var(--ink);
+	}
+
+	.feature-body {
+		font-size: 13.5px;
+		color: var(--text-muted);
+		text-wrap: pretty;
+	}
+
+	/* `color` here isn't decorative — without it, `.prose p` (article.css, tied on specificity
+	   with any bare `p` selector) would set every feature body paragraph to the article's body
+	   color instead of this band's dimmer `--text-muted`. */
+	.feature-body :global(p) {
+		margin: 0;
+		color: inherit;
+	}
+
+	/* 3-up */
+	@media (min-width: 1024px) {
+		.feature:not(:nth-child(3n)):not(:last-child) {
+			border-right: 1px solid var(--hairline-08);
+		}
+
+		.feature:nth-child(n + 4) {
+			border-top: 1px solid var(--hairline-08);
+		}
+	}
+
+	@media (min-width: 1920px) {
+		.feature {
+			padding: 44px 44px 52px;
+		}
+
+		.feature::before {
+			margin-bottom: 18px;
+			font-size: 48px;
+		}
+
+		.feature-title {
+			font-size: 21px;
+		}
+
+		.feature-body {
+			font-size: 14px;
+			max-width: 420px;
+		}
+	}
+
+	/* 2-up */
+	@media (max-width: 1023px) {
+		.feature {
+			padding: 30px 28px 34px;
+		}
+
+		.feature:nth-child(odd):not(:last-child) {
+			border-right: 1px solid var(--hairline-08);
+		}
+
+		.feature:nth-child(n + 3) {
+			border-top: 1px solid var(--hairline-08);
+		}
+
+		.feature::before {
+			margin-bottom: 12px;
+			font-size: 38px;
+		}
+
+		.feature-title {
+			font-size: 18px;
+			margin-bottom: 6px;
+		}
+	}
+
+	/* 1-up */
+	@media (max-width: 767px) {
+		.feature {
+			padding: 28px 18px 30px;
+		}
+
+		.feature:nth-child(odd):not(:last-child) {
+			border-right: none;
+		}
+
+		.feature:nth-child(n + 2) {
+			border-top: 1px solid var(--hairline-08);
+		}
+
+		.feature::before {
+			font-size: 34px;
+		}
+	}
+</style>

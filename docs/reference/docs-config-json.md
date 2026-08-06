@@ -1,3 +1,7 @@
+---
+description: Documents every docs.config.json field, its type, its default, and its CLI override.
+---
+
 # docs.config.json schema
 
 Optional, at the repo root. Every field is optional.

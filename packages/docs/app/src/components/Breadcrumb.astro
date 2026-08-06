@@ -86,13 +86,20 @@ const parent = ancestors.at(-1);
 		}
 
 		.breadcrumb-pill {
+			/* Bleeds full-bleed by canceling BaseLayout's `.page-main-content` mobile padding
+			   (26px 18px 40px) — named here so the two numbers this depends on are declared once,
+			   not scattered across the width/margin/padding below. If that padding ever changes,
+			   update these two values (BaseLayout.astro is out of scope for this component to
+			   edit directly). */
+			--page-pad-x: 18px;
+			--page-pad-top: 26px;
 			display: flex;
 			align-items: center;
 			gap: 10px;
-			width: calc(100% + 36px);
+			width: calc(100% + var(--page-pad-x) * 2);
 			min-height: 46px;
-			margin: -26px -18px 26px;
-			padding: 0 18px;
+			margin: calc(var(--page-pad-top) * -1) calc(var(--page-pad-x) * -1) 26px;
+			padding: 0 var(--page-pad-x);
 			background: var(--white-02);
 			border: none;
 			border-bottom: 1px solid var(--hairline-08);

@@ -1,0 +1,53 @@
+---
+// Shared hamburger trigger for NavSheet.astro, reused by Header.astro and LandingHeader.astro.
+// Hidden at desktop (>=1024px); shown once viewport width drops to tablet.
+---
+
+<button
+	type="button"
+	class="nav-toggle"
+	data-nav-sheet-trigger
+	aria-label="Open navigation"
+	aria-haspopup="dialog"
+>
+	<span class="nav-toggle__bar" />
+	<span class="nav-toggle__bar" />
+	<span class="nav-toggle__bar" />
+</button>
+
+<style>
+	.nav-toggle {
+		display: none;
+		flex-direction: column;
+		align-items: flex-end;
+		justify-content: center;
+		gap: 4px;
+		min-height: 44px;
+		min-width: 24px;
+		padding: 0;
+		background: none;
+		border: none;
+		cursor: pointer;
+	}
+
+	.nav-toggle__bar {
+		display: block;
+		height: 1.5px;
+		background: var(--text-muted);
+	}
+
+	.nav-toggle__bar:nth-child(1),
+	.nav-toggle__bar:nth-child(2) {
+		width: 20px;
+	}
+
+	.nav-toggle__bar:nth-child(3) {
+		width: 13px;
+	}
+
+	@media (max-width: 1023px) {
+		.nav-toggle {
+			display: flex;
+		}
+	}
+</style>
