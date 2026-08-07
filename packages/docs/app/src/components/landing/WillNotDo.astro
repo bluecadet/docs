@@ -6,11 +6,11 @@
 //     <WontItem status="yes" lead="Get out of the way.">…</WontItem>
 //   </WillNotDo>
 //
-// `accent` is an optional substring of `title` that renders in italic amber — the design's
-// attention treatment on the one clause that carries the point.
+// `accent` is an optional substring of `title` that renders in italic attention accent — the
+// design's attention treatment on the one clause that carries the point.
 interface Props {
 	title: string;
-	/** Substring of `title` to italicise in amber. Ignored when it isn't found in `title`. */
+	/** Substring of `title` to italicise in the attention accent. Ignored when it isn't found in `title`. */
 	accent?: string;
 	/** Dim paragraph under the heading. */
 	intro?: string;

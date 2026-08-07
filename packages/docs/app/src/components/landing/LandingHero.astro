@@ -5,7 +5,7 @@
 // repo with a plain README still gets the plain headline-and-lead hero.
 interface Eyebrow {
 	label: string;
-	tone: "sage" | "amber" | "neutral";
+	tone: "state" | "attention" | "neutral";
 }
 
 interface Props {
@@ -15,7 +15,7 @@ interface Props {
 	eyebrows?: Eyebrow[];
 	/** Copyable shell command, e.g. `npx @bluecadet/docs build`. */
 	installCommand?: string;
-	/** Marginalia beside the lead. First is amber, a second is neutral. */
+	/** Marginalia beside the lead. First is the attention accent, a second is neutral. */
 	notes?: string[];
 	/** Target for the "read the quickstart" link beside the install chip. */
 	quickstartHref?: string;
@@ -61,7 +61,7 @@ const marginalia = notes?.filter((note) => note.trim().length > 0).slice(0, 2) ?
 		marginalia.length > 0 && (
 			<div class="hero-notes">
 				{marginalia.map((note, i) => (
-					<p class:list={["hero-note", i === 0 ? "hero-note-amber" : "hero-note-neutral"]}>{note}</p>
+					<p class:list={["hero-note", i === 0 ? "hero-note-attention" : "hero-note-neutral"]}>{note}</p>
 				))}
 			</div>
 		)
@@ -143,14 +143,14 @@ const marginalia = notes?.filter((note) => note.trim().length > 0).slice(0, 2) ?
 		text-transform: uppercase;
 	}
 
-	.eyebrow-sage {
+	.eyebrow-state {
 		color: var(--bg);
 		background: var(--accent);
 	}
 
-	.eyebrow-amber {
+	.eyebrow-attention {
 		color: var(--accent-2);
-		border: 1px solid var(--amber-border-40);
+		border: 1px solid var(--accent-2-border-40);
 	}
 
 	.eyebrow-neutral {
@@ -199,9 +199,9 @@ const marginalia = notes?.filter((note) => note.trim().length > 0).slice(0, 2) ?
 		text-wrap: pretty;
 	}
 
-	.hero-note-amber {
+	.hero-note-attention {
 		border-left: 2px solid var(--accent-2);
-		color: var(--amber-annotation);
+		color: var(--accent-2-annotation);
 	}
 
 	.hero-note-neutral {
@@ -226,9 +226,9 @@ const marginalia = notes?.filter((note) => note.trim().length > 0).slice(0, 2) ?
 		align-items: center;
 		gap: 10px;
 		padding: 11px 16px;
-		border: 1px solid var(--sage-border-30);
+		border: 1px solid var(--accent-border-30);
 		border-radius: var(--radius-md);
-		background: var(--sage-tint-05);
+		background: var(--accent-tint-05);
 		font: 400 13.5px var(--font-mono);
 		color: var(--text-code);
 	}

@@ -52,19 +52,19 @@ async function main(): Promise<void> {
 	const root = path.resolve(process.cwd(), values.root ?? ".");
 	const out = path.resolve(process.cwd(), values.out ?? path.join(root, "dist"));
 
-	const cfg = resolveConfig({
+	const overrides = {
 		root,
 		out,
 		title: values.title,
 		repoUrl: values["repo-url"],
 		base: values.base,
 		site: values.site,
-	});
+	};
 
 	if (command === "build") {
-		await runBuild(cfg);
+		await runBuild(resolveConfig(overrides));
 	} else {
-		await runDev(cfg);
+		await runDev(overrides);
 	}
 }
 

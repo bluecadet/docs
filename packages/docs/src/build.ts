@@ -57,5 +57,8 @@ export function applyEnv(cfg: ResolvedConfig): void {
 	if (cfg.header) payload.header = cfg.header;
 	if (cfg.footer) payload.footer = cfg.footer;
 	if (cfg.sidebar) payload.sidebar = cfg.sidebar;
+	if (cfg.version) payload.version = cfg.version;
+	if (cfg.sidebarMeta) payload.sidebarMeta = cfg.sidebarMeta;
+	if (cfg.toc) payload.toc = cfg.toc;
 	process.env.DOCS_CONFIG = JSON.stringify(payload);
 }

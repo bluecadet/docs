@@ -4,6 +4,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 import Breadcrumb from "../components/Breadcrumb.astro";
 import Pagination from "../components/Pagination.astro";
 import Toc from "../components/Toc.astro";
+import { getDocsConfig } from "../lib/config";
 
 export async function getStaticPaths() {
 	// The `index` entry is the landing route, owned by src/pages/index.astro — exclude it here so
@@ -21,6 +22,14 @@ interface Props {
 
 const { entry } = Astro.props;
 const { Content, headings } = await render(entry);
+
+// Only resolved when both a template and this page's source are known — a page with no
+// `sourcePath` (e.g. a hypothetical generated one) simply omits the edit link.
+const editLinkTemplate = getDocsConfig().toc?.editLink;
+const editHref =
+	editLinkTemplate && entry.data.sourcePath
+		? editLinkTemplate.replace("{path}", entry.data.sourcePath)
+		: undefined;
 ---
 
 <BaseLayout
@@ -28,6 +37,7 @@ const { Content, headings } = await render(entry);
 	description={entry.data.description}
 	headings={headings}
 	currentId={entry.id}
+	editHref={editHref}
 >
 	<Breadcrumb id={entry.id} title={entry.data.title} />
 	{/* data-pagefind-body scopes the search index to this article's own prose — see the

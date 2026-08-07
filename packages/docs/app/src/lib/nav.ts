@@ -9,7 +9,9 @@
 //   depth-2 node under a `config` node under `reference`. An intermediate directory may or may not
 //   have its own page: the CLI collapses `docs/guides/index.md` onto route `/guides/` (content id
 //   `guides`), so a `guides` node can be BOTH a real page and a parent of `guides/*` children.
-//   Directories with no index page are inert label nodes (no `href`). Ordering is alphabetical —
+//   A root-level directory with no index page is an inert label node (no `href`); a nested one
+//   still gets an `href` (its first descendant page, see `fillDirectoryHrefs`) so it's clickable.
+//   Ordering is alphabetical —
 //   there is no author-controlled ordering mechanism in auto mode. The one display convention
 //   layered on top: at each level, leaf pages sort before nodes that have children, so a section's
 //   own pages read before its subsections.
@@ -19,6 +21,14 @@
 //   content id, so unlike auto mode, `node.id` for a group is NOT guaranteed to be a real path
 //   prefix of its descendants' ids. `trailFor`/`containsId` below both find ancestors by actually
 //   walking the tree (not by comparing id strings), so this holds in both modes.
+//
+// A group may declare its own page via `SidebarGroup.link` (a content id, exactly like a leaf
+// item) — its node then behaves as a real page (`isPage: true`, `id` set to that content id) so
+// active-state/trail matching and pagination treat it like any other page. Without a `link`, a
+// group nested below the root still needs somewhere to send a click: its `href` becomes its first
+// descendant's href (depth-first, `isPage` stays false so it isn't double-counted as a page).
+// Root-level groups with no `link` keep the inert "section heading" treatment. Auto mode mirrors
+// the no-link case for nested directories with no index page.
 import { type CollectionEntry, getCollection } from "astro:content";
 import { getDocsConfig, type SidebarGroup, type SidebarItem } from "./config.js";
 
@@ -31,12 +41,18 @@ export interface NavNode {
 	label: string;
 	/** Frontmatter description, when the backing page has one. */
 	description?: string;
-	/** Link target. Absent only for directories that have no index page. */
+	/** Link target. Absent only for directories/groups with no index page or descendant page. */
 	href?: string;
 	/** 0 for root-level nodes. */
 	depth: number;
 	/** True when a real content entry backs this node. */
 	isPage: boolean;
+	/**
+	 * True for config-mode group nodes (see `SidebarGroup`). Lets renderers keep the root-level
+	 * "section heading" treatment even when the group gains an `href` via `link` or a first-descendant
+	 * fallback — only nested group headings adopt the plain sidebar-item look.
+	 */
+	isGroup?: boolean;
 	children: NavNode[];
 }
 
@@ -127,7 +143,22 @@ function buildAutoNodes(entries: DocsEntry[], base: string): NavNode[] {
 	}
 
 	sortTree(nodes);
+	fillDirectoryHrefs(nodes);
 	return nodes;
+}
+
+/**
+ * A directory with no index page still needs somewhere to send a click once it's nested below the
+ * root: give it its first descendant page's href, depth-first in display order. Root-level
+ * directories with no index page keep the inert label treatment (see SidebarNav.astro).
+ */
+function fillDirectoryHrefs(nodes: NavNode[]): void {
+	for (const node of nodes) {
+		fillDirectoryHrefs(node.children);
+		if (!node.isPage && node.depth > 0) {
+			node.href = firstHrefOf(node.children);
+		}
+	}
 }
 
 const CONFIG_PATH = "docs.config.yaml";
@@ -150,6 +181,29 @@ function buildGroupNode(
 	base: string,
 	depth: number,
 ): NavNode {
+	const children = group.items.map((item) => buildItemNode(item, byId, usedIds, base, depth + 1));
+
+	if (group.link !== undefined) {
+		const entry = byId.get(group.link);
+		if (!entry) {
+			throw new Error(
+				`${CONFIG_PATH}: sidebar references unknown page "${group.link}" (no synced content with that id).`,
+			);
+		}
+		const cut = group.link.lastIndexOf("/");
+		return {
+			id: group.link,
+			segment: group.link.slice(cut + 1),
+			label: group.label,
+			description: entry.data.description,
+			href: `${base}${group.link}/`,
+			depth,
+			isPage: true,
+			isGroup: true,
+			children,
+		};
+	}
+
 	const id = uniqueSlug(group.label, usedIds);
 	return {
 		id,
@@ -157,7 +211,11 @@ function buildGroupNode(
 		label: group.label,
 		depth,
 		isPage: false,
-		children: group.items.map((item) => buildItemNode(item, byId, usedIds, base, depth + 1)),
+		isGroup: true,
+		// Nested groups with no page of their own link through to their first descendant instead;
+		// root-level groups keep the inert "section heading" treatment (see SidebarNav.astro).
+		href: depth > 0 ? firstHrefOf(children) : undefined,
+		children,
 	};
 }
 
@@ -218,6 +276,15 @@ export function firstPageOf(node: NavNode): NavPage | undefined {
 	for (const child of node.children) {
 		const page = firstPageOf(child);
 		if (page) return page;
+	}
+	return undefined;
+}
+
+/** The href of the first linkable page depth-first among `nodes`, or undefined if there isn't one. */
+function firstHrefOf(nodes: NavNode[]): string | undefined {
+	for (const node of nodes) {
+		const page = firstPageOf(node);
+		if (page) return page.href;
 	}
 	return undefined;
 }

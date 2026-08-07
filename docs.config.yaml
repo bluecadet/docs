@@ -26,9 +26,6 @@ sidebar:
       - reference/docs-config-yaml
       - reference/content-conventions
       - reference/search
-      - label: Packages
-        items:
-          - packages/docs
   - label: Explanation
     items:
       - explanation/architecture

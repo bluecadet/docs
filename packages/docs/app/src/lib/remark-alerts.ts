@@ -2,13 +2,13 @@
 // variants `article.css` knows how to draw:
 //
 //   > [!NOTE]      > [!TIP]        -> neutral callout, label is the keyword itself
-//   > [!IMPORTANT] > [!WARNING]    -> amber/attention callout, label "HEADS UP"
+//   > [!IMPORTANT] > [!WARNING]    -> attention callout, label "HEADS UP"
 //   > [!CAUTION]
 //
 // A matching blockquote is rewritten in place (via mdast->hast `data.hName`/`hProperties`, the
 // standard technique for custom hast output from a remark plugin) into:
 //
-//   <div class="callout callout--amber">
+//   <div class="callout callout--attention">
 //     <div class="callout-label">HEADS UP</div>
 //     <div class="callout-body">...rest of the blockquote's content...</div>
 //   </div>
@@ -21,7 +21,7 @@ import { visit } from "unist-util-visit";
 type BlockquoteChild = BlockContent | DefinitionContent;
 
 const MARKER = /^\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]/;
-const AMBER_KEYWORDS = new Set(["IMPORTANT", "WARNING", "CAUTION"]);
+const ATTENTION_KEYWORDS = new Set(["IMPORTANT", "WARNING", "CAUTION"]);
 
 export function remarkAlerts() {
 	return (tree: Root): void => {
@@ -36,8 +36,8 @@ export function remarkAlerts() {
 			if (!match) return;
 
 			const keyword = match[1] as "NOTE" | "TIP" | "IMPORTANT" | "WARNING" | "CAUTION";
-			const amber = AMBER_KEYWORDS.has(keyword);
-			const label = amber ? "HEADS UP" : keyword;
+			const attention = ATTENTION_KEYWORDS.has(keyword);
+			const label = attention ? "HEADS UP" : keyword;
 
 			const bodyChildren = stripMarker(node.children, first, firstText, match[0].length);
 
@@ -64,7 +64,9 @@ export function remarkAlerts() {
 			node.children = [labelCarrier, bodyCarrier];
 			node.data = {
 				hName: "div",
-				hProperties: { className: ["callout", amber ? "callout--amber" : "callout--neutral"] },
+				hProperties: {
+					className: ["callout", attention ? "callout--attention" : "callout--neutral"],
+				},
 			};
 		});
 	};

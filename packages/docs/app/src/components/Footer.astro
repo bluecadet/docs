@@ -1,9 +1,11 @@
 ---
 // One footer for every route (doc pages, landing and 404 all render this via BaseLayout's
-// default `footer` slot). Grid mirrors the header (same --rail-width column). Deliberately
-// prop-less: everything comes from config and the nav tree, so the footer is byte-identical
-// on every page — no per-template variants to drift apart. Only renders links/meta we actually
-// have data for — no fictional changelog/discord links, no fabricated version/license string.
+// default `footer` slot). Grid mirrors the header (same --rail-display swap to a plain flex row,
+// no rail column or divider, on sidebar-less pages — see BaseLayout's `.page--no-sidebar`).
+// Deliberately prop-less: everything comes from config and the nav tree, so the footer is
+// byte-identical on every page — no per-template variants to drift apart. Only renders
+// links/meta we actually have data for — no fictional changelog/discord links, no fabricated
+// version/license string.
 import { getDocsConfig, isExternalLink } from "../lib/config";
 import { docsEntryHref } from "../lib/nav";
 
@@ -61,9 +63,11 @@ const docsHref = await docsEntryHref();
 	}
 
 	/* Capped, centered inner row — mirrors .header-shell-inner and .page-body so the left/right
-	   hairlines line up into one continuous edge from the header down through the footer. */
+	   hairlines line up into one continuous edge from the header down through the footer.
+	   `--rail-display`/grid-template-columns follow the same grid-on-doc-pages, flex-on-sidebar-less
+	   swap as .header-shell-inner — see its comment in HeaderShell.astro. */
 	.site-footer-inner {
-		display: grid;
+		display: var(--rail-display);
 		grid-template-columns: var(--rail-width) 1fr;
 		max-width: var(--shell-width);
 		margin-inline: auto;
@@ -74,8 +78,8 @@ const docsHref = await docsEntryHref();
 		display: flex;
 		align-items: center;
 		gap: 8px;
-		border-right: 1px solid var(--hairline-08);
-		padding: 32px 36px;
+		border-right: var(--rail-divider);
+		padding: 32px var(--brand-pad-right) 32px var(--brand-pad-left);
 		font: 400 12px var(--font-mono);
 		color: var(--text-faint);
 		text-transform: lowercase;
@@ -90,8 +94,17 @@ const docsHref = await docsEntryHref();
 		display: flex;
 		align-items: center;
 		gap: 28px;
-		padding: 32px var(--content-pad-x);
+		padding: 32px var(--content-pad-x) 32px var(--nav-pad-left);
 		font: 400 12px var(--font-mono);
+	}
+
+	/* Sidebar-less pages (see BaseLayout's `--nav-flex`): the footer row is flex, not grid, at
+	   desktop too, so this cell needs to grow into the space the rail column used to reserve. A
+	   no-op (`initial`) on doc pages, where it's still the grid's second column filling `1fr`. */
+	@media (min-width: 1024px) {
+		.site-footer__right {
+			flex: var(--nav-flex, initial);
+		}
 	}
 
 	.site-footer__link {
@@ -110,6 +123,7 @@ const docsHref = await docsEntryHref();
 
 	@media (max-width: 1023px) {
 		.site-footer-inner {
+			display: grid;
 			grid-template-columns: 1fr;
 		}
 

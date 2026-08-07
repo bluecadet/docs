@@ -27,6 +27,13 @@ const base = import.meta.env.BASE_URL;
 function childrenAreNested(node: NavNode): boolean {
 	return nested || node.isPage || node.depth > 0;
 }
+
+// Same rule as SidebarNav: a root-level sidebar group keeps the dim "section heading" look even
+// once it's clickable via `sidebar[].link` — a group nested below the root always looks like a
+// plain item.
+function isSectionHeading(node: NavNode): boolean {
+	return node.depth === 0 && Boolean(node.isGroup);
+}
 ---
 
 {
@@ -53,42 +60,44 @@ function childrenAreNested(node: NavNode): boolean {
 				<span class="nav-sheet__search-kbd">/</span>
 			</button>
 
-			<nav class="nav-sheet__nav" aria-label="Docs navigation">
-				<Astro.self nodes={items} currentId={currentId} />
-			</nav>
+			<div class="nav-sheet__body">
+				<nav class="nav-sheet__nav" aria-label="Docs navigation">
+					<Astro.self nodes={items} currentId={currentId} />
+				</nav>
 
-			<div class="nav-sheet__footer">
-				{
-					footerLinks.length > 0 ? (
-						footerLinks.map((link) => (
-							<a
-								class="nav-sheet__footer-link"
-								href={link.href}
-								rel={isExternalLink(link.href) ? "noopener noreferrer" : undefined}
-								target={isExternalLink(link.href) ? "_blank" : undefined}
-							>
-								{link.label}
-								{isExternalLink(link.href) && " ↗"}
-							</a>
-						))
-					) : (
-						<>
-							<a class="nav-sheet__footer-link" href={await docsEntryHref()}>
-								docs
-							</a>
-							{config.repoUrl && (
+				<div class="nav-sheet__footer">
+					{
+						footerLinks.length > 0 ? (
+							footerLinks.map((link) => (
 								<a
 									class="nav-sheet__footer-link"
-									href={config.repoUrl}
-									rel="noopener noreferrer"
-									target="_blank"
+									href={link.href}
+									rel={isExternalLink(link.href) ? "noopener noreferrer" : undefined}
+									target={isExternalLink(link.href) ? "_blank" : undefined}
 								>
-									github ↗
+									{link.label}
+									{isExternalLink(link.href) && " ↗"}
 								</a>
-							)}
-						</>
-					)
-				}
+							))
+						) : (
+							<>
+								<a class="nav-sheet__footer-link" href={await docsEntryHref()}>
+									docs
+								</a>
+								{config.repoUrl && (
+									<a
+										class="nav-sheet__footer-link"
+										href={config.repoUrl}
+										rel="noopener noreferrer"
+										target="_blank"
+									>
+										github ↗
+									</a>
+								)}
+							</>
+						)
+					}
+				</div>
 			</div>
 		</dialog>
 	) : (
@@ -98,7 +107,10 @@ function childrenAreNested(node: NavNode): boolean {
 					{node.href ? (
 						<a
 							class="nav-sheet__item"
-							class:list={{ "is-active": node.id === currentId }}
+							class:list={{
+								"nav-sheet__item--section": isSectionHeading(node),
+								"is-active": node.id === currentId,
+							}}
 							href={node.href}
 							aria-current={node.id === currentId ? "page" : undefined}
 						>
@@ -141,7 +153,10 @@ function childrenAreNested(node: NavNode): boolean {
 		color: var(--ink);
 		display: none;
 		flex-direction: column;
-		overflow-y: auto;
+		/* Overrides the UA stylesheet's default `overflow: auto` on <dialog> — scrolling now lives
+		   only on .nav-sheet__body below, so the header and search bar it doesn't wrap can stay
+		   pinned in view. */
+		overflow: hidden;
 	}
 
 	.nav-sheet[open] {
@@ -168,7 +183,10 @@ function childrenAreNested(node: NavNode): boolean {
 		min-height: 56px;
 		padding: 0 14px 0 26px;
 		border-bottom: 1px solid var(--hairline-08);
-		background: var(--surface-code);
+		/* Same background as .header-shell (Header.astro) — this bar visually replaces the site
+		   header while the sheet is open, so it must read as identically colored, not a different
+		   surface, when the sheet toggles open/closed. */
+		background: var(--bg);
 		flex-shrink: 0;
 	}
 
@@ -203,7 +221,9 @@ function childrenAreNested(node: NavNode): boolean {
 		width: 100%;
 		min-height: 48px;
 		padding: 0 26px;
-		background: none;
+		/* Matches Breadcrumb.astro's .breadcrumb-pill background — the two are the same "search /
+		   wayfinding bar" affordance at different breakpoints and should read as the same surface. */
+		background: var(--white-02);
 		border: none;
 		border-bottom: 1px solid var(--hairline-06);
 		color: var(--text-muted);
@@ -223,9 +243,18 @@ function childrenAreNested(node: NavNode): boolean {
 		font-size: 11px;
 	}
 
+	/* Only this region scrolls — .nav-sheet__header and .nav-sheet__search stay flex items above
+	   it, pinned in place, instead of scrolling away with the nav tree (previously overflow-y:auto
+	   lived on .nav-sheet itself, so the whole column — header and search bar included — scrolled
+	   as one block on long nav trees). */
+	.nav-sheet__body {
+		flex: 1 1 auto;
+		min-height: 0;
+		overflow-y: auto;
+	}
+
 	.nav-sheet__nav {
 		padding: 8px 0 0;
-		flex: 1 0 auto;
 	}
 
 	.nav-sheet__list {
@@ -252,7 +281,23 @@ function childrenAreNested(node: NavNode): boolean {
 	/* Exactly one row — the current page — carries the "you are here" mark. */
 	.nav-sheet__item.is-active {
 		color: var(--ink);
-		background: var(--sage-tint-08);
+		background: var(--accent-tint-08);
+		box-shadow: inset 2px 0 var(--accent);
+	}
+
+	/* A root-level group heading (see isSectionHeading()) keeps the dim "section" look even once
+	   it's clickable via `sidebar[].link` — only a nested group heading adopts the plain
+	   .nav-sheet__item look above. Three-class selector so it reliably wins over the plainer
+	   .nav-sheet__item rules regardless of source order. */
+	.nav-sheet__item.nav-sheet__item--section {
+		font: 400 11px var(--font-mono);
+		letter-spacing: 0.06em;
+		color: var(--text-dim);
+	}
+
+	.nav-sheet__item.nav-sheet__item--section.is-active {
+		color: var(--ink);
+		background: var(--accent-tint-08);
 		box-shadow: inset 2px 0 var(--accent);
 	}
 
@@ -268,7 +313,7 @@ function childrenAreNested(node: NavNode): boolean {
 	}
 
 	/* The active sub-page keeps the canonical "you are here" treatment; the -1px pull lets its
-	   2px sage bar sit on top of the column hairline rather than beside it. */
+	   2px state-accented bar sit on top of the column hairline rather than beside it. */
 	.nav-sheet__list.is-nested .nav-sheet__item.is-active {
 		margin-left: -1px;
 	}

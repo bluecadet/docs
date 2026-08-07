@@ -1,7 +1,8 @@
 ---
-// Landing page — route "/". Uses the shared page shell (BaseLayout) so its header, sidebar rail
-// and footer columns are identical to every doc page; only the header/footer variants and the
-// full-bleed main differ.
+// Landing page — route "/". Uses the shared page shell (BaseLayout) so its header and footer
+// columns are identical to every doc page, but opts out of the left nav rail (`sidebar={false}`)
+// in favor of a single full-bleed main column with its own wider gutters (see the .landing-body
+// override below) — only the header/footer variants and the full-bleed main differ otherwise.
 //
 // The hero, footer meta and closing CTA accent render from the landing entry's frontmatter (see
 // src/content.config.ts) because they sit outside the MDX body. The editorial bands the design
@@ -38,6 +39,7 @@ const pageDescription = data?.description;
 	description={pageDescription}
 	main="full"
 	appendSiteTitle={false}
+	sidebar={false}
 >
 	<LandingHeader slot="header" />
 
@@ -45,7 +47,7 @@ const pageDescription = data?.description;
 	    pagefindIndex() comment in astro.config.mjs for why this also determines which pages are
 	    indexed at all. Everything the landing route renders into BaseLayout's default slot lives
 	    here, so it's all wrapped together rather than piecemeal. */}
-	<div data-pagefind-body data-pagefind-meta={`title:${pageTitle}`}>
+	<div class="landing-body" data-pagefind-body data-pagefind-meta={`title:${pageTitle}`}>
 		<LandingHero
 			title={pageTitle}
 			lead={pageDescription}
@@ -82,6 +84,23 @@ const pageDescription = data?.description;
 </BaseLayout>
 
 <style>
+	/* Without the sidebar rail (see BaseLayout's `sidebar={false}`), the landing page is one full-
+	   width column instead of a rail + reduced content column — so at desktop it needs a much
+	   wider gutter than a doc page's --content-pad-x (56px) to read as intentional rather than
+	   under-padded. Every landing band already keys its own edge padding off --content-pad-x, so
+	   overriding it once is the whole fix. Set on `:global(.page)` — BaseLayout's shell root,
+	   outside this component — rather than `.landing-body`, so the header and footer wordmark cells
+	   (which key their own gutter off --content-pad-x too — see BaseLayout's --brand-pad-left) pick
+	   up the same 88px, not just the body content. This only ships in index.astro's own stylesheet,
+	   so doc pages, which still have the rail, are untouched. Below 1024px this rule stops applying
+	   and --content-pad-x falls back to BaseLayout's own tablet/mobile values, which already suit a
+	   single column at those widths. */
+	@media (min-width: 1024px) {
+		:global(.page) {
+			--content-pad-x: 88px;
+		}
+	}
+
 	/* The MDX body mixes two kinds of block: ordinary prose, which wants the same measure and
 	   gutter as any doc page, and full-bleed landing bands (StatStrip, Terminal, Features,
 	   WillNotDo), which run edge to edge and carry their own padding. A named-column grid gives

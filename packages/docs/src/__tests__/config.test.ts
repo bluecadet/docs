@@ -41,7 +41,7 @@ describe("validateConfig", () => {
 		expect(warnings[0]).toContain('"typo"');
 	});
 
-	it.each(["title", "repoUrl", "base", "site"] as const)(
+	it.each(["title", "repoUrl", "base", "site", "version", "sidebarMeta"] as const)(
 		'throws a clear error when "%s" is not a string',
 		(key) => {
 			expect(() => validateConfig({ [key]: 5 }, CONFIG_PATH)).toThrowError(
@@ -250,6 +250,112 @@ describe("validateConfig", () => {
 			expect(warnings).toHaveLength(1);
 			expect(warnings[0]).toContain('"sidebar[0].typo"');
 		});
+
+		it("accepts a sidebar group with a link", () => {
+			const { config, warnings } = validateConfig(
+				{
+					sidebar: [
+						{
+							label: "Reference",
+							link: "reference/overview",
+							items: ["reference/cli"],
+						},
+					],
+				},
+				CONFIG_PATH,
+			);
+			expect(config.sidebar).toEqual([
+				{
+					label: "Reference",
+					link: "reference/overview",
+					items: ["reference/cli"],
+				},
+			]);
+			expect(warnings).toEqual([]);
+		});
+
+		it("accepts a link on a nested sidebar group", () => {
+			const { config } = validateConfig(
+				{
+					sidebar: [
+						{
+							label: "Guides",
+							items: [
+								{ label: "Advanced", link: "guides/advanced", items: ["guides/ci"] },
+							],
+						},
+					],
+				},
+				CONFIG_PATH,
+			);
+			expect(config.sidebar).toEqual([
+				{
+					label: "Guides",
+					items: [{ label: "Advanced", link: "guides/advanced", items: ["guides/ci"] }],
+				},
+			]);
+		});
+
+		it("throws when a sidebar group's link is not a string", () => {
+			expect(() =>
+				validateConfig({ sidebar: [{ label: "x", items: [], link: 5 }] }, CONFIG_PATH),
+			).toThrowError(/"sidebar\[0\]\.link" must be a string \(got number\)/);
+		});
+	});
+
+	describe("version/sidebarMeta", () => {
+		it("accepts a version and sidebarMeta string", () => {
+			const { config, warnings } = validateConfig(
+				{ version: "v2.4.1", sidebarMeta: "MIT licensed\nno telemetry" },
+				CONFIG_PATH,
+			);
+			expect(config.version).toBe("v2.4.1");
+			expect(config.sidebarMeta).toBe("MIT licensed\nno telemetry");
+			expect(warnings).toEqual([]);
+		});
+	});
+
+	describe("toc", () => {
+		it("accepts a toc note and editLink", () => {
+			const { config, warnings } = validateConfig(
+				{ toc: { note: "updated for 2.4", editLink: "https://github.com/acme/proj/edit/main/{path}" } },
+				CONFIG_PATH,
+			);
+			expect(config.toc).toEqual({
+				note: "updated for 2.4",
+				editLink: "https://github.com/acme/proj/edit/main/{path}",
+			});
+			expect(warnings).toEqual([]);
+		});
+
+		it("accepts a toc with no keys set", () => {
+			const { config } = validateConfig({ toc: {} }, CONFIG_PATH);
+			expect(config.toc).toEqual({});
+		});
+
+		it("throws when toc is not an object", () => {
+			expect(() => validateConfig({ toc: "nope" }, CONFIG_PATH)).toThrowError(
+				/"toc" must be an object \(got string\)/,
+			);
+		});
+
+		it("throws when toc.note is not a string", () => {
+			expect(() => validateConfig({ toc: { note: 5 } }, CONFIG_PATH)).toThrowError(
+				/"toc\.note" must be a string \(got number\)/,
+			);
+		});
+
+		it("throws when toc.editLink is not a string", () => {
+			expect(() => validateConfig({ toc: { editLink: 5 } }, CONFIG_PATH)).toThrowError(
+				/"toc\.editLink" must be a string \(got number\)/,
+			);
+		});
+
+		it("warns on an unknown key inside toc", () => {
+			const { warnings } = validateConfig({ toc: { typo: true } }, CONFIG_PATH);
+			expect(warnings).toHaveLength(1);
+			expect(warnings[0]).toContain('"toc.typo"');
+		});
 	});
 
 	it("warns once per unknown top-level key even alongside header/footer/sidebar", () => {
@@ -303,6 +409,13 @@ describe("resolveConfig (YAML file loading)", () => {
 				"      - label: Advanced",
 				"        items:",
 				"          - guides/ci",
+				"version: v2.4.1",
+				"sidebarMeta: |",
+				"  MIT licensed",
+				"  no telemetry",
+				"toc:",
+				"  note: updated for 2.4",
+				"  editLink: https://github.com/acme/proj/edit/main/{path}",
 				"",
 			].join("\n"),
 		);
@@ -317,6 +430,12 @@ describe("resolveConfig (YAML file loading)", () => {
 		expect(cfg.header).toEqual({ links: [{ label: "Changelog", href: "/changelog/" }] });
 		expect(cfg.footer).toEqual({
 			links: [{ label: "github", href: "https://github.com/acme/proj" }],
+		});
+		expect(cfg.version).toBe("v2.4.1");
+		expect(cfg.sidebarMeta).toBe("MIT licensed\nno telemetry\n");
+		expect(cfg.toc).toEqual({
+			note: "updated for 2.4",
+			editLink: "https://github.com/acme/proj/edit/main/{path}",
 		});
 		expect(cfg.sidebar).toEqual([
 			{
@@ -337,6 +456,9 @@ describe("resolveConfig (YAML file loading)", () => {
 		expect(cfg.header).toBeUndefined();
 		expect(cfg.footer).toBeUndefined();
 		expect(cfg.sidebar).toBeUndefined();
+		expect(cfg.version).toBeUndefined();
+		expect(cfg.sidebarMeta).toBeUndefined();
+		expect(cfg.toc).toBeUndefined();
 	});
 
 	it("throws naming the file and the parser's message on invalid YAML", () => {

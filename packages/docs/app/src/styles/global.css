@@ -15,6 +15,11 @@ html {
 	font-size: 16px;
 	-webkit-text-size-adjust: 100%;
 	text-size-adjust: 100%;
+	/* Reserves the scrollbar's width whether or not one is actually drawn, so NavSheet's scroll
+	   lock (documentElement.style.overflow = "hidden", see scripts/nav-sheet.ts) never changes the
+	   viewport's usable width — without this, opening/closing the mobile nav shifted the whole
+	   page horizontally by the scrollbar's width. */
+	scrollbar-gutter: stable;
 }
 
 img,
@@ -59,7 +64,7 @@ a {
 }
 
 ::selection {
-	background: var(--sage-tint-14);
+	background: var(--accent-tint-14);
 	color: var(--ink);
 }
 

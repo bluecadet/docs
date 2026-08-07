@@ -2,7 +2,8 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { buildRouteMap, discoverContent } from "../sync.js";
+import { buildRouteMap, discoverContent, syncContent } from "../sync.js";
+import type { ResolvedConfig } from "../types.js";
 
 let root: string;
 
@@ -117,5 +118,38 @@ describe("buildRouteMap", () => {
 		}
 		expect(thrown?.message).toContain(flat);
 		expect(thrown?.message).toContain(nested);
+	});
+});
+
+describe("syncContent - sourcePath frontmatter", () => {
+	it("injects the repo-root-relative source path into every synced page's frontmatter", () => {
+		write("README.md");
+		write("docs/how-to/foo.md", "# Foo\n\nBody.\n");
+
+		const appRoot = fs.mkdtempSync(path.join(os.tmpdir(), "docs-sync-app-test-"));
+		try {
+			const cfg: ResolvedConfig = {
+				root,
+				out: path.join(root, "dist"),
+				title: "Test",
+				branch: "main",
+				content: [],
+			};
+			syncContent(cfg, appRoot);
+
+			const synced = fs.readFileSync(
+				path.join(appRoot, "src", "content", "docs", "how-to", "foo.md"),
+				"utf8",
+			);
+			expect(synced).toContain("sourcePath: docs/how-to/foo.md");
+
+			const landing = fs.readFileSync(
+				path.join(appRoot, "src", "content", "docs", "index.md"),
+				"utf8",
+			);
+			expect(landing).toContain("sourcePath: README.md");
+		} finally {
+			fs.rmSync(appRoot, { recursive: true, force: true });
+		}
 	});
 });

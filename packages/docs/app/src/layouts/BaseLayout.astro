@@ -39,6 +39,10 @@ interface Props {
 	/** Append " — <site title>" to the document title. */
 	appendSiteTitle?: boolean;
 	robots?: string;
+	/** Set false to omit the left nav rail entirely — the landing page's single-column layout. */
+	sidebar?: boolean;
+	/** Resolved `toc.editLink` URL for this page, passed through to the aside TOC's meta block. */
+	editHref?: string;
 }
 
 const {
@@ -49,6 +53,8 @@ const {
 	main = "article",
 	appendSiteTitle = true,
 	robots,
+	sidebar = true,
+	editHref,
 } = Astro.props;
 
 const siteTitle = getDocsConfig().title;
@@ -69,10 +75,10 @@ const hasToc = main === "article" && headings.some((heading) => heading.depth ==
 		<link rel="icon" href={`${base}favicon.svg`} type="image/svg+xml" />
 	</head>
 	<body>
-		<div class="page">
+		<div class="page" class:list={{ "page--no-sidebar": !sidebar }}>
 			<slot name="header"><Header /></slot>
 			<div class="page-body">
-				<SidebarNav currentId={currentId} />
+				{sidebar && <SidebarNav currentId={currentId} />}
 				<main
 					class="page-main"
 					class:list={{ "page-main--full": main === "full", "page-main--toc": hasToc }}
@@ -80,7 +86,7 @@ const hasToc = main === "article" && headings.some((heading) => heading.depth ==
 					<div class="page-main-content">
 						<slot />
 					</div>
-					{hasToc && <Toc variant="aside" headings={headings} />}
+					{hasToc && <Toc variant="aside" headings={headings} editHref={editHref} />}
 				</main>
 			</div>
 			<slot name="footer"><Footer /></slot>
@@ -106,12 +112,37 @@ const hasToc = main === "article" && headings.some((heading) => heading.depth ==
 		   top-aligned labels line up without each component re-declaring the same numbers. */
 		--content-pad-x: 56px;
 		--content-pad-top: 44px;
+		/* Header/footer read these instead of a hard-coded `grid`/border so both variants can drop
+		   the rail column and its divider in `.page--no-sidebar` below without duplicating the swap
+		   in HeaderShell/Wordmark/Footer directly. */
+		--rail-display: grid;
+		--rail-divider: 1px solid var(--hairline-08);
+		--brand-pad-left: 36px;
+		--brand-pad-right: 36px;
+		--nav-pad-left: var(--content-pad-x);
 		display: grid;
 		grid-template-rows: auto 1fr auto;
 		/* dvh keeps mobile browsers' collapsing toolbars from over-sizing the shell; the vh line
 		   above it is the fallback for engines without dvh. */
 		min-height: 100vh;
 		min-height: 100dvh;
+	}
+
+	/* Sidebar-less pages (`sidebar={false}` — currently just the landing page): header and footer
+	   have no rail below them to align with, so the two-column grid (and its rail-width track and
+	   divider) gives way to a plain flex row — wordmark, then the nav/link cell flexed to fill the
+	   rest — with the wordmark aligned to the content gutter instead of the rail's fixed padding.
+	   Doc pages never carry this class, so they're untouched. */
+	.page--no-sidebar {
+		--rail-display: flex;
+		--rail-divider: none;
+		--brand-pad-left: var(--content-pad-x);
+		--brand-pad-right: 40px;
+		--nav-pad-left: 0px;
+		/* Desktop-only (consumers gate this behind their own `min-width: 1024px` query): with no
+		   rail column, the search/nav cell needs `flex: 1` to fill the row instead of the tablet
+		   breakpoint's `margin-left: auto` trick, which only pushes a content-sized box right. */
+		--nav-flex: 1;
 	}
 
 	.page-body {
@@ -123,7 +154,10 @@ const hasToc = main === "article" && headings.some((heading) => heading.depth ==
 		border-inline: 1px solid var(--hairline-08);
 	}
 
-	.page-body:not(:has(.sidebar-rail)) { grid-template-columns: 1fr; } /* SidebarNav.astro renders nothing when there are no nav-worthy pages; collapse the empty rail column */
+	/* SidebarNav renders nothing — either because `sidebar={false}` (landing, 404) or because
+	   SidebarNav.astro found no nav-worthy pages — so collapse the now-empty rail column instead of
+	   reserving width for it. One rule covers both cases. */
+	.page-body:not(:has(.sidebar-rail)) { grid-template-columns: 1fr; }
 
 	.page-main {
 		display: grid;

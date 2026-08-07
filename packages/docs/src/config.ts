@@ -10,15 +10,24 @@ import type {
 	ResolvedConfig,
 	SidebarGroup,
 	SidebarItem,
+	TocConfig,
 } from "./types.js";
 
 const H1 = /^#[ \t]+(.+?)[ \t]*$/m;
-const STRING_KEYS = ["title", "repoUrl", "base", "site"] as const;
-const KNOWN_KEYS = new Set<string>([...STRING_KEYS, "content", "header", "footer", "sidebar"]);
+const STRING_KEYS = ["title", "repoUrl", "base", "site", "version", "sidebarMeta"] as const;
+const KNOWN_KEYS = new Set<string>([
+	...STRING_KEYS,
+	"content",
+	"header",
+	"footer",
+	"sidebar",
+	"toc",
+]);
 const LINKS_OBJECT_KEYS = new Set<string>(["links"]);
 const FOOTER_KEYS = new Set<string>(["links", "meta"]);
 const LINK_KEYS = new Set<string>(["label", "href"]);
-const SIDEBAR_GROUP_KEYS = new Set<string>(["label", "items"]);
+const SIDEBAR_GROUP_KEYS = new Set<string>(["label", "items", "link"]);
+const TOC_KEYS = new Set<string>(["note", "editLink"]);
 
 export interface CliOverrides {
 	root: string;
@@ -54,6 +63,9 @@ export function resolveConfig(overrides: CliOverrides): ResolvedConfig {
 		header: fileConfig.header,
 		footer: fileConfig.footer,
 		sidebar: fileConfig.sidebar,
+		version: fileConfig.version,
+		sidebarMeta: fileConfig.sidebarMeta,
+		toc: fileConfig.toc,
 	};
 }
 
@@ -129,6 +141,9 @@ export function validateConfig(
 	if (parsed.sidebar !== undefined) {
 		config.sidebar = validateSidebar(parsed.sidebar, configPath, warnings);
 	}
+	if (parsed.toc !== undefined) {
+		config.toc = validateToc(parsed.toc, configPath, warnings);
+	}
 
 	return { config, warnings };
 }
@@ -157,6 +172,37 @@ function validateFooter(value: unknown, configPath: string, warnings: string[]):
 			);
 		}
 		result.meta = obj.meta;
+	}
+	return result;
+}
+
+/** Validates the `toc` object: `{ note?: string, editLink?: string }`. */
+function validateToc(value: unknown, configPath: string, warnings: string[]): TocConfig {
+	if (typeof value !== "object" || value === null || Array.isArray(value)) {
+		throw new Error(`${configPath}: "toc" must be an object (got ${describeType(value)}).`);
+	}
+	const obj = value as Record<string, unknown>;
+
+	for (const childKey of Object.keys(obj)) {
+		if (!TOC_KEYS.has(childKey)) {
+			warnings.push(`${configPath}: unknown key "toc.${childKey}" is ignored.`);
+		}
+	}
+
+	const result: TocConfig = {};
+	if (obj.note !== undefined) {
+		if (typeof obj.note !== "string") {
+			throw new Error(`${configPath}: "toc.note" must be a string (got ${describeType(obj.note)}).`);
+		}
+		result.note = obj.note;
+	}
+	if (obj.editLink !== undefined) {
+		if (typeof obj.editLink !== "string") {
+			throw new Error(
+				`${configPath}: "toc.editLink" must be a string (got ${describeType(obj.editLink)}).`,
+			);
+		}
+		result.editLink = obj.editLink;
 	}
 	return result;
 }
@@ -268,7 +314,16 @@ function validateSidebarGroup(
 		validateSidebarItem(item, `${label}.items[${i}]`, configPath, warnings),
 	);
 
-	return { label: obj.label, items };
+	const group: SidebarGroup = { label: obj.label, items };
+	if (obj.link !== undefined) {
+		if (typeof obj.link !== "string") {
+			throw new Error(
+				`${configPath}: "${label}.link" must be a string (got ${describeType(obj.link)}).`,
+			);
+		}
+		group.link = obj.link;
+	}
+	return group;
 }
 
 function validateSidebarItem(

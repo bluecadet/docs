@@ -41,9 +41,13 @@
 
 	/* Capped, centered inner row — max-width plus the left/right hairlines are shared with
 	   .page-body and the footer's inner row so the two vertical rules read as one continuous
-	   edge from the header down through the footer. */
+	   edge from the header down through the footer.
+	   `--rail-display` is `grid` on doc pages (the rail-width column below stays put) and `flex` on
+	   sidebar-less pages (see BaseLayout's `.page--no-sidebar`) — grid-template-columns is simply
+	   inert once flex wins, so the rail-width track only ever applies in the mode that has a rail
+	   to align with. */
 	.header-shell-inner {
-		display: grid;
+		display: var(--rail-display);
 		grid-template-columns: var(--rail-width) 1fr;
 		height: 100%;
 		max-width: var(--shell-width);

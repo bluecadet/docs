@@ -246,7 +246,7 @@ const startHere = [...new Map([...entryPoints, ...flat].map((page) => [page.id, 
 	:global(.search-row__desc mark),
 	:global(.search-row__title mark) {
 		color: var(--accent-2);
-		background: var(--amber-tint-14);
+		background: var(--accent-2-tint-14);
 		border-radius: 2px;
 		padding: 0 3px;
 	}
@@ -259,7 +259,7 @@ const startHere = [...new Map([...entryPoints, ...flat].map((page) => [page.id, 
 	}
 
 	:global(.search-row.is-active) {
-		background: var(--sage-tint-09);
+		background: var(--accent-tint-09);
 		box-shadow: inset 2px 0 var(--accent);
 	}
 
@@ -275,11 +275,11 @@ const startHere = [...new Map([...entryPoints, ...flat].map((page) => [page.id, 
 	:global(.search-callout) {
 		margin: 10px 18px;
 		padding: 14px 16px;
-		border: 1px solid var(--amber-border-22);
+		border: 1px solid var(--accent-2-border-22);
 		border-left: 2px solid var(--accent-2);
 		border-radius: var(--radius-md);
-		background: var(--amber-tint-06);
-		color: var(--amber-callout-body);
+		background: var(--accent-2-tint-06);
+		color: var(--accent-2-callout-body);
 		font-size: 13.5px;
 		line-height: 1.6;
 	}
@@ -315,8 +315,8 @@ const startHere = [...new Map([...entryPoints, ...flat].map((page) => [page.id, 
 		color: var(--text-muted);
 	}
 
-	:global(.search-pill--amber) {
-		border: 1px solid var(--amber-border-40);
+	:global(.search-pill--attention) {
+		border: 1px solid var(--accent-2-border-40);
 		color: var(--accent-2);
 	}
 

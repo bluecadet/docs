@@ -1,4 +1,4 @@
-// Turns the sage "#" beside article H2/H3 headings into a real, clickable, keyboard-focusable
+// Turns the state-accented "#" beside article H2/H3 headings into a real, clickable, keyboard-focusable
 // anchor link to that heading — rather than the purely decorative CSS `::before` glyph it replaces
 // (see article.css's history). Runs as a `markdown.rehypePlugins` entry, but — unlike its siblings
 // `rehype-code-blocks.ts`/`rehype-tables.ts` — it depends on headings already having an `id`.

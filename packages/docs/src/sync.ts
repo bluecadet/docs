@@ -103,7 +103,11 @@ function writePage(absPath: string, route: string, ctx: WriteCtx): void {
 
 	const outPath = contentPathFor(ctx.contentDir, route, isMdx);
 	fs.mkdirSync(path.dirname(outPath), { recursive: true });
-	fs.writeFileSync(outPath, matter.stringify(body, { ...parsed.data, title }));
+	// sourcePath is the repo-root-relative path to this file (e.g. "docs/how-to/foo.md") — the
+	// same `label` used for the GitHub blob URL rewriting above. It lets `toc.editLink` templates
+	// resolve a per-page edit URL without the app needing to know anything about the consumer
+	// repo's directory layout (see content.config.ts and pages/[...slug].astro).
+	fs.writeFileSync(outPath, matter.stringify(body, { ...parsed.data, title, sourcePath: label }));
 }
 
 /**

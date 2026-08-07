@@ -32,7 +32,8 @@ function renderRequestedPath(el: Element, pathname: string): void {
 		el.textContent = "/";
 		return;
 	}
-	const last = parts[parts.length - 1];
+	// parts.length > 0 is checked above, so the last element always exists.
+	const last = parts[parts.length - 1] ?? "";
 	const lead = parts.slice(0, -1);
 	const leadHtml = lead.length > 0 ? `${lead.map(escapeHtml).join("/")}/` : "";
 	el.innerHTML = `/${leadHtml}<span class="requested-highlight">${escapeHtml(last)}</span>`;

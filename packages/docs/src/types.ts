@@ -15,6 +15,17 @@ export interface FooterConfig extends ConfigLinks {
 	meta?: string;
 }
 
+/** The "on this page" TOC's optional bottom meta block (aside/desktop variant only). */
+export interface TocConfig {
+	/** Short attention-accented note, e.g. `updated for 2.4`. */
+	note?: string;
+	/**
+	 * URL template for the per-page "edit this page" link. `{path}` is replaced with the page's
+	 * source path relative to the consumer repo root, e.g. `docs/how-to/foo.md`.
+	 */
+	editLink?: string;
+}
+
 /** A sidebar entry: either a synced page's content id, or a nested group. */
 export type SidebarItem = string | SidebarGroup;
 
@@ -22,6 +33,8 @@ export type SidebarItem = string | SidebarGroup;
 export interface SidebarGroup {
 	label: string;
 	items: SidebarItem[];
+	/** Optional content id the group's own heading links to, exactly like a leaf `SidebarItem` string. */
+	link?: string;
 }
 
 /** Optional `docs.config.yaml` at the root of a consumer repo. */
@@ -45,6 +58,12 @@ export interface DocsConfig {
 	 * default auto-generated (alphabetical, directory-mirroring) tree.
 	 */
 	sidebar?: SidebarGroup[];
+	/** Version string, e.g. `v2.4.1`. Rendered in the header and at the bottom of the sidebar. */
+	version?: string;
+	/** Multiline string; each non-empty line renders as its own row in the sidebar's bottom meta block. */
+	sidebarMeta?: string;
+	/** Optional bottom meta block for the desktop "on this page" TOC. */
+	toc?: TocConfig;
 }
 
 /** Fully-resolved settings after merging `docs.config.yaml`, CLI flags, and defaults. */
@@ -63,6 +82,9 @@ export interface ResolvedConfig {
 	header?: ConfigLinks;
 	footer?: FooterConfig;
 	sidebar?: SidebarGroup[];
+	version?: string;
+	sidebarMeta?: string;
+	toc?: TocConfig;
 }
 
 /** A single markdown/mdx source file destined for the published site. */

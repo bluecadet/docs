@@ -1,13 +1,16 @@
 ---
 // The one left rail — identical on the landing page, doc pages and 404 (see BaseLayout.astro,
 // which is the only place that mounts it). It renders the real docs tree recursively via
-// `Astro.self`: pages are links, index-less directories are inert `segment/` labels, and children
-// nest at any depth. Per-page H2 headings are NOT part of this component — that's Toc.astro's job.
+// `Astro.self`: pages are links, root-level index-less directories/groups are inert `segment/`
+// labels, and children nest at any depth. A group nested below the root always renders as a plain
+// link (its own page via `sidebar[].link`, or its first descendant's href — see ../lib/nav.ts).
+// Per-page H2 headings are NOT part of this component — that's Toc.astro's job.
 //
 // Two layers here: `.sidebar-rail` is the grid cell (owns the full-height hairline, so the border
 // runs to the bottom of the page even when the nav is short), `.sidebar-nav` is the sticky,
 // independently-scrolling nav itself.
 import { getNavTree, type NavNode } from "../lib/nav";
+import { getDocsConfig } from "../lib/config";
 
 interface Props {
 	/** Active page id, when one of the nav entries is the current page. */
@@ -22,23 +25,51 @@ const { currentId, nodes, nested = false } = Astro.props;
 const isRoot = nodes === undefined;
 const items = nodes ?? (await getNavTree()).nodes;
 
+// Bottom meta block (isRoot only — see below): `version` first, then each non-empty line of
+// `sidebarMeta`. Rendered only when there's something to show.
+const config = getDocsConfig();
+const metaLines = [
+	...(config.version ? [config.version] : []),
+	...(config.sidebarMeta ?? "")
+		.split("\n")
+		.map((line) => line.trim())
+		.filter(Boolean),
+];
+
 // Children of a root-level directory keep the design's flat "group" treatment (dim `guides/`
 // label, items flush in the same column). Every deeper list becomes the indented, hairline-bordered
 // sub-page column.
 function childrenAreNested(node: NavNode): boolean {
 	return nested || node.isPage || node.depth > 0;
 }
+
+// Root-level sidebar groups (see `SidebarGroup` in ../lib/config.ts) keep the dim mono "section
+// heading" look even once they gain an `href` via `link` — only a group nested below the root
+// switches to the plain sidebar-item treatment other links at its depth use.
+function isSectionHeading(node: NavNode): boolean {
+	return node.depth === 0 && Boolean(node.isGroup);
+}
 ---
 
 {
 	isRoot ? (
-		// A consumer with no nav-worthy pages (e.g. a single README) yields zero nodes — render
-		// nothing rather than an empty rail. BaseLayout.astro collapses the now-unoccupied grid
-		// column via `.page-body:not(:has(.sidebar-rail))`.
-		items.length > 0 && (
+		// A consumer with no nav-worthy pages (e.g. a single README) and no bottom meta block yields
+		// nothing to render — render nothing rather than an empty rail. BaseLayout.astro collapses
+		// the now-unoccupied grid column via `.page-body:not(:has(.sidebar-rail))`.
+		(items.length > 0 || metaLines.length > 0) && (
 			<div class="sidebar-rail">
 				<nav class="sidebar-nav" aria-label="Docs navigation">
-					<Astro.self nodes={items} currentId={currentId} />
+					{items.length > 0 && <Astro.self nodes={items} currentId={currentId} />}
+					{metaLines.length > 0 && (
+						<div class="sidebar-meta">
+							{metaLines.map((line, i) => (
+								<>
+									{i > 0 && <br />}
+									{line}
+								</>
+							))}
+						</div>
+					)}
 				</nav>
 			</div>
 		)
@@ -49,7 +80,10 @@ function childrenAreNested(node: NavNode): boolean {
 					{node.href ? (
 						<a
 							class="sidebar-item"
-							class:list={{ "is-active": node.id === currentId }}
+							class:list={{
+								"sidebar-item--section": isSectionHeading(node),
+								"is-active": node.id === currentId,
+							}}
 							href={node.href}
 							aria-current={node.id === currentId ? "page" : undefined}
 						>
@@ -106,13 +140,24 @@ function childrenAreNested(node: NavNode): boolean {
 		flex-direction: column;
 	}
 
+	/* Bottom-of-rail meta block (version/sidebarMeta) — only rendered when configured, after the
+	   last nav group. Dimmest text tier: this is the least-emphasis content in the whole rail. */
+	.sidebar-meta {
+		margin: 34px 34px 0;
+		padding-top: 24px;
+		border-top: 1px solid var(--hairline-08);
+		font: 400 11.5px/2 var(--font-mono);
+		color: var(--text-faint);
+	}
+
 	.sidebar-label {
 		padding: 20px 34px 8px;
 		font: 400 12px var(--font-mono);
 		color: var(--text-dim);
 	}
 
-	.sidebar-nav > .sidebar-list > .sidebar-label:first-child {
+	.sidebar-nav > .sidebar-list > .sidebar-label:first-child,
+	.sidebar-nav > .sidebar-list > .sidebar-item.sidebar-item--section:first-child {
 		padding-top: 0;
 	}
 
@@ -129,12 +174,32 @@ function childrenAreNested(node: NavNode): boolean {
 	/* Exactly one node in the whole tree — the current page — carries the "you are here" mark. */
 	.sidebar-item.is-active {
 		color: var(--ink);
-		background: var(--sage-tint-08);
+		background: var(--accent-tint-08);
 		box-shadow: inset 2px 0 var(--accent);
 	}
 
 	.sidebar-item.is-active:hover {
 		color: var(--ink);
+	}
+
+	/* A root-level group heading (see isSectionHeading()) keeps the dim mono "section" look even
+	   once it's clickable via `sidebar[].link` — only a nested group heading adopts the plain
+	   .sidebar-item look above. Three-class selectors here so these reliably win over the plainer
+	   .sidebar-item rules regardless of source order. */
+	.sidebar-item.sidebar-item--section {
+		padding: 20px 34px 8px;
+		font: 400 12px var(--font-mono);
+		color: var(--text-dim);
+	}
+
+	.sidebar-item.sidebar-item--section:hover {
+		color: var(--accent);
+	}
+
+	.sidebar-item.sidebar-item--section.is-active {
+		color: var(--ink);
+		background: var(--accent-tint-08);
+		box-shadow: inset 2px 0 var(--accent);
 	}
 
 	/* Sub-page column: hairline rail, indented, smaller type. */
@@ -149,7 +214,7 @@ function childrenAreNested(node: NavNode): boolean {
 	}
 
 	/* The active sub-page keeps the canonical "you are here" treatment; the -1px pull lets its
-	   2px sage bar sit on top of the column hairline rather than beside it. */
+	   2px state-accented bar sit on top of the column hairline rather than beside it. */
 	.sidebar-list.is-nested .sidebar-item.is-active {
 		margin-left: -1px;
 	}

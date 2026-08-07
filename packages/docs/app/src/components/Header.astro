@@ -32,8 +32,18 @@ const base = import.meta.env.BASE_URL;
 		display: flex;
 		align-items: center;
 		gap: 32px;
-		padding: 0 var(--content-pad-x);
+		padding: 0 var(--content-pad-x) 0 var(--nav-pad-left);
 		min-width: 0;
+	}
+
+	/* Sidebar-less pages (see BaseLayout's `--nav-flex`): HeaderShell's row is flex, not grid, at
+	   desktop too, so this cell needs to grow into the space the rail column used to reserve. A
+	   no-op (`initial`) on doc pages, where HeaderShell stays a grid and this is still the second
+	   column filling the remaining `1fr` track on its own. */
+	@media (min-width: 1024px) {
+		.site-header__right {
+			flex: var(--nav-flex, initial);
+		}
 	}
 
 	/* Tablet: HeaderShell collapses to a flex row; push this side to the far right. */

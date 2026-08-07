@@ -25,6 +25,17 @@ export interface FooterConfig extends ConfigLinks {
 	meta?: string;
 }
 
+/** The "on this page" TOC's optional bottom meta block (aside/desktop variant only). */
+export interface TocConfig {
+	/** Short attention-accented note, e.g. `updated for 2.4`. */
+	note?: string;
+	/**
+	 * URL template for the per-page "edit this page" link. `{path}` is replaced with the page's
+	 * source path relative to the consumer repo root, e.g. `docs/how-to/foo.md`.
+	 */
+	editLink?: string;
+}
+
 /** A sidebar entry: either a synced page's content id, or a nested group. */
 export type SidebarItem = string | SidebarGroup;
 
@@ -32,6 +43,8 @@ export type SidebarItem = string | SidebarGroup;
 export interface SidebarGroup {
 	label: string;
 	items: SidebarItem[];
+	/** Optional content id the group's own heading links to, exactly like a leaf `SidebarItem` string. */
+	link?: string;
 }
 
 /** The parsed shape of `DOCS_CONFIG`, with fallbacks already applied. */
@@ -43,6 +56,12 @@ export interface DocsAppConfig {
 	header?: ConfigLinks;
 	footer?: FooterConfig;
 	sidebar?: SidebarGroup[];
+	/** Version string, e.g. `v2.4.1`. Rendered in the header and at the bottom of the sidebar. */
+	version?: string;
+	/** Multiline string; each non-empty line renders as its own row in the sidebar's bottom meta block. */
+	sidebarMeta?: string;
+	/** Optional bottom meta block for the desktop "on this page" TOC. */
+	toc?: TocConfig;
 }
 
 function parseDocsConfig(): DocsAppConfig {

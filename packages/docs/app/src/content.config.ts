@@ -19,17 +19,17 @@ const landingFields = {
 		.array(
 			z.object({
 				label: z.string(),
-				/** sage = state, amber = attention, neutral = plain outline. */
-				tone: z.enum(["sage", "amber", "neutral"]).default("neutral"),
+				/** state = STATE accent, attention = ATTENTION accent, neutral = plain outline. */
+				tone: z.enum(["state", "attention", "neutral"]).default("neutral"),
 			}),
 		)
 		.max(3)
 		.optional(),
 	/** Shown as a copyable `$ …` chip under the hero lead, e.g. `npx @bluecadet/docs build`. */
 	installCommand: z.string().optional(),
-	/** Marginalia beside the hero. The first renders amber, a second (max) renders neutral. */
+	/** Marginalia beside the hero. The first renders in the attention accent, a second (max) renders neutral. */
 	heroNotes: z.array(z.string()).max(2).optional(),
-	/** Italic amber second clause appended to the closing CTA headline. */
+	/** Italic attention-accented second clause appended to the closing CTA headline. */
 	closingAccent: z.string().optional(),
 };
 
@@ -39,6 +39,12 @@ export const collections = {
 		schema: z.object({
 			title: z.string(),
 			description: z.string().optional(),
+			/**
+			 * Repo-root-relative path to this page's source markdown (see sync.ts), e.g.
+			 * `docs/how-to/foo.md`. Used to build `toc.editLink` URLs; omitted for pages with no
+			 * on-disk source.
+			 */
+			sourcePath: z.string().optional(),
 			...landingFields,
 		}),
 	}),

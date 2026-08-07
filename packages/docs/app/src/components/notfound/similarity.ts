@@ -14,11 +14,17 @@ function levenshtein(a: string, b: string): number {
 		const cur = [i];
 		for (let j = 1; j <= n; j++) {
 			const cost = a[i - 1] === b[j - 1] ? 0 : 1;
-			cur[j] = Math.min(cur[j - 1] + 1, prev[j] + 1, prev[j - 1] + cost);
+			// j, j - 1 are within [0, n] and prev/cur are built up to index j on every
+			// iteration, so these reads are always in bounds.
+			const curLeft = cur[j - 1]!;
+			const prevSame = prev[j]!;
+			const prevDiag = prev[j - 1]!;
+			cur[j] = Math.min(curLeft + 1, prevSame + 1, prevDiag + cost);
 		}
 		prev = cur;
 	}
-	return prev[n];
+	// prev has length n + 1, so index n is always in bounds.
+	return prev[n]!;
 }
 
 /** Similarity in [0, 1] — 1 means identical, 0 means maximally different. */

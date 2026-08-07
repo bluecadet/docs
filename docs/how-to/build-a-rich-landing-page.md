@@ -27,9 +27,9 @@ title: acme build
 description: A build tool for people who would rather not think about build tools.
 eyebrows:
   - label: static output
-    tone: sage
+    tone: state
   - label: no config
-    tone: amber
+    tone: attention
   - label: any repo
     tone: neutral
 installCommand: npx acme-build
@@ -42,10 +42,10 @@ closingAccent: It really is one command.
 
 | Field | Type | Renders as |
 | --- | --- | --- |
-| `eyebrows` | up to 3 `{ label, tone }` | Uppercase mono chips above the headline. `tone` is `sage` (solid), `amber` (outlined) or `neutral` (outlined, default). |
+| `eyebrows` | up to 3 `{ label, tone }` | Uppercase mono chips above the headline. `tone` is `state` (solid, sage by default), `attention` (outlined, amber by default) or `neutral` (outlined, default). |
 | `installCommand` | string | A `$ …` chip under the lead with a copy button, plus a link through to your first doc page. |
-| `heroNotes` | up to 2 strings | Marginalia beside the hero. The first is amber, a second is neutral. |
-| `closingAccent` | string | An italic amber second clause on the closing call to action. |
+| `heroNotes` | up to 2 strings | Marginalia beside the hero. The first is the attention accent, a second is neutral. |
+| `closingAccent` | string | An italic attention-accented second clause on the closing call to action. |
 
 The footer's right-aligned meta line (`MIT licensed · no telemetry`) isn't landing frontmatter —
 it's `footer.meta` in [`docs.config.yaml`](/reference/docs-config-yaml/), because the footer is
@@ -53,7 +53,7 @@ the same on every page.
 
 `title` and `description` do double duty: they're the hero headline and lead. A `title` containing
 a comma-separated clause (`Reproducible builds, without the ceremony.`) splits across two lines,
-with the second set in italic sage.
+with the second set in italic state accent (sage by default).
 
 ## Body blocks are components
 
@@ -103,14 +103,15 @@ depends on:
 - `<Line label="…">` renders a dim, fixed-width first column, so aligned output doesn't depend on
   you counting spaces.
 - `<Line />` on its own is a blank spacer row.
-- `<Ok>` is sage, `<Warn>` is amber. Use them the way the rest of the site does: sage for state and
-  success, amber for what changed or needs attention.
+- `<Ok>` is the state accent, `<Warn>` is the attention accent. Use them the way the rest of the
+  site does: state for where you are and what succeeded, attention for what changed or needs
+  attention.
 
 ### Features
 
 Three numbered pillars. The numerals are not authored — they're generated, and they alternate
-sage/amber/sage, so reordering or adding one never leaves a stale `03` behind. Three-up on desktop,
-two-up on tablet, stacked on mobile.
+state/attention/state, so reordering or adding one never leaves a stale `03` behind. Three-up on
+desktop, two-up on tablet, stacked on mobile.
 
 ```mdx
 <Features>
@@ -124,8 +125,8 @@ two-up on tablet, stacked on mobile.
 
 ### WillNotDo
 
-The honest-limitations band. `accent` is a substring of `title` to set in italic amber; it's
-ignored if it doesn't appear in the title.
+The honest-limitations band. `accent` is a substring of `title` to set in italic attention accent;
+it's ignored if it doesn't appear in the title.
 
 ```mdx
 <WillNotDo
@@ -138,8 +139,8 @@ ignored if it doesn't appear in the title.
 </WillNotDo>
 ```
 
-`status` defaults to `no` (a dim ✕). `status="yes"` gives a sage ✓ — useful for the one affirmative
-row that closes the list.
+`status` defaults to `no` (a dim ✕). `status="yes"` gives a state-accented ✓ — useful for the one
+affirmative row that closes the list.
 
 ## Import paths
 

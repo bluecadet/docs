@@ -95,14 +95,24 @@ function recordRecent(href: string, title: string): void {
 }
 
 export function initSearchModal(): void {
-	const dialog = document.getElementById("search-modal") as HTMLDialogElement | null;
-	const input = document.querySelector<HTMLInputElement>("[data-search-input]");
-	const body = document.querySelector<HTMLDivElement>("[data-search-body]");
-	const icon = document.querySelector<HTMLElement>("[data-search-icon]");
-	const status = document.querySelector<HTMLElement>("[data-search-status]");
-	const hints = document.querySelector<HTMLElement>("[data-search-hints]");
+	const dialogEl = document.getElementById("search-modal") as HTMLDialogElement | null;
+	const inputEl = document.querySelector<HTMLInputElement>("[data-search-input]");
+	const bodyEl = document.querySelector<HTMLDivElement>("[data-search-body]");
+	const iconEl = document.querySelector<HTMLElement>("[data-search-icon]");
+	const statusEl = document.querySelector<HTMLElement>("[data-search-status]");
+	const hintsEl = document.querySelector<HTMLElement>("[data-search-hints]");
 	const cancelButton = document.querySelector<HTMLElement>("[data-search-cancel]");
-	if (!dialog || !input || !body || !icon || !status || !hints) return;
+	if (!dialogEl || !inputEl || !bodyEl || !iconEl || !statusEl || !hintsEl) return;
+
+	// Re-bound to fresh `const`s so the null-check above narrows these to their non-null types for
+	// the rest of this function — TypeScript's control-flow narrowing doesn't cross into the nested
+	// function declarations below, but the declared type of a never-reassigned `const` does.
+	const dialog = dialogEl;
+	const input = inputEl;
+	const body = bodyEl;
+	const icon = iconEl;
+	const status = statusEl;
+	const hints = hintsEl;
 
 	const startHere = readJson<StartHereEntry[]>("search-start-here-data", []);
 	const repoUrl = readJson<string | null>("search-repo-url-data", null);
@@ -318,7 +328,7 @@ export function initSearchModal(): void {
 				`<a class="search-pill search-pill--neutral" href="${escapeHtml(`${repoUrl}/issues?q=${encodeURIComponent(query)}`)}" target="_blank" rel="noopener noreferrer">search github issues ↗</a>`,
 			);
 			pills.push(
-				`<a class="search-pill search-pill--amber" href="${escapeHtml(`${repoUrl}/issues/new?title=${encodeURIComponent(query)}`)}" target="_blank" rel="noopener noreferrer">open an issue ↗</a>`,
+				`<a class="search-pill search-pill--attention" href="${escapeHtml(`${repoUrl}/issues/new?title=${encodeURIComponent(query)}`)}" target="_blank" rel="noopener noreferrer">open an issue ↗</a>`,
 			);
 		}
 

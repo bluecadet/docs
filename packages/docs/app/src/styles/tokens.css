@@ -2,66 +2,70 @@
  * Design tokens.
  *
  * Two accents, each with one job (verbatim from the design spec):
- *   sage  (--accent)   — STATE: where you are, what succeeded.
- *   amber (--accent-2) — ATTENTION: what changed, what is required, what will break.
- * Do not reach for a third accent color. Do not use sage for "attention" or amber for "state."
+ *   --accent   — STATE: where you are, what succeeded. (Current default palette: sage.)
+ *   --accent-2 — ATTENTION: what changed, what is required, what will break. (Current default
+ *                palette: amber.)
+ * Do not reach for a third accent color. Do not use --accent for "attention" or --accent-2 for
+ * "state." Re-skinning the site for another brand means changing the four source tokens below —
+ * no other token name should hardcode a hue.
  *
- * Architecture: a small set of SOURCE tokens (--bg, --ink, --accent, --accent-2) plus a few
- * literal surface/text tokens that are their own distinct values (not tints of a source). Tint,
- * alpha, and hairline tokens below are derived from the sources via color-mix() so there is one
- * place to change a brand color. Where color-mix cannot reproduce a literal spec value exactly,
- * the literal is used instead and left uncommented.
+ * Architecture: a small set of SOURCE tokens (--bg, --ink, --accent, --accent-2). Every other
+ * token in this file is derived from those four via color-mix() so there is one place to change
+ * a brand color. Where color-mix cannot reproduce a literal spec value within a few RGB points,
+ * the literal is used instead and commented as such.
  */
 
 :root {
 	/* ---- Source tokens ------------------------------------------------- */
 	--bg: #101112;
 	--ink: #e8e9ea;
-	--accent: #9cc3a9; /* sage — state */
-	--accent-2: #e0a75e; /* amber — attention */
+	--accent: #9cc3a9; /* default: sage — state */
+	--accent-2: #e0a75e; /* default: amber — attention */
 
-	/* ---- Surface tokens (distinct panel backgrounds, kept literal) ------ */
+	/* ---- Surface tokens (distinct panel backgrounds, derived from --bg) -
+	   Each is a black/white mix over --bg chosen to reproduce the original literal. */
 	--surface-page: var(--bg); /* #101112 — main card/page background */
-	--surface-panel-1: #0e0f10; /* stat strip, feature grid, CTA band backgrounds */
-	--surface-panel-2: #121314; /* "will not do" band, code demo band */
-	--surface-footer: #0d0e0f; /* footer */
-	--surface-code: #151617; /* code block / terminal / search modal body */
+	--surface-panel-1: color-mix(in srgb, black 12%, var(--bg)); /* ~#0e0f10 — stat strip, feature grid, CTA band backgrounds */
+	--surface-panel-2: color-mix(in srgb, white 1%, var(--bg)); /* ~#121314 — "will not do" band, code demo band */
+	--surface-footer: color-mix(in srgb, black 18%, var(--bg)); /* ~#0d0e0f — footer */
+	--surface-code: color-mix(in srgb, white 2%, var(--bg)); /* ~#151617 — code block / terminal / search modal body */
 
-	/* ---- Text tiers (named by role) -------------------------------------
-	   #cdd4cf / #c5c8ca / #9b9fa2 / #6b6f72 / #4a4d50, darkest to least-emphasis. */
-	--text-code: #cdd4cf; /* code block text */
-	--text-body: #c5c8ca; /* article/callout paragraph copy */
-	--text-muted: #9b9fa2; /* secondary copy, inactive nav links, hero subhead */
-	--text-dim: #6b6f72; /* labels, meta, breadcrumb separators, sidebar group labels */
-	--text-faint: #4a4d50; /* least-emphasis meta (version strings, disabled/deprecated) */
+	/* ---- Text tiers (named by role) --------------------------------------
+	   Each is var(--ink) mixed toward var(--bg), chosen to reproduce the original literal
+	   (#cdd4cf / #c5c8ca / #9b9fa2 / #6b6f72 / #4a4d50, darkest to least-emphasis). */
+	--text-code: color-mix(in srgb, var(--accent) 13%, color-mix(in srgb, var(--ink) 91%, var(--bg))); /* ~#cdd3d1, approximates #cdd4cf (max channel delta 2) — code block text */
+	--text-body: color-mix(in srgb, var(--ink) 84.5%, var(--bg)); /* ~#c6c7c8, approximates #c5c8ca (max channel delta 2) — article/callout paragraph copy */
+	--text-muted: color-mix(in srgb, var(--ink) 65.5%, var(--bg)); /* ~#9d9e9f, approximates #9b9fa2 (max channel delta 3) — secondary copy, inactive nav links, hero subhead */
+	--text-dim: color-mix(in srgb, var(--ink) 43%, var(--bg)); /* ~#6d6e6f, approximates #6b6f72 (max channel delta 3) — labels, meta, breadcrumb separators, sidebar group labels */
+	--text-faint: color-mix(in srgb, var(--ink) 27.8%, var(--bg)); /* ~#4c4d4e, approximates #4a4d50 (max channel delta 2) — least-emphasis meta (version strings, disabled/deprecated) */
 
 	/* ---- Accent-derived tints (color-mix from source accents) ----------
 	   Tint backgrounds at 4/6/8/9/12/14% alpha over the page background, used for
 	   active/success/required/changed states. Named by alpha step, not by intended use, so
 	   component authors can pick the step the spec calls for at each call site. */
-	--sage-tint-04: color-mix(in srgb, var(--accent) 4%, transparent);
-	--sage-tint-05: color-mix(in srgb, var(--accent) 5%, transparent);
-	--sage-tint-08: color-mix(in srgb, var(--accent) 8%, transparent);
-	--sage-tint-09: color-mix(in srgb, var(--accent) 9%, transparent);
-	--sage-tint-14: color-mix(in srgb, var(--accent) 14%, transparent);
+	--accent-tint-04: color-mix(in srgb, var(--accent) 4%, transparent);
+	--accent-tint-05: color-mix(in srgb, var(--accent) 5%, transparent);
+	--accent-tint-08: color-mix(in srgb, var(--accent) 8%, transparent);
+	--accent-tint-09: color-mix(in srgb, var(--accent) 9%, transparent);
+	--accent-tint-14: color-mix(in srgb, var(--accent) 14%, transparent);
 
-	--amber-tint-04: color-mix(in srgb, var(--accent-2) 4%, transparent);
-	--amber-tint-05: color-mix(in srgb, var(--accent-2) 5%, transparent);
-	--amber-tint-06: color-mix(in srgb, var(--accent-2) 6%, transparent);
-	--amber-tint-08: color-mix(in srgb, var(--accent-2) 8%, transparent);
-	--amber-tint-12: color-mix(in srgb, var(--accent-2) 12%, transparent);
-	--amber-tint-14: color-mix(in srgb, var(--accent-2) 14%, transparent);
+	--accent-2-tint-04: color-mix(in srgb, var(--accent-2) 4%, transparent);
+	--accent-2-tint-05: color-mix(in srgb, var(--accent-2) 5%, transparent);
+	--accent-2-tint-06: color-mix(in srgb, var(--accent-2) 6%, transparent);
+	--accent-2-tint-08: color-mix(in srgb, var(--accent-2) 8%, transparent);
+	--accent-2-tint-12: color-mix(in srgb, var(--accent-2) 12%, transparent);
+	--accent-2-tint-14: color-mix(in srgb, var(--accent-2) 14%, transparent);
 
 	/* Accent border alphas (outlined chips/badges/callouts). */
-	--sage-border-30: color-mix(in srgb, var(--accent) 30%, transparent);
-	--amber-border-22: color-mix(in srgb, var(--accent-2) 22%, transparent);
-	--amber-border-30: color-mix(in srgb, var(--accent-2) 30%, transparent);
-	--amber-border-40: color-mix(in srgb, var(--accent-2) 40%, transparent);
+	--accent-border-30: color-mix(in srgb, var(--accent) 30%, transparent);
+	--accent-2-border-22: color-mix(in srgb, var(--accent-2) 22%, transparent);
+	--accent-2-border-30: color-mix(in srgb, var(--accent-2) 30%, transparent);
+	--accent-2-border-40: color-mix(in srgb, var(--accent-2) 40%, transparent);
 
-	/* Amber-adjacent text/annotation colors — spec literals, not reproducible via color-mix of
-	   the two sources alone (they mix amber toward the ink/body text tone, not toward transparent). */
-	--amber-annotation: #8a7f6d; /* small annotation/margin-note text on amber left-border blocks */
-	--amber-callout-body: #d8cfc2; /* text color inside amber "HEADS UP" callouts */
+	/* --accent-2-adjacent text/annotation colors, mixed toward the ink/body text tone rather
+	   than toward transparent. */
+	--accent-2-annotation: color-mix(in srgb, var(--accent-2) 26%, var(--text-dim)); /* ~#8b7d6b, approximates #8a7f6d (max channel delta 2) — small annotation/margin-note text on accent-2 left-border blocks */
+	--accent-2-callout-body: #d8cfc2; /* text color inside accent-2 "HEADS UP" callouts — no color-mix of the sources/text tiers reproduces this within a few RGB points, kept literal */
 
 	/* ---- Hairlines (white-mix, by emphasis step) ------------------------ */
 	--hairline-06: color-mix(in srgb, white 6%, transparent);
@@ -76,9 +80,9 @@
 	--white-07: color-mix(in srgb, white 7%, transparent);
 
 	/* ---- Overlay / scrim -------------------------------------------------
-	   Search modal backdrop. Base color #0a0b0c isn't one of the four source tokens, so this
-	   stays literal; it's a near-black distinct from --bg, tuned for the blurred-backdrop scrim. */
-	--overlay-scrim: rgba(10, 11, 12, 0.72);
+	   Search modal backdrop. color-mix(black 35%, var(--bg)) approximates #0a0b0c (max channel
+	   delta 0); mixed again with transparent at 72% to reproduce rgba(10, 11, 12, 0.72). */
+	--overlay-scrim: color-mix(in srgb, color-mix(in srgb, black 35%, var(--bg)) 72%, transparent);
 
 	/* ---- Terminal traffic-light chrome ------------------------------------
 	   Reuses the two accents plus one dark neutral gray (not red/yellow/green). */

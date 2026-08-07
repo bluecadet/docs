@@ -40,7 +40,7 @@ const routesPayload = {
 			<div class="notfound-col">
 				<div class="requested-panel">
 					<div class="requested-panel-header">requested</div>
-					<pre class="requested-panel-body"><span class="requested-line" data-requested-path>…</span><span class="requested-line"><span class="dim">status  </span>404</span><span class="requested-line requested-closest" data-requested-closest hidden><span class="dim">closest </span><span data-closest-path></span> <span class="sage" data-closest-pct></span></span></pre>
+					<pre class="requested-panel-body"><span class="requested-line" data-requested-path>…</span><span class="requested-line"><span class="dim">status  </span>404</span><span class="requested-line requested-closest" data-requested-closest hidden><span class="dim">closest </span><span data-closest-path></span> <span class="state" data-closest-pct></span></span></pre>
 				</div>
 
 				<div class="dym-label" data-dym-label hidden>DID YOU MEAN</div>
@@ -155,7 +155,7 @@ const routesPayload = {
 		color: var(--text-dim);
 	}
 
-	.requested-panel-body .sage {
+	.requested-panel-body .state {
 		color: var(--accent);
 	}
 
@@ -213,7 +213,7 @@ const routesPayload = {
 	}
 
 	:global(.dym-row--active) {
-		background: var(--sage-tint-08);
+		background: var(--accent-tint-08);
 		box-shadow: inset 2px 0 var(--accent);
 	}
 
@@ -266,7 +266,7 @@ const routesPayload = {
 		border-left: 2px solid var(--accent-2);
 		padding: 2px 0 2px 14px;
 		font: 400 12px/1.8 var(--font-mono);
-		color: var(--amber-annotation);
+		color: var(--accent-2-annotation);
 	}
 
 	.margin-note a {

@@ -5,7 +5,7 @@ interface Props {
 	firstSectionTitle: string;
 	firstHref: string;
 	repoUrl?: string;
-	/** Optional italic amber second clause from landing frontmatter (`closingAccent`). */
+	/** Optional italic attention-accented second clause from landing frontmatter (`closingAccent`). */
 	accent?: string;
 }
 
@@ -68,7 +68,7 @@ const { firstSectionTitle, firstHref, repoUrl, accent } = Astro.props;
 
 	.btn-secondary {
 		color: var(--accent-2);
-		border: 1px solid var(--amber-border-40);
+		border: 1px solid var(--accent-2-border-40);
 	}
 
 	/* Tablet keeps the flex row (it already wraps via flex-wrap above, just with less padding);

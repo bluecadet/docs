@@ -8,8 +8,12 @@
 //   `disclosure` — a native <details> for tablet/mobile. Mounted INSIDE the article content by the
 //                  doc page template so it sits in the article flow rather than above the
 //                  breadcrumb. No JS: <details>/<summary> is the whole interaction.
-// The design's "updated for / edit this page" metadata and "related" links blocks are
-// deliberately omitted: no data source for either.
+// The design's "related" links block is deliberately omitted: no data source for it. The
+// "updated for / edit this page" meta block IS rendered below the link list, aside variant only
+// (see toc.note/toc.editLink in docs.config.yaml) — intentionally left off the mobile disclosure,
+// which stays a minimal link list.
+import { getDocsConfig } from "../lib/config";
+
 interface Heading {
 	depth: number;
 	slug: string;
@@ -19,10 +23,13 @@ interface Heading {
 interface Props {
 	headings: Heading[];
 	variant: "aside" | "disclosure";
+	/** Resolved `toc.editLink` URL for this page (aside variant only) — see pages/[...slug].astro. */
+	editHref?: string;
 }
 
-const { headings, variant } = Astro.props;
+const { headings, variant, editHref } = Astro.props;
 const sections = headings.filter((heading) => heading.depth === 2);
+const note = getDocsConfig().toc?.note;
 ---
 
 {
@@ -42,6 +49,22 @@ const sections = headings.filter((heading) => heading.depth === 2);
 							</a>
 						))}
 					</nav>
+					{(note || editHref) && (
+						<div class="toc-aside__meta">
+							{note && <span class="toc-aside__note">{note}</span>}
+							{note && editHref && <br />}
+							{editHref && (
+								<a
+									class="toc-aside__edit-link"
+									href={editHref}
+									rel="noopener noreferrer"
+									target="_blank"
+								>
+									edit this page ↗
+								</a>
+							)}
+						</div>
+					)}
 				</aside>
 			</div>
 		) : (
@@ -121,6 +144,30 @@ const sections = headings.filter((heading) => heading.depth === 2);
 		color: var(--accent);
 		margin-left: -1px;
 		border-left: 1px solid var(--accent);
+	}
+
+	/* Bottom meta block — aside variant only (see the comment near the top of this file for why
+	   the disclosure variant never gets one). Gap-matches the 32px the design puts between the
+	   link list and this block. */
+	.toc-aside__meta {
+		margin-top: 32px;
+		padding-top: 24px;
+		border-top: 1px solid var(--hairline-08);
+		font: 400 11.5px/2 var(--font-mono);
+		color: var(--text-dim);
+	}
+
+	.toc-aside__note {
+		color: var(--accent-2);
+	}
+
+	.toc-aside__edit-link {
+		color: var(--text-muted);
+		transition: color 0.15s ease;
+	}
+
+	.toc-aside__edit-link:hover {
+		color: var(--ink);
 	}
 
 	/* -- <details> disclosure variant (tablet/mobile) --------------------------------------- */
@@ -218,8 +265,9 @@ const sections = headings.filter((heading) => heading.depth === 2);
 					const visible = entries
 						.filter((entry) => entry.isIntersecting)
 						.sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
-					if (visible.length === 0) return;
-					const match = targets.find((target) => target.el === visible[0].target);
+					const nearest = visible[0];
+					if (!nearest) return;
+					const match = targets.find((target) => target.el === nearest.target);
 					if (match) setActive(match.link);
 				},
 				{ rootMargin: "0px 0px -70% 0px", threshold: 0 },

@@ -38,6 +38,15 @@ sidebar:
         items:
           - reference/config/base
           - reference/config/advanced
+
+version: v2.4.1
+sidebarMeta: |
+  MIT licensed
+  no telemetry
+
+toc:
+  note: updated for 2.4
+  editLink: "https://github.com/org/my-project/edit/main/{path}"
 ```
 
 | Field | Type | Default | Description |
@@ -51,6 +60,10 @@ sidebar:
 | `footer.links` | `{ label, href }[]` | — | Extra links rendered in the footer, replacing the default "docs"/"github" pair entirely when set. |
 | `footer.meta` | `string` | — | Right-aligned meta string in the footer (e.g. `MIT licensed · no telemetry`), rendered on every page. |
 | `sidebar` | array of groups | — | Author-controlled sidebar structure. When present, replaces the default auto-generated (alphabetical, directory-mirroring) sidebar — see [Sidebar semantics](#sidebar-semantics). |
+| `version` | `string` | — | Version string (e.g. `v2.4.1`), rendered as small mono text in the header and at the bottom of the sidebar. |
+| `sidebarMeta` | `string` | — | Multiline string rendered at the bottom of the sidebar, below `version` if both are set. Each non-empty line becomes its own row (e.g. `MIT licensed` / `no telemetry`). |
+| `toc.note` | `string` | — | Short note shown in the attention accent color (amber by default) below the desktop "on this page" list (e.g. `updated for 2.4`). |
+| `toc.editLink` | `string` | — | URL template for a per-page "edit this page" link, also below the desktop "on this page" list. `{path}` is replaced with the page's source path relative to the repo root (e.g. `docs/how-to/foo.md`). Omitted on pages with no on-disk source, and on the mobile/tablet disclosure variant of the TOC. |
 
 ## Header/footer links
 
@@ -93,14 +106,15 @@ Groups can nest.
 ## Notes
 
 - Every scalar field (`title`/`repoUrl`/`base`/`site`) can also be set (or overridden) via a CLI
-  flag; flags win over the file — see [CLI](/reference/cli/). `content`/`header`/`footer`/`sidebar`
-  have no CLI flag equivalent; they're config-file only.
+  flag; flags win over the file — see [CLI](/reference/cli/).
+  `content`/`header`/`footer`/`sidebar`/`version`/`sidebarMeta`/`toc` have no CLI flag equivalent;
+  they're config-file only.
 - An invalid or malformed `docs.config.yaml` (not valid YAML, not a YAML mapping at the top level, a
   known field with the wrong type, or a `content` array containing a non-string) is a hard build
   error naming the file path and the offending field.
-- Unknown top-level keys — and unknown keys nested inside `header`, `footer`, a link object, or a
-  sidebar group — are reported as a console warning (not a build error) and otherwise ignored; a
-  typo'd field name won't fail your build, but it also won't do anything.
+- Unknown top-level keys — and unknown keys nested inside `header`, `footer`, `toc`, a link object,
+  or a sidebar group — are reported as a console warning (not a build error) and otherwise ignored;
+  a typo'd field name won't fail your build, but it also won't do anything.
 - `repoUrl` normalization handles both SSH (`git@github.com:org/repo.git`) and `.git`-suffixed
   remotes, converting them to a plain `https://github.com/org/repo`.
 - If neither `docs.config.yaml` nor `git remote get-url origin` provides a repo URL, out-of-tree
