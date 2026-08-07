@@ -1,34 +1,28 @@
 ---
 // Doc-page header: logo cell aligned with the sidebar rail, search trigger pill (visual only —
-// SearchModal.astro's script wires the modal behind the shared `data-search-trigger`), and a
-// github link when configured. No version chip: no data source for one.
+// SearchModal.astro's script wires the modal behind the shared `data-search-trigger`), and the
+// shared primary nav. No version chip: no data source for one.
 //
 // The shell (sticky positioning, grid/flex layout, translucent+blurred background, hairline
-// border) and the brand/search/hamburger pieces are shared with LandingHeader.astro via
+// border) and the brand/nav/search/hamburger pieces are shared with LandingHeader.astro via
 // components/header/* so the two variants can't drift apart — see HeaderShell.astro for the
-// tablet/mobile breakpoint behavior both headers follow.
+// tablet/mobile breakpoint behavior both headers follow, and HeaderNav.astro for the link set.
 import HeaderShell from "./header/HeaderShell.astro";
+import HeaderNav from "./header/HeaderNav.astro";
 import Wordmark from "./header/Wordmark.astro";
 import SearchTrigger from "./header/SearchTrigger.astro";
-import RepoLink from "./header/RepoLink.astro";
 import NavToggle from "./header/NavToggle.astro";
+import { getDocsConfig } from "../lib/config";
 
-const siteTitle = process.env.DOCS_TITLE ?? "docs";
-const repoUrl = process.env.DOCS_REPO_URL;
+const config = getDocsConfig();
 const base = import.meta.env.BASE_URL;
 ---
 
 <HeaderShell>
-	<Wordmark title={siteTitle} href={base} />
+	<Wordmark title={config.title} href={base} />
 	<div class="site-header__right">
 		<SearchTrigger />
-		{
-			repoUrl && (
-				<nav class="site-header__nav">
-					<RepoLink href={repoUrl} />
-				</nav>
-			)
-		}
+		<HeaderNav />
 		<NavToggle />
 	</div>
 </HeaderShell>
@@ -40,14 +34,6 @@ const base = import.meta.env.BASE_URL;
 		gap: 32px;
 		padding: 0 var(--content-pad-x);
 		min-width: 0;
-	}
-
-	.site-header__nav {
-		margin-left: auto;
-		display: flex;
-		align-items: center;
-		gap: 22px;
-		font-size: 13px;
 	}
 
 	/* Tablet: HeaderShell collapses to a flex row; push this side to the far right. */
@@ -62,12 +48,6 @@ const base = import.meta.env.BASE_URL;
 	@media (max-width: 767px) {
 		.site-header__right {
 			gap: 16px;
-		}
-
-		/* Repo link moves to NavSheet's footer + the doc-page Footer at this width; no room for it
-		   in a 52px header alongside the search icon and hamburger. */
-		.site-header__nav {
-			display: none;
 		}
 	}
 </style>

@@ -1,4 +1,30 @@
-/** Optional `docs.config.json` at the root of a consumer repo. */
+/** A single labeled link, e.g. in `header.links` or `footer.links`. */
+export interface ConfigLink {
+	label: string;
+	href: string;
+}
+
+/** An optional set of extra links rendered in the header or footer chrome. */
+export interface ConfigLinks {
+	links?: ConfigLink[];
+}
+
+/** Footer chrome: optional links plus an optional right-aligned meta string. */
+export interface FooterConfig extends ConfigLinks {
+	/** e.g. `ISC licensed · builds to static files`. Rendered on every page. */
+	meta?: string;
+}
+
+/** A sidebar entry: either a synced page's content id, or a nested group. */
+export type SidebarItem = string | SidebarGroup;
+
+/** A labeled sidebar group containing pages and/or nested groups, in author-controlled order. */
+export interface SidebarGroup {
+	label: string;
+	items: SidebarItem[];
+}
+
+/** Optional `docs.config.yaml` at the root of a consumer repo. */
 export interface DocsConfig {
 	/** Site title. Falls back to the README's first heading, then the repo directory name. */
 	title?: string;
@@ -10,9 +36,18 @@ export interface DocsConfig {
 	base?: string;
 	/** Absolute site origin, e.g. `https://bluecadet.github.io`. */
 	site?: string;
+	/** Extra links rendered in the header chrome. */
+	header?: ConfigLinks;
+	/** Extra links and an optional meta string rendered in the footer chrome. */
+	footer?: FooterConfig;
+	/**
+	 * Author-controlled sidebar structure. When present, drives `getNavTree()` instead of the
+	 * default auto-generated (alphabetical, directory-mirroring) tree.
+	 */
+	sidebar?: SidebarGroup[];
 }
 
-/** Fully-resolved settings after merging `docs.config.json`, CLI flags, and defaults. */
+/** Fully-resolved settings after merging `docs.config.yaml`, CLI flags, and defaults. */
 export interface ResolvedConfig {
 	/** Absolute path to the consumer repo. */
 	root: string;
@@ -25,6 +60,9 @@ export interface ResolvedConfig {
 	content: string[];
 	base?: string;
 	site?: string;
+	header?: ConfigLinks;
+	footer?: FooterConfig;
+	sidebar?: SidebarGroup[];
 }
 
 /** A single markdown/mdx source file destined for the published site. */

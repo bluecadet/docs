@@ -27,7 +27,7 @@ npx @bluecadet/docs [build|dev] [options]
 | `--repo-url <url>` | — | Override the detected GitHub repo URL (used for out-of-tree link rewriting and the header's GitHub link). |
 | `-h, --help` | — | Show usage. |
 
-CLI flags always override `docs.config.json` — see [docs.config.json](/reference/docs-config-json/).
+CLI flags always override `docs.config.yaml` — see [docs.config.yaml](/reference/docs-config-yaml/).
 
 ## Exit behavior
 
@@ -42,9 +42,9 @@ CLI flags always override `docs.config.json` — see [docs.config.json](/referen
 - Unresolved links are non-fatal: the CLI logs up to 10 examples (deduped) to the console and
   either unwraps them to plain text or leaves them as a GitHub blob URL, depending on whether a
   `repoUrl` is known — see [link rewriting](/reference/content-conventions/#link-and-asset-rewriting).
-- An invalid `docs.config.json` (bad JSON, a known field with the wrong type, or a non-string
+- An invalid `docs.config.yaml` (bad YAML, a known field with the wrong type, or a non-string
   `content` entry) is a hard error naming the field; an unknown top-level key is a console warning
-  instead — see [docs.config.json](/reference/docs-config-json/#notes).
+  instead — see [docs.config.yaml](/reference/docs-config-yaml/#notes).
 
 ## `docs dev`
 

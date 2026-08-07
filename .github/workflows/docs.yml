@@ -17,7 +17,7 @@ on:
     paths:
       - "README.md"
       - "docs/**"
-      - "docs.config.json"
+      - "docs.config.yaml"
       - "packages/docs/**"
   workflow_dispatch:
 

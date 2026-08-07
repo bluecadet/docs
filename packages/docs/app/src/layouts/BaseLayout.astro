@@ -16,6 +16,7 @@ import SearchModal from "../components/SearchModal.astro";
 import SidebarNav from "../components/SidebarNav.astro";
 import Toc from "../components/Toc.astro";
 import Footer from "../components/Footer.astro";
+import { getDocsConfig } from "../lib/config";
 
 interface Heading {
 	depth: number;
@@ -38,11 +39,6 @@ interface Props {
 	/** Append " — <site title>" to the document title. */
 	appendSiteTitle?: boolean;
 	robots?: string;
-	/** Forwarded to the default footer's "docs" link — see Footer.astro. Only the landing page
-	 *  (which has no header/footer overrides of its own for this) needs to set it. */
-	footerDocsHref?: string;
-	/** Forwarded to the default footer's optional right-aligned meta string. */
-	footerMeta?: string;
 }
 
 const {
@@ -53,11 +49,9 @@ const {
 	main = "article",
 	appendSiteTitle = true,
 	robots,
-	footerDocsHref,
-	footerMeta,
 } = Astro.props;
 
-const siteTitle = process.env.DOCS_TITLE ?? "docs";
+const siteTitle = getDocsConfig().title;
 const pageTitle = appendSiteTitle && title ? `${title} — ${siteTitle}` : title || siteTitle;
 const base = import.meta.env.BASE_URL;
 
@@ -89,7 +83,7 @@ const hasToc = main === "article" && headings.some((heading) => heading.depth ==
 					{hasToc && <Toc variant="aside" headings={headings} />}
 				</main>
 			</div>
-			<slot name="footer"><Footer docsHref={footerDocsHref} meta={footerMeta} /></slot>
+			<slot name="footer"><Footer /></slot>
 		</div>
 		<NavSheet currentId={currentId} />
 		<SearchModal />
@@ -106,7 +100,7 @@ const hasToc = main === "article" && headings.some((heading) => heading.depth ==
 		/* Shared cap: header, body and footer each center an inner row to this width with matching
 		   border-left/border-right hairlines, so the two rules read as one continuous edge running
 		   from the top of the header to the bottom of the footer. */
-		--shell-width: 1480px;
+		--shell-width: 1440px;
 		/* Shared horizontal/top gutters — every band that abuts the shell's outer edge (sidebar,
 		   article, TOC, header search cell, landing bands) pads from these two so their edges and
 		   top-aligned labels line up without each component re-declaring the same numbers. */

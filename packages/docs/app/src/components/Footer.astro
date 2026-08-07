@@ -1,37 +1,52 @@
 ---
-// One footer for every route (doc pages and the landing page both render this via BaseLayout's
-// default `footer` slot — landing used to override it with its own near-duplicate, deleted in
-// favor of this shared component). Grid mirrors the header (same --rail-width column). Only
-// renders links we actually have data for — no fictional changelog/discord links, no fabricated
-// version/license string (no data source for either).
-interface Props {
-	/** "docs" link target. Doc pages want the site root; the landing page (which IS the site
-	 *  root) wants the first real doc page instead — see index.astro. */
-	docsHref?: string;
-	/** Optional right-aligned meta string (landing frontmatter's `footerMeta`, e.g.
-	 *  "MIT · no telemetry"). Doc pages never pass one. */
-	meta?: string;
-}
+// One footer for every route (doc pages, landing and 404 all render this via BaseLayout's
+// default `footer` slot). Grid mirrors the header (same --rail-width column). Deliberately
+// prop-less: everything comes from config and the nav tree, so the footer is byte-identical
+// on every page — no per-template variants to drift apart. Only renders links/meta we actually
+// have data for — no fictional changelog/discord links, no fabricated version/license string.
+import { getDocsConfig, isExternalLink } from "../lib/config";
+import { docsEntryHref } from "../lib/nav";
 
-const siteTitle = process.env.DOCS_TITLE ?? "docs";
-const repoUrl = process.env.DOCS_REPO_URL;
-const base = import.meta.env.BASE_URL;
-
-const { docsHref = base, meta } = Astro.props;
+const config = getDocsConfig();
+const footerLinks = config.footer?.links ?? [];
+const meta = config.footer?.meta;
+const docsHref = await docsEntryHref();
 ---
 
 <footer class="site-footer">
 	<div class="site-footer-inner">
 		<div class="site-footer__brand">
-			<span class="glyph">▞</span>{siteTitle}
+			<span class="glyph">▞</span>{config.title}
 		</div>
 		<div class="site-footer__right">
-			<a class="site-footer__link" href={docsHref}>docs</a>
 			{
-				repoUrl && (
-					<a class="site-footer__link" href={repoUrl} rel="noopener noreferrer" target="_blank">
-						github
-					</a>
+				footerLinks.length > 0 ? (
+					footerLinks.map((link) => (
+						<a
+							class="site-footer__link"
+							href={link.href}
+							rel={isExternalLink(link.href) ? "noopener noreferrer" : undefined}
+							target={isExternalLink(link.href) ? "_blank" : undefined}
+						>
+							{link.label}
+						</a>
+					))
+				) : (
+					<>
+						<a class="site-footer__link" href={docsHref}>
+							docs
+						</a>
+						{config.repoUrl && (
+							<a
+								class="site-footer__link"
+								href={config.repoUrl}
+								rel="noopener noreferrer"
+								target="_blank"
+							>
+								github
+							</a>
+						)}
+					</>
 				)
 			}
 			{meta && <span class="site-footer__meta">{meta}</span>}

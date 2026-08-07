@@ -7,8 +7,9 @@
 // Opened by any [data-search-trigger] button (see Header.astro / LandingHeader.astro) or the
 // `/` key. Included once per page from BaseLayout.astro and index.astro.
 import { firstPageOf, getNavTree } from "../lib/nav";
+import { getDocsConfig } from "../lib/config";
 
-const repoUrl = process.env.DOCS_REPO_URL;
+const repoUrl = getDocsConfig().repoUrl;
 
 // "START HERE" = the entry point of each top-level section, in sidebar order, topped up from the
 // full page list when there are fewer than 8 sections.

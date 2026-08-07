@@ -5,17 +5,19 @@ description: Publishes per-package README files from a monorepo alongside your d
 # Include package READMEs from a monorepo
 
 If your repo has multiple packages, each with its own `README.md`, publish them alongside your
-main `docs/` tree with the `content` field in `docs.config.json`.
+main `docs/` tree with the `content` field in `docs.config.yaml`.
 
-```json
-{
-  "content": ["packages/*/README.md"]
-}
+```yaml
+content:
+  - "packages/*/README.md"
 ```
 
 Every match is treated exactly like a file under `docs/`: its `README`/`index` basename collapses
 onto its containing directory's route. So `packages/docs/README.md` publishes at `/packages/docs/`
 and `packages/other-package/README.md` publishes at `/packages/other-package/`.
+
+This site does exactly that: the [`@bluecadet/docs` package README](/packages/docs/) is published
+with this glob and listed in the sidebar under Reference → Packages.
 
 ## Notes
 

@@ -1,0 +1,42 @@
+title: bluecadet docs
+repoUrl: https://github.com/bluecadet/docs
+
+content:
+  - "packages/*/README.md"
+
+header:
+  links:
+    - label: github
+      href: https://github.com/bluecadet/docs
+    - label: npm
+      href: https://www.npmjs.com/package/@bluecadet/docs
+
+sidebar:
+  - label: Tutorials
+    items:
+      - tutorials/add-docs-to-your-repo
+  - label: How-to
+    items:
+      - how-to/configure-docs-config-yaml
+      - how-to/include-package-readmes-from-a-monorepo
+      - how-to/build-a-rich-landing-page
+  - label: Reference
+    items:
+      - reference/cli
+      - reference/docs-config-yaml
+      - reference/content-conventions
+      - reference/search
+      - label: Packages
+        items:
+          - packages/docs
+  - label: Explanation
+    items:
+      - explanation/architecture
+
+footer:
+  links:
+    - label: docs
+      href: /
+    - label: github
+      href: https://github.com/bluecadet/docs
+  meta: ISC licensed · builds to static files

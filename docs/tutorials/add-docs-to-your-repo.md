@@ -91,7 +91,8 @@ See that workflow's own inputs for deploy targets and options (e.g. GitHub Pages
 
 ## Next steps
 
-- Need per-repo settings (a custom title, a monorepo's extra READMEs, a non-root base path)? See
-  [Configure docs.config.json](/how-to/configure-docs-config-json/).
+- Need per-repo settings (a custom title, a monorepo's extra READMEs, a non-root base path, header/
+  footer links, a hand-ordered sidebar)? See
+  [Configure docs.config.yaml](/how-to/configure-docs-config-yaml/).
 - Full flag/behavior reference: [CLI](/reference/cli/) and
   [content conventions](/reference/content-conventions/).

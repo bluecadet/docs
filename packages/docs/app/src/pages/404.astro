@@ -9,10 +9,10 @@
 import BaseLayout from "../layouts/BaseLayout.astro";
 import LandingHeader from "../components/landing/LandingHeader.astro";
 import { getNavTree } from "../lib/nav";
+import { getDocsConfig } from "../lib/config";
 
 const base = import.meta.env.BASE_URL;
-const siteTitle = process.env.DOCS_TITLE ?? "Docs";
-const repoUrl = process.env.DOCS_REPO_URL;
+const { title: siteTitle, repoUrl } = getDocsConfig();
 
 const { flat } = await getNavTree();
 
@@ -23,7 +23,7 @@ const routesPayload = {
 ---
 
 <BaseLayout title={`404 — ${siteTitle}`} main="full" appendSiteTitle={false} robots="noindex">
-	<LandingHeader slot="header" title={siteTitle} docsHref={base} repoUrl={repoUrl} />
+	<LandingHeader slot="header" />
 
 	<div class="notfound-main">
 		<div class="notfound-eyebrow">404 — no page here</div>

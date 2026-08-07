@@ -42,9 +42,20 @@ export function logSyncResult(result: {
 	}
 }
 
+/**
+ * Sets `DOCS_BASE`/`DOCS_SITE` (still read directly by astro.config.mjs) and the consolidated
+ * `DOCS_CONFIG` JSON payload that app code reads via `app/src/lib/config.ts`'s `getDocsConfig()`.
+ */
 export function applyEnv(cfg: ResolvedConfig): void {
-	process.env.DOCS_TITLE = cfg.title;
-	if (cfg.repoUrl) process.env.DOCS_REPO_URL = cfg.repoUrl;
 	if (cfg.base) process.env.DOCS_BASE = cfg.base;
 	if (cfg.site) process.env.DOCS_SITE = cfg.site;
+
+	const payload: Record<string, unknown> = { title: cfg.title };
+	if (cfg.repoUrl) payload.repoUrl = cfg.repoUrl;
+	if (cfg.base) payload.base = cfg.base;
+	if (cfg.site) payload.site = cfg.site;
+	if (cfg.header) payload.header = cfg.header;
+	if (cfg.footer) payload.footer = cfg.footer;
+	if (cfg.sidebar) payload.sidebar = cfg.sidebar;
+	process.env.DOCS_CONFIG = JSON.stringify(payload);
 }

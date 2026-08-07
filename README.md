@@ -16,9 +16,10 @@ npx @bluecadet/docs build
 ```
 
 Reads `README.md` and `docs/` from the current directory and writes a static site to `./dist`. Add
-an optional `docs.config.json` at the repo root for a custom title, GitHub URL, deploy base path,
-or extra content globs (monorepo package READMEs, etc.). Run it from CI with the reusable
-`bluecadet/docs/.github/workflows/build-docs.yml@main` workflow.
+an optional `docs.config.yaml` at the repo root for a custom title, GitHub URL, deploy base path,
+extra content globs (monorepo package READMEs, etc.), header/footer links, or a hand-ordered
+sidebar. Run it from CI with the reusable `bluecadet/docs/.github/workflows/build-docs.yml@main`
+workflow.
 
 See the [full docs](https://bluecadet.github.io/docs/) for a tutorial, how-to guides, and
 reference material.

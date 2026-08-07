@@ -36,7 +36,6 @@ installCommand: npx acme-build
 heroNotes:
   - "↖ the config file is optional. it has four keys."
   - nothing here phones home.
-footerMeta: MIT licensed · no telemetry
 closingAccent: It really is one command.
 ---
 ```
@@ -46,8 +45,11 @@ closingAccent: It really is one command.
 | `eyebrows` | up to 3 `{ label, tone }` | Uppercase mono chips above the headline. `tone` is `sage` (solid), `amber` (outlined) or `neutral` (outlined, default). |
 | `installCommand` | string | A `$ …` chip under the lead with a copy button, plus a link through to your first doc page. |
 | `heroNotes` | up to 2 strings | Marginalia beside the hero. The first is amber, a second is neutral. |
-| `footerMeta` | string | Right-aligned meta line in the landing footer. |
 | `closingAccent` | string | An italic amber second clause on the closing call to action. |
+
+The footer's right-aligned meta line (`MIT licensed · no telemetry`) isn't landing frontmatter —
+it's `footer.meta` in [`docs.config.yaml`](/reference/docs-config-yaml/), because the footer is
+the same on every page.
 
 `title` and `description` do double duty: they're the hero headline and lead. A `title` containing
 a comma-separated clause (`Reproducible builds, without the ceremony.`) splits across two lines,

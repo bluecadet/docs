@@ -11,7 +11,7 @@ description: Details which files get published, how routes and titles are derive
 - `docs/index.md` and `docs/index.mdx` are mutually exclusive — the build errors if both exist.
 - Everything else under `docs/` (any depth, any folder names) is published, one page per
   `.md`/`.mdx` file.
-- Extra glob patterns from `docs.config.json`'s `content` field are published the same way — see
+- Extra glob patterns from `docs.config.yaml`'s `content` field are published the same way — see
   [Include package READMEs from a monorepo](/how-to/include-package-readmes-from-a-monorepo/).
 - A repo needs a `README.md` at its root, a `docs/index.md`, or a `docs/index.mdx` to have a
   landing page at all; the build hard-errors if none of the three exist.
@@ -55,8 +55,10 @@ Two fields are read by the site, both optional:
 
 No other frontmatter fields are read — the content schema is just `{ title, description? }`.
 
-Sidebar navigation and full-text search — see [Search](/reference/search/) — are both generated
-from the published file tree, not from frontmatter; there's no separate nav or search config.
+Sidebar navigation is generated from the published file tree by default, or from `docs.config.yaml`'s
+`sidebar` field when set — see [docs.config.yaml](/reference/docs-config-yaml/#sidebar-semantics).
+Full-text search — see [Search](/reference/search/) — is always generated from the published file
+tree; there's no separate search config. Neither reads frontmatter beyond `title`/`description`.
 
 ## Markdown features
 

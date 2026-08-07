@@ -56,7 +56,7 @@ function childrenAreNested(node: NavNode): boolean {
 							{node.label}
 						</a>
 					) : (
-						<div class="sidebar-label">{node.segment}/</div>
+						<div class="sidebar-label">{node.label}/</div>
 					)}
 					{node.children.length > 0 && (
 						<Astro.self

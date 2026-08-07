@@ -1,0 +1,36 @@
+---
+// The one primary nav both header variants render, so the link set can't differ between the
+// landing page and doc pages: a "docs" link to the first doc page, then `header.links` from
+// docs.config.yaml (or the default repoUrl github link when none are configured). Owns the
+// nav's typography and breakpoints too — parents only decide where it sits. At ≤767px the
+// whole nav hides: the links move to NavSheet.astro's footer and the doc-page Footer; no room
+// in a 52px header alongside the search icon and hamburger.
+import { getDocsConfig } from "../../lib/config";
+import { docsEntryHref } from "../../lib/nav";
+import NavLinks from "./NavLinks.astro";
+
+const config = getDocsConfig();
+const configured =
+	config.header?.links ?? (config.repoUrl ? [{ label: "github", href: config.repoUrl }] : []);
+const links = [{ label: "docs", href: await docsEntryHref() }, ...configured];
+---
+
+<nav class="header-nav" aria-label="Primary">
+	<NavLinks links={links} />
+</nav>
+
+<style>
+	.header-nav {
+		margin-left: auto;
+		display: flex;
+		align-items: center;
+		gap: 22px;
+		font-size: 13px;
+	}
+
+	@media (max-width: 767px) {
+		.header-nav {
+			display: none;
+		}
+	}
+</style>

@@ -3,7 +3,8 @@
 // LandingHeader.astro and the mobile breadcrumb pill's "all pages" trigger (see Breadcrumb.astro).
 // One instance per page, mounted once from BaseLayout.astro. Renders the same recursive tree as
 // SidebarNav.astro (see ../lib/nav.ts) so the two can never drift apart, at touch-sized targets.
-import { getNavTree, type NavNode } from "../lib/nav";
+import { docsEntryHref, getNavTree, type NavNode } from "../lib/nav";
+import { getDocsConfig, isExternalLink } from "../lib/config";
 
 interface Props {
 	/** Active page id, when one of the nav entries is the current page. */
@@ -17,8 +18,8 @@ interface Props {
 const { currentId, nodes, nested = false } = Astro.props;
 const isRoot = nodes === undefined;
 const items = nodes ?? (await getNavTree()).nodes;
-const siteTitle = process.env.DOCS_TITLE ?? "docs";
-const repoUrl = process.env.DOCS_REPO_URL;
+const config = getDocsConfig();
+const footerLinks = config.footer?.links ?? [];
 const base = import.meta.env.BASE_URL;
 
 // Same rule as SidebarNav: root-level directories keep the flat group treatment; everything
@@ -34,7 +35,7 @@ function childrenAreNested(node: NavNode): boolean {
 			<div class="nav-sheet__header">
 				<a class="nav-sheet__brand" href={base}>
 					<span class="glyph">▞</span>
-					{siteTitle}
+					{config.title}
 				</a>
 				<button
 					type="button"
@@ -57,19 +58,37 @@ function childrenAreNested(node: NavNode): boolean {
 			</nav>
 
 			<div class="nav-sheet__footer">
-				<a class="nav-sheet__footer-link" href={base}>
-					docs
-				</a>
-				{repoUrl && (
-					<a
-						class="nav-sheet__footer-link"
-						href={repoUrl}
-						rel="noopener noreferrer"
-						target="_blank"
-					>
-						github ↗
-					</a>
-				)}
+				{
+					footerLinks.length > 0 ? (
+						footerLinks.map((link) => (
+							<a
+								class="nav-sheet__footer-link"
+								href={link.href}
+								rel={isExternalLink(link.href) ? "noopener noreferrer" : undefined}
+								target={isExternalLink(link.href) ? "_blank" : undefined}
+							>
+								{link.label}
+								{isExternalLink(link.href) && " ↗"}
+							</a>
+						))
+					) : (
+						<>
+							<a class="nav-sheet__footer-link" href={await docsEntryHref()}>
+								docs
+							</a>
+							{config.repoUrl && (
+								<a
+									class="nav-sheet__footer-link"
+									href={config.repoUrl}
+									rel="noopener noreferrer"
+									target="_blank"
+								>
+									github ↗
+								</a>
+							)}
+						</>
+					)
+				}
 			</div>
 		</dialog>
 	) : (
@@ -86,7 +105,7 @@ function childrenAreNested(node: NavNode): boolean {
 							{node.label}
 						</a>
 					) : (
-						<div class="nav-sheet__label">{node.segment}/</div>
+						<div class="nav-sheet__label">{node.label}/</div>
 					)}
 					{node.children.length > 0 && (
 						<Astro.self

@@ -26,7 +26,7 @@ files generated at build time and served alongside the rest of the site.
   Pagefind's relevance scoring.
 - `↑`/`↓` moves between results, `Enter` opens the highlighted one, `Esc` closes the modal.
 - A query with no matches links out to search or open the repo's GitHub issues, if `repoUrl` is
-  configured — see [docs.config.json](/reference/docs-config-json/).
+  configured — see [docs.config.yaml](/reference/docs-config-yaml/).
 
 ## Limitations
 

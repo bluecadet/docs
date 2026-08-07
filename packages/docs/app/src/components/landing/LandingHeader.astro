@@ -1,37 +1,25 @@
 ---
-// Landing-only header variant: 240px rail column + wordmark, search trigger pill (SearchModal.astro
-// is mounted on this route too, via BaseLayout.astro — same shared `data-search-trigger`), and a
-// right nav of "docs" + optional "github ↗". Reused as-is on the 404 page.
-//
-// The shell (sticky positioning, grid/flex layout, translucent+blurred background, hairline
-// border) and the brand/search/hamburger pieces are shared with Header.astro via components/header/*
-// so the two variants can't drift apart — see HeaderShell.astro for the tablet/mobile breakpoint
-// behavior both headers follow. SidebarNav stays visible down to 768px; only below that (mobile)
-// does it hide in favor of the hamburger + NavSheet.astro.
+// Landing-only header variant (reused as-is on the 404 page). Same wordmark, search trigger and
+// shared primary nav as the doc-page Header.astro — the only differences are layout tweaks for
+// pages without a sidebar (wider tablet search pill, tighter gap). The link set itself lives in
+// HeaderNav.astro so it can't diverge between templates; the shell (sticky positioning, grid/flex
+// layout, translucent+blurred background, hairline border) is HeaderShell.astro.
 import HeaderShell from "../header/HeaderShell.astro";
+import HeaderNav from "../header/HeaderNav.astro";
 import Wordmark from "../header/Wordmark.astro";
 import SearchTrigger from "../header/SearchTrigger.astro";
-import RepoLink from "../header/RepoLink.astro";
 import NavToggle from "../header/NavToggle.astro";
+import { getDocsConfig } from "../../lib/config";
 
-interface Props {
-	title: string;
-	docsHref: string;
-	repoUrl?: string;
-}
-
-const { title, docsHref, repoUrl } = Astro.props;
+const config = getDocsConfig();
 const base = import.meta.env.BASE_URL;
 ---
 
 <HeaderShell>
-	<Wordmark title={title} href={base} />
+	<Wordmark title={config.title} href={base} />
 	<div class="landing-header-nav">
 		<SearchTrigger tabletWidth="230px" />
-		<nav class="landing-nav" aria-label="Primary">
-			<a href={docsHref}>docs</a>
-			{repoUrl && <RepoLink href={repoUrl} />}
-		</nav>
+		<HeaderNav />
 		<NavToggle />
 	</div>
 </HeaderShell>
@@ -45,36 +33,18 @@ const base = import.meta.env.BASE_URL;
 		min-width: 0;
 	}
 
-	.landing-nav {
-		display: flex;
-		gap: 22px;
-		font-size: 13.5px;
-		color: var(--text-muted);
-		margin-left: auto;
-	}
-
-	/* Tablet: HeaderShell collapses to a flex row. The "docs" text link is dropped in favor of the
-	   hamburger + nav sheet (which also lists every section) and the hero/CTA buttons already on
-	   the page. */
+	/* Tablet: HeaderShell collapses to a flex row; push this side to the far right. */
 	@media (max-width: 1023px) {
 		.landing-header-nav {
 			margin-left: auto;
 			padding: 0;
 			gap: 20px;
 		}
-
-		.landing-nav a:not(.repo-link) {
-			display: none;
-		}
 	}
 
 	@media (max-width: 767px) {
 		.landing-header-nav {
 			gap: 16px;
-		}
-
-		.landing-nav {
-			display: none;
 		}
 	}
 </style>

@@ -1,0 +1,38 @@
+---
+// Renders `docs.config.yaml`'s `header.links` (or `footer.links`, reused by Footer.astro/
+// NavSheet.astro), in author order. Shared by Header.astro and LandingHeader.astro so the two
+// headers can never render a different link set. External links (http(s) to a different origin —
+// see `isExternalLink()`) get the same "↗" affordance as the default repoUrl link; internal links
+// render as a plain nav link.
+import RepoLink from "./RepoLink.astro";
+import { type ConfigLink, isExternalLink } from "../../lib/config";
+
+interface Props {
+	links: ConfigLink[];
+}
+
+const { links } = Astro.props;
+---
+
+{
+	links.map((link) =>
+		isExternalLink(link.href) ? (
+			<RepoLink href={link.href} label={link.label} />
+		) : (
+			<a class="nav-link" href={link.href}>
+				{link.label}
+			</a>
+		),
+	)
+}
+
+<style>
+	.nav-link {
+		color: var(--text-muted);
+		transition: color 0.15s ease;
+	}
+
+	.nav-link:hover {
+		color: var(--accent);
+	}
+</style>
