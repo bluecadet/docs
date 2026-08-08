@@ -1,6 +1,6 @@
-// Shared nav tree. SidebarNav, NavSheet, Breadcrumb, Pagination, SearchModal, the landing CTA
-// cards and the 404 route payload all read from here, so sidebar order and prev/next order can
-// never drift apart.
+// Shared nav tree. SidebarNav, NavSheet, Breadcrumb, Pagination, SearchModal, ClosingCta and the
+// 404 route payload all read from here, so sidebar order and prev/next order can never drift
+// apart.
 //
 // Two build modes:
 //
@@ -298,13 +298,6 @@ export async function docsEntryHref(): Promise<string> {
 	const { nodes } = await getNavTree();
 	const first = nodes[0] && firstPageOf(nodes[0]);
 	return first?.href ?? import.meta.env.BASE_URL;
-}
-
-/** How many linkable pages sit at or below `node`. */
-export function pageCount(node: NavNode): number {
-	let total = isPage(node) ? 1 : 0;
-	for (const child of node.children) total += pageCount(child);
-	return total;
 }
 
 /** Root-to-node path (inclusive) for `id`, or an empty array when `id` isn't in the tree. */

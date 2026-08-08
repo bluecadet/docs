@@ -1,10 +1,11 @@
 ---
-// Full-bleed "here is what this does not do" band for the landing page's MDX body:
+// Full-bleed glyph-marked list band for the landing page's MDX body — originally the "here is
+// what this does not do" list, generalized to any glyph-per-row list:
 //
-//   <WillNotDo title="Things this will not do" accent="will not" intro="A short list…">
-//     <WontItem lead="Replace your site.">…</WontItem>
-//     <WontItem status="yes" lead="Get out of the way.">…</WontItem>
-//   </WillNotDo>
+//   <GlyphList title="Things this will not do" accent="will not" intro="A short list…">
+//     <GlyphItem lead="Replace your site.">…</GlyphItem>
+//     <GlyphItem glyph="✓" color="var(--accent)" lead="Get out of the way.">…</GlyphItem>
+//   </GlyphList>
 //
 // `accent` is an optional substring of `title` that renders in italic attention accent — the
 // design's attention treatment on the one clause that carries the point.
@@ -23,20 +24,20 @@ const before = at === -1 ? title : title.slice(0, at);
 const after = at === -1 ? "" : title.slice(at + (accent?.length ?? 0));
 ---
 
-<div class="landing-band wont">
-	<div class="wont-head">
-		<h2 class="wont-title">
-			{before}{at !== -1 && <span class="wont-accent">{accent}</span>}{after}
+<div class="landing-band glyph-list">
+	<div class="glyph-list-head">
+		<h2 class="glyph-list-title">
+			{before}{at !== -1 && <span class="glyph-list-accent">{accent}</span>}{after}
 		</h2>
-		{intro && <p class="wont-intro">{intro}</p>}
+		{intro && <p class="glyph-list-intro">{intro}</p>}
 	</div>
-	<div class="wont-items">
+	<div class="glyph-list-items">
 		<slot />
 	</div>
 </div>
 
 <style>
-	.wont {
+	.glyph-list {
 		display: grid;
 		grid-template-columns: 360px minmax(0, 1fr);
 		gap: 88px;
@@ -49,7 +50,7 @@ const after = at === -1 ? "" : title.slice(at + (accent?.length ?? 0));
 	   div lives inside `.prose` (the landing MDX body), so `padding-bottom`/`border-bottom` must
 	   be reset explicitly rather than left unset, or `.prose h2` supplies them uncontested (a
 	   class selector beats an unset property regardless of specificity). */
-	.wont-title {
+	.glyph-list-title {
 		margin: 0 0 18px;
 		padding-bottom: 0;
 		font: 400 32px/1.2 var(--font-serif);
@@ -57,12 +58,12 @@ const after = at === -1 ? "" : title.slice(at + (accent?.length ?? 0));
 		border-bottom: none;
 	}
 
-	.wont-accent {
+	.glyph-list-accent {
 		font-style: italic;
 		color: var(--accent-2);
 	}
 
-	.wont-intro {
+	.glyph-list-intro {
 		margin: 0;
 		font-size: 14px;
 		line-height: 1.8;
@@ -70,36 +71,36 @@ const after = at === -1 ? "" : title.slice(at + (accent?.length ?? 0));
 		text-wrap: pretty;
 	}
 
-	.wont-items {
+	.glyph-list-items {
 		display: flex;
 		flex-direction: column;
 	}
 
 	/* Tablet and mobile stack: the heading column sits above the list. */
 	@media (max-width: 1023px) {
-		.wont {
+		.glyph-list {
 			grid-template-columns: minmax(0, 1fr);
 			gap: 15px;
 			padding: 56px var(--content-pad-x) 64px;
 		}
 
-		.wont-title {
+		.glyph-list-title {
 			margin-bottom: 12px;
 			font-size: 30px;
 		}
 
-		.wont-intro {
+		.glyph-list-intro {
 			max-width: 520px;
 		}
 	}
 
 	@media (max-width: 767px) {
-		.wont {
+		.glyph-list {
 			gap: 12px;
 			padding: 48px var(--content-pad-x) 50px;
 		}
 
-		.wont-title {
+		.glyph-list-title {
 			font-size: 28px;
 		}
 	}

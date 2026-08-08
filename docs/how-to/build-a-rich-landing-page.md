@@ -5,12 +5,14 @@ description: Shows how to add hero eyebrows, stat strips, transcripts, and featu
 # Build a rich landing page
 
 Your site's `/` route is generated from whichever landing source the CLI finds — `docs/index.mdx`,
-`docs/index.md`, or your root `README.md`. All three give you a working landing page: a headline, a
-lead paragraph, a card per top-level section, and a closing call to action.
+`docs/index.md`, or your root `README.md`. All three give you a working landing page: a headline
+and a lead paragraph, rendered from the file's title and description.
 
-To get the fuller treatment — eyebrow chips, a copyable install command, a stat strip, a terminal
-transcript, feature pillars — switch the landing source to `docs/index.mdx` and add the pieces you
-want. Every piece is optional and independent; skipping one just leaves it out.
+Everything else — eyebrow chips, a copyable install command, a stat strip, a terminal transcript,
+feature pillars, the section card grid, a closing call to action — is optional, and only available
+from `docs/index.mdx`: plain markdown has no way to import a component. Switch the landing source
+to `docs/index.mdx` and add the pieces you want; every piece is independent, so skipping one just
+leaves it out.
 
 > [!NOTE]
 > `docs/index.md` and `docs/index.mdx` are mutually exclusive. If you have an `index.md`, rename it
@@ -18,8 +20,8 @@ want. Every piece is optional and independent; skipping one just leaves it out.
 
 ## Hero pieces go in frontmatter
 
-The hero, footer and closing band render before and after your MDX body, so they're authored as
-frontmatter rather than as components:
+The hero renders before your MDX body, so its pieces are authored as frontmatter rather than as
+components:
 
 ```mdx
 ---
@@ -36,7 +38,6 @@ installCommand: npx acme-build
 heroNotes:
   - "↖ the config file is optional. it has four keys."
   - nothing here phones home.
-closingAccent: It really is one command.
 ---
 ```
 
@@ -45,7 +46,6 @@ closingAccent: It really is one command.
 | `eyebrows` | up to 3 `{ label, tone }` | Uppercase mono chips above the headline. `tone` is `state` (solid, sage by default), `attention` (outlined, amber by default) or `neutral` (outlined, default). |
 | `installCommand` | string | A `$ …` chip under the lead with a copy button, plus a link through to your first doc page. |
 | `heroNotes` | up to 2 strings | Marginalia beside the hero. The first is the attention accent, a second is neutral. |
-| `closingAccent` | string | An italic attention-accented second clause on the closing call to action. |
 
 The footer's right-aligned meta line (`MIT licensed · no telemetry`) isn't landing frontmatter —
 it's `footer.meta` in [`docs.config.yaml`](/reference/docs-config-yaml/), because the footer is
@@ -57,8 +57,8 @@ with the second set in italic state accent (sage by default).
 
 ## Body blocks are components
 
-Everything between the hero and the section cards is your MDX body. Import the blocks you want from
-the package — the CLI leaves `.mdx` imports untouched, and it can always resolve itself:
+Everything after the hero is your MDX body. Import the blocks you want from the package — the CLI
+leaves `.mdx` imports untouched, and it can always resolve itself:
 
 ```mdx
 import StatStrip from "@bluecadet/docs/components/landing/StatStrip.astro";
@@ -123,24 +123,67 @@ desktop, two-up on tablet, stacked on mobile.
 </Features>
 ```
 
-### WillNotDo
+### GlyphList
 
-The honest-limitations band. `accent` is a substring of `title` to set in italic attention accent;
-it's ignored if it doesn't appear in the title.
+A glyph-marked list band — originally shipped as the honest-limitations list, and general enough
+for any row-per-item list that wants a leading mark. `accent` is a substring of `title` to set in
+italic attention accent; it's ignored if it doesn't appear in the title.
 
 ```mdx
-<WillNotDo
+<GlyphList
   title="Things acme will not do"
   accent="will not"
   intro="A short list, kept honest."
 >
-  <WontItem lead="Manage your infrastructure.">It builds. That is the whole surface.</WontItem>
-  <WontItem status="yes" lead="Get out of the way.">That is the pitch.</WontItem>
-</WillNotDo>
+  <GlyphItem lead="Manage your infrastructure.">It builds. That is the whole surface.</GlyphItem>
+  <GlyphItem glyph="✓" color="var(--accent)" lead="Get out of the way.">That is the pitch.</GlyphItem>
+</GlyphList>
 ```
 
-`status` defaults to `no` (a dim ✕). `status="yes"` gives a state-accented ✓ — useful for the one
-affirmative row that closes the list.
+Each `<GlyphItem>` defaults to a dim `✕`. Pass `glyph` and `color` to use a different mark and
+accent — `glyph="✓" color="var(--accent)"` is the state-accented checkmark useful for the one
+affirmative row that closes a list like this.
+
+### CtaCards
+
+A full-bleed link grid. `<CtaCards>` is a pure wrapper — compose it from `<CtaCard>` children,
+one per destination you want to highlight. The numeral in front of each card's label is not
+authored — it's generated, so reordering or adding a card never leaves a stale `03` behind:
+
+```mdx
+<CtaCards>
+  <CtaCard label="guides" title="Start here" href="/guides/intro/">
+    Zero to docs in five minutes.
+  </CtaCard>
+  <CtaCard label="reference" title="CLI flags" href="/reference/cli/">
+    Every flag, its default, and when the build hard-errors.
+  </CtaCard>
+</CtaCards>
+```
+
+`<CtaCard>` takes `label`, `title` and `href` props; its children are an optional description
+shown under the title. A childless `<CtaCards>` renders nothing.
+
+### ClosingCta
+
+A closing call to action: a headline pointing at your first doc section, a "read the docs" button,
+and a link to your repo when `repoUrl` is configured. Zero-config, it reads its destinations from
+your nav tree and site config on its own — pass just an optional accent clause:
+
+```mdx
+<ClosingCta accent="It really is one command." />
+```
+
+Both halves can be replaced. A `title` prop swaps out the derived headline, and any `<a>` links
+passed as children replace the default buttons — the first is styled as the primary button, the
+rest as secondary:
+
+```mdx
+<ClosingCta title="Ready when you are." accent="Go.">
+  <a href="/tutorials/add-docs-to-your-repo/">get started →</a>
+  <a href="https://github.com/acme/acme">github ↗</a>
+</ClosingCta>
+```
 
 ## Import paths
 
@@ -149,7 +192,9 @@ affirmative row that closes the list.
 | `StatStrip`, `Stat` | `@bluecadet/docs/components/landing/StatStrip.astro`, `…/Stat.astro` |
 | `Terminal`, `Line`, `Ok`, `Warn` | `@bluecadet/docs/components/landing/Terminal.astro`, `…/Line.astro`, `…/Ok.astro`, `…/Warn.astro` |
 | `Features`, `Feature` | `@bluecadet/docs/components/landing/Features.astro`, `…/Feature.astro` |
-| `WillNotDo`, `WontItem` | `@bluecadet/docs/components/landing/WillNotDo.astro`, `…/WontItem.astro` |
+| `GlyphList`, `GlyphItem` | `@bluecadet/docs/components/landing/GlyphList.astro`, `…/GlyphItem.astro` |
+| `CtaCards`, `CtaCard` | `@bluecadet/docs/components/landing/CtaCards.astro`, `…/CtaCard.astro` |
+| `ClosingCta` | `@bluecadet/docs/components/landing/ClosingCta.astro` |
 
 These are the only components the package exports. Layout, colour and type are fixed — there is no
 theming hook, deliberately, so every site built with this tool reads the same way.

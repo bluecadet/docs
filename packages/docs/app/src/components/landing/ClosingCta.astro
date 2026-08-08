@@ -1,31 +1,75 @@
 ---
-// Landing-only closing CTA band: points at the first doc section, plus an outbound repo link
-// when one is configured.
+// Full-bleed closing CTA band for the landing page's MDX body. Zero-config, it points at the
+// first doc section and an outbound repo link when one is configured — both derived from the nav
+// tree and site config:
+//
+//   <ClosingCta accent="It really is one command." />
+//
+// `title` replaces the derived headline; a default slot of plain <a> links replaces the two
+// default buttons (first one styled primary, the rest secondary):
+//
+//   <ClosingCta title="Ready when you are.">
+//     <a href="/tutorials/add-docs-to-your-repo/">read the docs →</a>
+//     <a href="https://github.com/acme/acme" target="_blank" rel="noopener noreferrer">github ↗</a>
+//   </ClosingCta>
+//
+import { getDocsConfig } from "../../lib/config";
+import { firstPageOf, getNavTree, type NavNode } from "../../lib/nav";
+
 interface Props {
-	firstSectionTitle: string;
-	firstHref: string;
-	repoUrl?: string;
-	/** Optional italic attention-accented second clause from landing frontmatter (`closingAccent`). */
+	/** Replaces the derived "Start with the …" headline when given. */
+	title?: string;
+	/** Optional italic attention-accented second clause appended to the closing headline. */
 	accent?: string;
 }
 
-const { firstSectionTitle, firstHref, repoUrl, accent } = Astro.props;
+const { title, accent } = Astro.props;
+const hasActions = Astro.slots.has("default");
+
+// Only touch the nav tree when something actually needs it: the derived headline (no `title`) or
+// the derived buttons (no slotted actions).
+let firstSection: NavNode | undefined;
+if (!title || !hasActions) {
+	({ 0: firstSection } = (await getNavTree()).nodes);
+}
+
+const headline = title ?? (firstSection && `Start with the ${firstSection.label.toLowerCase()}.`);
+// With an explicit title the band always renders; without one it keeps the old "no sections yet"
+// no-render behavior.
+const shouldRender = Boolean(title) || Boolean(firstSection);
+
+let firstHref: string | undefined;
+let repoUrl: string | undefined;
+if (!hasActions) {
+	firstHref = firstSection ? (firstPageOf(firstSection)?.href ?? import.meta.env.BASE_URL) : undefined;
+	({ repoUrl } = getDocsConfig());
+}
 ---
 
-<div class="closing-cta">
-	<h2 class="closing-cta-title">
-		Start with the {firstSectionTitle.toLowerCase()}.{" "}
-		{accent && <span class="closing-cta-accent">{accent}</span>}
-	</h2>
-	<div class="closing-cta-actions">
-		<a class="btn btn-primary" href={firstHref}>read the docs →</a>
-		{repoUrl && (
-			<a class="btn btn-secondary" href={repoUrl} rel="noopener noreferrer" target="_blank">
-				github ↗
-			</a>
-		)}
-	</div>
-</div>
+{
+	shouldRender && (
+		<div class="landing-band closing-cta">
+			<h2 class="closing-cta-title">
+				{headline}{" "}
+				{accent && <span class="closing-cta-accent">{accent}</span>}
+			</h2>
+			<div class="closing-cta-actions">
+				{hasActions ? (
+					<slot />
+				) : (
+					<>
+						<a href={firstHref}>read the docs →</a>
+						{repoUrl && (
+							<a href={repoUrl} rel="noopener noreferrer" target="_blank">
+								github ↗
+							</a>
+						)}
+					</>
+				)}
+			</div>
+		</div>
+	)
+}
 
 <style>
 	.closing-cta {
@@ -55,18 +99,21 @@ const { firstSectionTitle, firstHref, repoUrl, accent } = Astro.props;
 		margin-left: auto;
 	}
 
-	.btn {
+	/* Styles both the default-rendered buttons and any slotted links through the same selectors —
+	   one source of truth for the primary/secondary button look, keyed off DOM order rather than
+	   a class, since slotted <a> tags are authored plain. */
+	.closing-cta-actions :global(a) {
 		font: 400 13px var(--font-mono);
 		padding: 12px 20px;
 		border-radius: var(--radius-md);
 	}
 
-	.btn-primary {
+	.closing-cta-actions :global(a:first-child) {
 		color: var(--bg);
 		background: var(--accent);
 	}
 
-	.btn-secondary {
+	.closing-cta-actions :global(a:not(:first-child)) {
 		color: var(--accent-2);
 		border: 1px solid var(--accent-2-border-40);
 	}
@@ -91,7 +138,7 @@ const { firstSectionTitle, firstHref, repoUrl, accent } = Astro.props;
 			margin-left: 0;
 		}
 
-		.btn {
+		.closing-cta-actions :global(a) {
 			display: flex;
 			align-items: center;
 			justify-content: center;

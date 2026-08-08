@@ -4,29 +4,24 @@
 // in favor of a single full-bleed main column with its own wider gutters (see the .landing-body
 // override below) — only the header/footer variants and the full-bleed main differ otherwise.
 //
-// The hero, footer meta and closing CTA accent render from the landing entry's frontmatter (see
-// src/content.config.ts) because they sit outside the MDX body. The editorial bands the design
-// puts between the hero and the CTA cards — stat strip, terminal demo, feature pillars, the
-// "will not do" list — are MDX components the author drops into their own index.mdx instead, so
-// the shape of the page is theirs. Everything is optional: with none of it, this route is still
-// a headline, a lead, the CTA cards, and the closing band.
+// The hero and footer meta render from the landing entry's frontmatter (see src/content.config.ts)
+// because they sit outside the MDX body. Everything below the hero — stat strip, terminal demo,
+// feature pillars, the CTA cards, the "will not do" list, the closing CTA — is MDX components the
+// author drops into their own index.mdx instead, so the shape of the page is theirs. Everything is
+// optional: with none of it, this route is still a headline and a lead.
 import { getCollection, render } from "astro:content";
 import BaseLayout from "../layouts/BaseLayout.astro";
-import CtaCards from "../components/landing/CtaCards.astro";
-import ClosingCta from "../components/landing/ClosingCta.astro";
 import LandingHeader from "../components/landing/LandingHeader.astro";
 import LandingHero from "../components/landing/LandingHero.astro";
-import { docsEntryHref, getNavTree } from "../lib/nav";
+import { docsEntryHref } from "../lib/nav";
 import { getDocsConfig } from "../lib/config";
 
-const { title: siteTitle, repoUrl } = getDocsConfig();
+const { title: siteTitle } = getDocsConfig();
 
 const entries = await getCollection("docs");
 const indexEntry = entries.find((entry) => entry.id === "index");
 const { Content } = indexEntry ? await render(indexEntry) : { Content: undefined };
 
-const { nodes } = await getNavTree();
-const firstSection = nodes[0];
 const docsHref = await docsEntryHref();
 
 const data = indexEntry?.data;
@@ -58,26 +53,9 @@ const pageDescription = data?.description;
 		/>
 		{
 			Content && (
-				<article class="prose landing-content">
+				<article class="landing-content">
 					<Content />
 				</article>
-			)
-		}
-		{
-			nodes.length > 0 && (
-				<section class="landing-section">
-					<CtaCards nodes={nodes} />
-				</section>
-			)
-		}
-		{
-			firstSection && (
-				<ClosingCta
-					firstSectionTitle={firstSection.label}
-					firstHref={docsHref}
-					repoUrl={repoUrl}
-					accent={data?.closingAccent}
-				/>
 			)
 		}
 	</div>
@@ -103,8 +81,8 @@ const pageDescription = data?.description;
 
 	/* The MDX body mixes two kinds of block: ordinary prose, which wants the same measure and
 	   gutter as any doc page, and full-bleed landing bands (StatStrip, Terminal, Features,
-	   WillNotDo), which run edge to edge and carry their own padding. A named-column grid gives
-	   both without the bands having to break out with negative margins. */
+	   CtaCards, GlyphList, ClosingCta), which run edge to edge and carry their own padding. A
+	   named-column grid gives both without the bands having to break out with negative margins. */
 	.landing-content {
 		display: grid;
 		grid-template-columns:
@@ -127,18 +105,14 @@ const pageDescription = data?.description;
 	}
 
 	/* Bands supply their own vertical rhythm and hairlines. A band that opens or closes the body
-	   cancels the article's padding on that edge so it butts straight against the hero / CTA
-	   cards, the way the design's bands do. */
+	   cancels the article's padding on that edge so it butts straight against the hero above, or
+	   the page's own bottom edge below, the way the design's bands do. */
 	.landing-content > :global(.landing-band:first-child) {
 		margin-top: -66px;
 	}
 
 	.landing-content > :global(.landing-band:last-child) {
 		margin-bottom: -66px;
-	}
-
-	.landing-section {
-		padding: 0 var(--content-pad-x) 84px;
 	}
 
 	@media (max-width: 1023px) {
@@ -158,10 +132,6 @@ const pageDescription = data?.description;
 		.landing-content > :global(.landing-band:last-child) {
 			margin-bottom: -54px;
 		}
-
-		.landing-section {
-			padding: 0 var(--content-pad-x) 66px;
-		}
 	}
 
 	@media (max-width: 767px) {
@@ -180,10 +150,6 @@ const pageDescription = data?.description;
 
 		.landing-content > :global(.landing-band:last-child) {
 			margin-bottom: -42px;
-		}
-
-		.landing-section {
-			padding: 0 var(--content-pad-x) 54px;
 		}
 	}
 </style>

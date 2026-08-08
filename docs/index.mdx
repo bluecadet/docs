@@ -12,19 +12,21 @@ installCommand: npx @bluecadet/docs build
 heroNotes:
   - "↖ one required input: a README.md, or a docs/index.md. everything else is optional."
   - the repo you point it at needs no package.json, no dependencies and no astro config.
-closingAccent: It is one command.
 ---
 
+import ClosingCta from "@bluecadet/docs/components/landing/ClosingCta.astro";
+import CtaCard from "@bluecadet/docs/components/landing/CtaCard.astro";
+import CtaCards from "@bluecadet/docs/components/landing/CtaCards.astro";
 import Feature from "@bluecadet/docs/components/landing/Feature.astro";
 import Features from "@bluecadet/docs/components/landing/Features.astro";
+import GlyphItem from "@bluecadet/docs/components/landing/GlyphItem.astro";
+import GlyphList from "@bluecadet/docs/components/landing/GlyphList.astro";
 import Line from "@bluecadet/docs/components/landing/Line.astro";
 import Ok from "@bluecadet/docs/components/landing/Ok.astro";
 import Stat from "@bluecadet/docs/components/landing/Stat.astro";
 import StatStrip from "@bluecadet/docs/components/landing/StatStrip.astro";
 import Terminal from "@bluecadet/docs/components/landing/Terminal.astro";
 import Warn from "@bluecadet/docs/components/landing/Warn.astro";
-import WillNotDo from "@bluecadet/docs/components/landing/WillNotDo.astro";
-import WontItem from "@bluecadet/docs/components/landing/WontItem.astro";
 
 <StatStrip>
   <Stat value="1" label="command to build the whole site" />
@@ -61,28 +63,41 @@ import WontItem from "@bluecadet/docs/components/landing/WontItem.astro";
   </Feature>
 </Features>
 
-<WillNotDo
+<GlyphList
   title="Things this will not do"
   accent="will not"
   intro="A short list, kept honest. If one of these is a dealbreaker, better you find out here than after you have moved your docs."
 >
-  <WontItem lead="Be a CMS.">
+  <GlyphItem lead="Be a CMS.">
     It builds from files on disk. Nothing to log in to, and no copy of your content stored anywhere
     but your repo.
-  </WontItem>
-  <WontItem lead="Let you restyle it.">
+  </GlyphItem>
+  <GlyphItem lead="Let you restyle it.">
     The palette, typography and layout are the same for every repo that uses it. Configuration
     covers the title, repo URL, base path and extra content globs — not design.
-  </WontItem>
-  <WontItem lead="Read your source code.">
+  </GlyphItem>
+  <GlyphItem lead="Read your source code.">
     There is no API-reference generator here. If you want types or CLI flags documented, write them
     down as markdown like everything else.
-  </WontItem>
-  <WontItem status="yes" lead="Stay out of your repo.">
+  </GlyphItem>
+  <GlyphItem glyph="✓" color="var(--accent)" lead="Stay out of your repo.">
     One command in, one output directory out. It never writes back into the tree it read.
-  </WontItem>
-</WillNotDo>
+  </GlyphItem>
+</GlyphList>
 
-> [!TIP]
-> First time here? [Add docs to your repo](tutorials/add-docs-to-your-repo/) walks through the
-> whole setup, including wiring it into CI.
+<CtaCards>
+  <CtaCard label="tutorials" title="Add docs to your repo" href="/tutorials/add-docs-to-your-repo/">
+    Turns a bare repo into a built, browsable static site and deploys it through CI.
+  </CtaCard>
+  <CtaCard label="how-to" title="Configure docs.config.yaml" href="/how-to/configure-docs-config-yaml/">
+    Covers when and how to add a docs.config.yaml to override the CLI's defaults.
+  </CtaCard>
+  <CtaCard label="reference" title="CLI" href="/reference/cli/">
+    Lists every CLI flag for build and dev, their defaults, and when the build hard-errors.
+  </CtaCard>
+  <CtaCard label="explanation" title="Architecture and design decisions" href="/explanation/architecture/">
+    Explains why docs are synced into a bundled Astro app and rewritten, not read in place.
+  </CtaCard>
+</CtaCards>
+
+<ClosingCta accent="It is one command." />

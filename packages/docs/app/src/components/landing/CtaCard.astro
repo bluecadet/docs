@@ -1,0 +1,84 @@
+---
+// One numbered card inside <CtaCards>. The numeral is not authored — it's a CSS counter, so
+// reordering or adding cards never leaves a stale "03" behind:
+//
+//   <CtaCard label="guides" title="Start here" href="/guides/intro/">
+//     Zero to docs in five minutes.
+//   </CtaCard>
+//
+interface Props {
+	/** Lowercase eyebrow rendered after the number, e.g. "guides". */
+	label: string;
+	/** Card headline. */
+	title: string;
+	/** Link target. */
+	href: string;
+}
+
+const { label, title, href } = Astro.props;
+const hasDescription = Astro.slots.has("default");
+---
+
+<a class="cta-card" href={href}>
+	<span class="cta-num">{label.toLowerCase()}</span>
+	<span class="cta-title">{title}</span>
+	{hasDescription && (
+		<span class="cta-desc">
+			<slot />
+		</span>
+	)}
+</a>
+
+<style>
+	.cta-card {
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+		padding: 32px;
+		background: var(--bg);
+		transition: background 0.15s ease;
+		counter-increment: cta-card;
+	}
+
+	.cta-card:hover {
+		background: var(--surface-panel-2);
+	}
+
+	.cta-num {
+		font: 400 11.5px var(--font-mono);
+		color: var(--accent);
+	}
+
+	.cta-num::before {
+		content: counter(cta-card, decimal-leading-zero) " / ";
+	}
+
+	.cta-card:nth-child(4n + 2) .cta-num,
+	.cta-card:nth-child(4n + 3) .cta-num {
+		color: var(--accent-2);
+	}
+
+	.cta-title {
+		font: 500 21px var(--font-serif);
+		color: var(--ink);
+		transition: color 0.15s ease;
+	}
+
+	.cta-card:hover .cta-title {
+		color: var(--accent);
+	}
+
+	.cta-desc {
+		font-size: 14px;
+		color: var(--text-muted);
+	}
+
+	/* `color` here isn't decorative — without it, `.prose p` (article.css, tied on specificity
+	   with any bare `p` selector) would set the description to the article's body color instead
+	   of this card's dimmer `--text-muted`. */
+	.cta-desc :global(p) {
+		display: inline;
+		margin: 0;
+		color: inherit;
+	}
+</style>

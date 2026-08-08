@@ -1,94 +1,37 @@
 ---
-// Landing-only CTA link grid: one numbered card per top-level nav node, linking to that section's
-// first page (see ../../lib/nav.ts).
-import { firstPageOf, type NavNode, pageCount } from "../../lib/nav";
-
-interface Props {
-	nodes: NavNode[];
-}
-
-const { nodes } = Astro.props;
-
-const cards = nodes
-	.map((node) => {
-		const target = firstPageOf(node);
-		if (!target) return null;
-		const count = pageCount(node);
-		return {
-			label: node.label,
-			href: target.href,
-			title: target.label,
-			description: target.description ?? `${count} page${count === 1 ? "" : "s"}`,
-		};
-	})
-	.filter((card) => card !== null);
-
-function pad(n: number): string {
-	return String(n).padStart(2, "0");
-}
+// Full-bleed CTA link grid for the landing page's MDX body. Pure composition — it takes no props
+// and reads nothing itself; compose it from <CtaCard> children:
+//
+//   <CtaCards>
+//     <CtaCard label="guides" title="Start here" href="/guides/intro/">
+//       Zero to docs in five minutes.
+//     </CtaCard>
+//   </CtaCards>
+//
+// A childless <CtaCards /> renders nothing.
+const hasCards = Astro.slots.has("default");
 ---
 
-<div class="cta-cards">
-	{
-		cards.map((card, i) => (
-			<a class="cta-card" href={card.href}>
-				<span class="cta-num">
-					{pad(i + 1)} / {card.label.toLowerCase()}
-				</span>
-				<span class="cta-title">{card.title}</span>
-				<span class="cta-desc">{card.description}</span>
-			</a>
-		))
-	}
-</div>
+{
+	hasCards && (
+		<div class="landing-band cta-band">
+			<div class="cta-cards">
+				<slot />
+			</div>
+		</div>
+	)
+}
 
 <style>
+
 	.cta-cards {
 		display: grid;
 		grid-template-columns: 1fr 1fr;
 		gap: 1px;
+		padding-bottom: 1px;
 		background: var(--hairline-10);
-		border: 1px solid var(--hairline-10);
-		border-radius: var(--radius-md);
 		overflow: hidden;
-	}
-
-	.cta-card {
-		display: flex;
-		flex-direction: column;
-		gap: 8px;
-		padding: 32px;
-		background: var(--bg);
-		transition: background 0.15s ease;
-	}
-
-	.cta-card:hover {
-		background: var(--white-02);
-	}
-
-	.cta-num {
-		font: 400 11.5px var(--font-mono);
-		color: var(--accent);
-	}
-
-	.cta-card:nth-child(4n + 2) .cta-num,
-	.cta-card:nth-child(4n + 3) .cta-num {
-		color: var(--accent-2);
-	}
-
-	.cta-title {
-		font: 500 21px var(--font-serif);
-		color: var(--ink);
-		transition: color 0.15s ease;
-	}
-
-	.cta-card:hover .cta-title {
-		color: var(--accent);
-	}
-
-	.cta-desc {
-		font-size: 14px;
-		color: var(--text-muted);
+		counter-reset: cta-card;
 	}
 
 	/* Tablet keeps the 2-up grid (it's already the default above); only mobile collapses to a

@@ -1,22 +1,29 @@
 ---
-// One row of a <WillNotDo> list. Default is a dim ✕ ("no, and that's deliberate"); `status="yes"`
-// flips it to a state-accented ✓ for the affirmative row the design closes the list with.
+// One row of a <GlyphList>. Default is a dim ✕ ("no, and that's deliberate"); pass `glyph`/`color`
+// to use any other mark and accent, e.g. a state-accented ✓ for an affirmative row:
+//
+//   <GlyphItem lead="Replace your site.">…</GlyphItem>
+//   <GlyphItem glyph="✓" color="var(--accent)" lead="Get out of the way.">…</GlyphItem>
+//
 interface Props {
 	/** Bold ink lead-in sentence. */
 	lead: string;
-	status?: "no" | "yes";
+	/** Glyph rendered in the leading column. */
+	glyph?: string;
+	/** Any CSS color for the glyph. */
+	color?: string;
 }
 
-const { lead, status = "no" } = Astro.props;
+const { lead, glyph = "✕", color = "var(--text-faint)" } = Astro.props;
 ---
 
-<div class:list={["wont-item", `wont-item-${status}`]}>
-	<span class="wont-icon" aria-hidden="true">{status === "yes" ? "✓" : "✕"}</span>
-	<span class="wont-text"><span class="wont-lead">{lead}</span> <slot /></span>
+<div class="glyph-item" style={`--glyph-color: ${color}`}>
+	<span class="glyph-item-icon" aria-hidden="true">{glyph}</span>
+	<span class="glyph-item-text"><span class="glyph-item-lead">{lead}</span> <slot /></span>
 </div>
 
 <style>
-	.wont-item {
+	.glyph-item {
 		display: grid;
 		grid-template-columns: 28px minmax(0, 1fr);
 		gap: 20px;
@@ -29,34 +36,30 @@ const { lead, status = "no" } = Astro.props;
 		text-wrap: pretty;
 	}
 
-	.wont-item:last-child {
+	.glyph-item:last-child {
 		border-bottom: none;
 	}
 
-	.wont-icon {
+	.glyph-item-icon {
 		font: 400 12px var(--font-mono);
-		color: var(--text-faint);
+		color: var(--glyph-color);
 	}
 
-	.wont-item-yes .wont-icon {
-		color: var(--accent);
-	}
-
-	.wont-lead {
+	.glyph-item-lead {
 		color: var(--ink);
 	}
 
 	/* `color` here isn't decorative — without it, `.prose p` (article.css, tied on specificity
 	   with any bare `p` selector) would set this row's body text to the article's body color
-	   instead of inheriting `.wont-item`'s dimmer `--text-muted`. */
-	.wont-text :global(p) {
+	   instead of inheriting `.glyph-item`'s dimmer `--text-muted`. */
+	.glyph-item-text :global(p) {
 		display: inline;
 		margin: 0;
 		color: inherit;
 	}
 
 	@media (max-width: 1023px) {
-		.wont-item {
+		.glyph-item {
 			grid-template-columns: 24px minmax(0, 1fr);
 			gap: 18px;
 			padding: 18px 0;
@@ -65,14 +68,14 @@ const { lead, status = "no" } = Astro.props;
 	}
 
 	@media (max-width: 767px) {
-		.wont-item {
+		.glyph-item {
 			grid-template-columns: 22px minmax(0, 1fr);
 			gap: 16px;
 			padding: 16px 0;
 			font-size: 14px;
 		}
 
-		.wont-icon {
+		.glyph-item-icon {
 			padding-top: 2px;
 			font-size: 11.5px;
 		}
