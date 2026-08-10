@@ -1,7 +1,8 @@
 // Client behavior for NavSheet.astro: a native <dialog> used as a full-screen mobile/tablet nav
-// drawer. `<dialog>.showModal()` already gives us a focus trap (background content becomes inert)
-// and an `esc`-to-close/`cancel` event for free — same pattern SearchModal.astro's script relies
-// on — so this only has to handle opening, body-scroll locking, and closing on backdrop click.
+// drawer. `<dialog>.showModal()` already gives us a focus trap (background content becomes inert),
+// background-scroll locking (see the `html:has(dialog:modal)` rule in styles/global.css), and an
+// `esc`-to-close/`cancel` event for free — same pattern SearchModal.astro's script relies on — so
+// this only has to handle opening and closing on backdrop click.
 export function initNavSheet(): void {
 	const dialog = document.getElementById("nav-sheet") as HTMLDialogElement | null;
 	if (!dialog) return;
@@ -9,15 +10,10 @@ export function initNavSheet(): void {
 	const closeButton = dialog.querySelector<HTMLElement>("[data-nav-sheet-close]");
 	let lastTrigger: HTMLElement | null = null;
 
-	function lockScroll(locked: boolean): void {
-		document.documentElement.style.overflow = locked ? "hidden" : "";
-	}
-
 	function openSheet(trigger?: HTMLElement | null): void {
 		lastTrigger = trigger ?? (document.activeElement as HTMLElement | null);
 		if (typeof dialog?.showModal === "function") {
 			dialog.showModal();
-			lockScroll(true);
 		}
 	}
 
@@ -40,7 +36,6 @@ export function initNavSheet(): void {
 	});
 
 	dialog.addEventListener("close", () => {
-		lockScroll(false);
 		lastTrigger?.focus();
 	});
 

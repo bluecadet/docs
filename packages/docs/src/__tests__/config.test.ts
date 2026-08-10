@@ -77,17 +77,66 @@ describe("validateConfig", () => {
 	});
 
 	describe("header/footer", () => {
-		it("accepts header and footer link lists", () => {
+		it("accepts header links and footer groups", () => {
 			const { config, warnings } = validateConfig(
 				{
 					header: { links: [{ label: "Changelog", href: "/changelog/" }] },
-					footer: { links: [{ label: "github", href: "https://github.com/acme/proj" }] },
+					footer: {
+						groups: [
+							{
+								title: "Project",
+								links: [{ label: "github", href: "https://github.com/acme/proj" }],
+							},
+						],
+					},
 				},
 				CONFIG_PATH,
 			);
 			expect(config.header).toEqual({ links: [{ label: "Changelog", href: "/changelog/" }] });
 			expect(config.footer).toEqual({
-				links: [{ label: "github", href: "https://github.com/acme/proj" }],
+				groups: [
+					{
+						title: "Project",
+						links: [{ label: "github", href: "https://github.com/acme/proj" }],
+					},
+				],
+			});
+			expect(warnings).toEqual([]);
+		});
+
+		it("accepts a footer link with a note", () => {
+			const { config, warnings } = validateConfig(
+				{
+					footer: {
+						groups: [
+							{
+								title: "Related",
+								links: [
+									{
+										label: "caliper docs",
+										href: "https://docs.caliper.dev",
+										note: "docs.caliper.dev",
+									},
+								],
+							},
+						],
+					},
+				},
+				CONFIG_PATH,
+			);
+			expect(config.footer).toEqual({
+				groups: [
+					{
+						title: "Related",
+						links: [
+							{
+								label: "caliper docs",
+								href: "https://docs.caliper.dev",
+								note: "docs.caliper.dev",
+							},
+						],
+					},
+				],
 			});
 			expect(warnings).toEqual([]);
 		});
@@ -111,6 +160,15 @@ describe("validateConfig", () => {
 			const { warnings } = validateConfig({ header: { meta: "nope" } }, CONFIG_PATH);
 			expect(warnings).toHaveLength(1);
 			expect(warnings[0]).toContain('"header.meta"');
+		});
+
+		it("warns on links inside footer (footer uses groups, not links)", () => {
+			const { warnings } = validateConfig(
+				{ footer: { links: [{ label: "x", href: "/x/" }] } },
+				CONFIG_PATH,
+			);
+			expect(warnings).toHaveLength(1);
+			expect(warnings[0]).toContain('"footer.links"');
 		});
 
 		it("accepts a header with no links", () => {
@@ -155,6 +213,115 @@ describe("validateConfig", () => {
 			);
 			expect(warnings).toHaveLength(1);
 			expect(warnings[0]).toContain('"header.links[0].extra"');
+		});
+	});
+
+	describe("footer.groups", () => {
+		it("throws when footer.groups is not an array", () => {
+			expect(() => validateConfig({ footer: { groups: "nope" } }, CONFIG_PATH)).toThrowError(
+				/"footer\.groups" must be an array \(got string\)/,
+			);
+		});
+
+		it("throws when a footer group is not an object", () => {
+			expect(() => validateConfig({ footer: { groups: ["nope"] } }, CONFIG_PATH)).toThrowError(
+				/"footer\.groups\[0\]" must be an object \(got string\)/,
+			);
+		});
+
+		it("throws when a footer group is missing a title", () => {
+			expect(() =>
+				validateConfig({ footer: { groups: [{ links: [{ label: "x", href: "/x/" }] }] } }, CONFIG_PATH),
+			).toThrowError(/"footer\.groups\[0\]\.title" must be a string \(got undefined\)/);
+		});
+
+		it("throws when a footer group's title is an empty string", () => {
+			expect(() =>
+				validateConfig(
+					{ footer: { groups: [{ title: "", links: [{ label: "x", href: "/x/" }] }] } },
+					CONFIG_PATH,
+				),
+			).toThrowError(/"footer\.groups\[0\]\.title" must not be empty/);
+		});
+
+		it("throws when a footer group is missing links", () => {
+			expect(() =>
+				validateConfig({ footer: { groups: [{ title: "Project" }] } }, CONFIG_PATH),
+			).toThrowError(/"footer\.groups\[0\]\.links" must be an array \(got undefined\)/);
+		});
+
+		it("throws when a footer group's links array is empty", () => {
+			expect(() =>
+				validateConfig({ footer: { groups: [{ title: "Project", links: [] }] } }, CONFIG_PATH),
+			).toThrowError(/"footer\.groups\[0\]\.links" must not be empty/);
+		});
+
+		it("throws when a footer link is missing a label", () => {
+			expect(() =>
+				validateConfig(
+					{ footer: { groups: [{ title: "Project", links: [{ href: "/x/" }] }] } },
+					CONFIG_PATH,
+				),
+			).toThrowError(/"footer\.groups\[0\]\.links\[0\]\.label" must be a string \(got undefined\)/);
+		});
+
+		it("throws when a footer link's label is an empty string", () => {
+			expect(() =>
+				validateConfig(
+					{ footer: { groups: [{ title: "Project", links: [{ label: "", href: "/x/" }] }] } },
+					CONFIG_PATH,
+				),
+			).toThrowError(/"footer\.groups\[0\]\.links\[0\]\.label" must not be empty/);
+		});
+
+		it("throws when a footer link's href is an empty string", () => {
+			expect(() =>
+				validateConfig(
+					{ footer: { groups: [{ title: "Project", links: [{ label: "x", href: "" }] }] } },
+					CONFIG_PATH,
+				),
+			).toThrowError(/"footer\.groups\[0\]\.links\[0\]\.href" must not be empty/);
+		});
+
+		it("throws when a footer link's note is not a string", () => {
+			expect(() =>
+				validateConfig(
+					{
+						footer: {
+							groups: [{ title: "Project", links: [{ label: "x", href: "/x/", note: 5 }] }],
+						},
+					},
+					CONFIG_PATH,
+				),
+			).toThrowError(/"footer\.groups\[0\]\.links\[0\]\.note" must be a string \(got number\)/);
+		});
+
+		it("warns on an unknown key inside footer", () => {
+			const { warnings } = validateConfig({ footer: { typo: true } }, CONFIG_PATH);
+			expect(warnings).toHaveLength(1);
+			expect(warnings[0]).toContain('"footer.typo"');
+		});
+
+		it("warns on an unknown key inside a footer group", () => {
+			const { warnings } = validateConfig(
+				{ footer: { groups: [{ title: "Project", links: [{ label: "x", href: "/x/" }], typo: 1 }] } },
+				CONFIG_PATH,
+			);
+			expect(warnings).toHaveLength(1);
+			expect(warnings[0]).toContain('"footer.groups[0].typo"');
+		});
+
+		it("warns on an unknown key inside a footer link", () => {
+			const { warnings } = validateConfig(
+				{
+					footer: {
+						groups: [{ title: "Project", links: [{ label: "x", href: "/x/", extra: 1 }] }],
+					},
+				},
+				CONFIG_PATH,
+			);
+			expect(warnings).toHaveLength(1);
+			expect(warnings[0]).toContain('"footer.groups[0].links[0].extra"');
 		});
 	});
 
@@ -360,7 +527,7 @@ describe("validateConfig", () => {
 
 	it("warns once per unknown top-level key even alongside header/footer/sidebar", () => {
 		const { warnings } = validateConfig(
-			{ header: { links: [] }, footer: { links: [] }, sidebar: [], typo: 1 },
+			{ header: { links: [] }, footer: { meta: "MIT" }, sidebar: [], typo: 1 },
 			CONFIG_PATH,
 		);
 		expect(warnings).toEqual([`${CONFIG_PATH}: unknown key "typo" is ignored.`]);
@@ -395,9 +562,11 @@ describe("resolveConfig (YAML file loading)", () => {
 				"    - label: Changelog",
 				"      href: /changelog/",
 				"footer:",
-				"  links:",
-				"    - label: github",
-				"      href: https://github.com/acme/proj",
+				"  groups:",
+				"    - title: Project",
+				"      links:",
+				"        - label: github",
+				"          href: https://github.com/acme/proj",
 				"sidebar:",
 				"  - label: Getting started",
 				"    items:",
@@ -429,7 +598,12 @@ describe("resolveConfig (YAML file loading)", () => {
 		expect(cfg.content).toEqual(["packages/*/README.md"]);
 		expect(cfg.header).toEqual({ links: [{ label: "Changelog", href: "/changelog/" }] });
 		expect(cfg.footer).toEqual({
-			links: [{ label: "github", href: "https://github.com/acme/proj" }],
+			groups: [
+				{
+					title: "Project",
+					links: [{ label: "github", href: "https://github.com/acme/proj" }],
+				},
+			],
 		});
 		expect(cfg.version).toBe("v2.4.1");
 		expect(cfg.sidebarMeta).toBe("MIT licensed\nno telemetry\n");

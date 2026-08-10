@@ -28,7 +28,7 @@ site: https://org.github.io
   `content` — see [Include package READMEs from a monorepo](/how-to/include-package-readmes-from-a-monorepo/).
 - **A title that shouldn't come from your README's first heading** (or you have no README).
 - **Extra links in the header or footer** (a changelog, a status page, a second repo) beyond the
-  default GitHub link — set `header.links`/`footer.links`.
+  default GitHub link — set `header.links`/`footer.groups`.
 - **Author-controlled sidebar order or grouping** instead of the default alphabetical,
   directory-mirroring tree — set `sidebar`.
 
@@ -41,15 +41,22 @@ header:
       href: /changelog/
 
 footer:
-  links:
-    - label: docs
-      href: /
-    - label: github
-      href: https://github.com/org/my-project
+  groups:
+    - title: Project
+      links:
+        - label: docs
+          href: /
+        - label: github
+          href: https://github.com/org/my-project
+    - title: Related
+      links:
+        - label: caliper docs
+          href: https://docs.caliper.dev
+          note: docs.caliper.dev
 ```
 
 Either field, once set, fully replaces that chrome's default content — `header.links` here means no
-more default GitHub icon link, and `footer.links` means no more default "docs"/"github" pair. See
+more default GitHub icon link, and `footer.groups` means no more default "docs"/"github" pair. See
 the [reference](/reference/docs-config-yaml/#header-footer-links) for the external-link (↗)
 detection rule and the base-prefixing caveat.
 

@@ -1,56 +1,94 @@
 ---
 // One footer for every route (doc pages, landing and 404 all render this via BaseLayout's
-// default `footer` slot). Grid mirrors the header (same --rail-display swap to a plain flex row,
-// no rail column or divider, on sidebar-less pages — see BaseLayout's `.page--no-sidebar`).
-// Deliberately prop-less: everything comes from config and the nav tree, so the footer is
-// byte-identical on every page — no per-template variants to drift apart. Only renders
-// links/meta we actually have data for — no fictional changelog/discord links, no fabricated
-// version/license string.
+// default `footer` slot). Deliberately prop-less: everything comes from config and the nav tree,
+// so the footer is byte-identical on every page — no per-template variants to drift apart. Only
+// renders link groups/meta we actually have data for — no fictional changelog/discord links, no
+// fabricated version/license string.
+//
+// Layout differences between the docs (sidebar) and landing/404 (no-sidebar) pages come only from
+// the `--rail-*`/`--brand-pad-*`/`--nav-flex` custom properties BaseLayout sets on `.page` /
+// `.page--no-sidebar` — see Header/HeaderShell's matching comments — never from a prop here. The
+// same mechanism also moves the brand mark between the rail column (docs, where the sidebar
+// already lives under it) and the bottom bar (landing/404, which has no rail to put it in): see
+// the `:global(.page--no-sidebar)` rules below.
 import { getDocsConfig, isExternalLink } from "../lib/config";
-import { docsEntryHref } from "../lib/nav";
+import type { FooterGroup } from "../lib/config";
+import { footerGroups } from "../lib/nav";
 
 const config = getDocsConfig();
-const footerLinks = config.footer?.links ?? [];
 const meta = config.footer?.meta;
-const docsHref = await docsEntryHref();
+
+// See footerGroups() (lib/nav.ts) for the fallback applied when the config declares no groups —
+// shared with NavSheet.astro so the two can never drift apart.
+const groups: FooterGroup[] = await footerGroups(config);
+
+// Desktop column proportions, generalized for however many groups the config declares (n):
+// the last group — typically the note-bearing "from the same shop" list — gets extra width so
+// its links end well before the right edge instead of stretching to match the other columns.
+// Computed from `groups.length` server-side and handed to the two media-scoped grid rules below
+// as custom properties — this reads config data, not an external prop, so it doesn't reintroduce
+// the per-template variants the prop-less design avoids.
+//   - rail (docs): `repeat(n-1, 1fr) 1.4fr` — n === 3 is exactly the reference's `1fr 1fr 1.4fr`.
+//   - no-rail (landing): `repeat(n+1, 1fr)`, last group spans 2 of those tracks — n === 3 is
+//     exactly the reference's `repeat(4, 1fr)` with the shop group at `span 2`.
+// n <= 1 has nothing to differentiate, so both variants just render one full-width column
+// (`repeat(0, ...)` is invalid CSS and would drop the whole declaration, so guard it explicitly).
+const groupCount = groups.length;
+const groupsColumnsRail = groupCount > 1 ? `repeat(${groupCount - 1}, 1fr) 1.4fr` : "1fr";
+const groupsColumnsNoRail = groupCount > 1 ? `repeat(${groupCount + 1}, 1fr)` : "1fr";
+const lastGroupIsWide = groupCount > 1;
 ---
 
 <footer class="site-footer">
 	<div class="site-footer-inner">
-		<div class="site-footer__brand">
-			<span class="glyph">▞</span>{config.title}
+		<div class="site-footer__top">
+			<div class="site-footer__brand site-footer__brand--rail">
+				<span class="glyph">▞</span>{config.title}
+			</div>
+			<div
+				class="site-footer__groups"
+				style={`--groups-columns-rail:${groupsColumnsRail};--groups-columns-no-rail:${groupsColumnsNoRail}`}
+			>
+				{
+					groups.map((group, index) => {
+						// A group whose links carry notes (e.g. the "from the same shop" URLs) gets its own
+						// single-column treatment on the stacked tiers — see `.site-footer__group-links--notes`.
+						const hasNotes = group.links.some((link) => link.note);
+						const isLast = index === groups.length - 1;
+						return (
+							<div class:list={["site-footer__group", { "site-footer__group--wide": lastGroupIsWide && isLast }]}>
+								<div class="site-footer__group-title">{group.title}</div>
+								<div
+									class:list={[
+										"site-footer__group-links",
+										{ "site-footer__group-links--notes": hasNotes },
+									]}
+								>
+									{group.links.map((link) => (
+										<a
+											class="site-footer__link"
+											href={link.href}
+											rel={isExternalLink(link.href) ? "noopener noreferrer" : undefined}
+											target={isExternalLink(link.href) ? "_blank" : undefined}
+										>
+											<span class="site-footer__link-label">
+												{link.label}
+												{isExternalLink(link.href) && " ↗"}
+											</span>
+											{link.note && <span class="site-footer__note">{link.note}</span>}
+										</a>
+									))}
+								</div>
+							</div>
+						);
+					})
+				}
+			</div>
 		</div>
-		<div class="site-footer__right">
-			{
-				footerLinks.length > 0 ? (
-					footerLinks.map((link) => (
-						<a
-							class="site-footer__link"
-							href={link.href}
-							rel={isExternalLink(link.href) ? "noopener noreferrer" : undefined}
-							target={isExternalLink(link.href) ? "_blank" : undefined}
-						>
-							{link.label}
-						</a>
-					))
-				) : (
-					<>
-						<a class="site-footer__link" href={docsHref}>
-							docs
-						</a>
-						{config.repoUrl && (
-							<a
-								class="site-footer__link"
-								href={config.repoUrl}
-								rel="noopener noreferrer"
-								target="_blank"
-							>
-								github
-							</a>
-						)}
-					</>
-				)
-			}
+		<div class="site-footer__bottom">
+			<div class="site-footer__brand site-footer__brand--bottom">
+				<span class="glyph">▞</span>{config.title}
+			</div>
 			{meta && <span class="site-footer__meta">{meta}</span>}
 		</div>
 	</div>
@@ -62,24 +100,25 @@ const docsHref = await docsEntryHref();
 		background: var(--surface-footer);
 	}
 
-	/* Capped, centered inner row — mirrors .header-shell-inner and .page-body so the left/right
-	   hairlines line up into one continuous edge from the header down through the footer.
-	   `--rail-display`/grid-template-columns follow the same grid-on-doc-pages, flex-on-sidebar-less
-	   swap as .header-shell-inner — see its comment in HeaderShell.astro. */
+	/* Capped, centered inner column — mirrors .header-shell-inner and .page-body so the left/right
+	   hairlines line up into one continuous edge from the header down through the footer. */
 	.site-footer-inner {
-		display: var(--rail-display);
-		grid-template-columns: var(--rail-width) 1fr;
 		max-width: var(--shell-width);
 		margin-inline: auto;
 		border-inline: 1px solid var(--hairline-08);
+	}
+
+	/* Brand + link groups row. Follows the same grid-on-doc-pages, flex-on-sidebar-less swap as
+	   .header-shell-inner — see its comment in HeaderShell.astro. */
+	.site-footer__top {
+		display: var(--rail-display);
+		grid-template-columns: var(--rail-width) 1fr;
 	}
 
 	.site-footer__brand {
 		display: flex;
 		align-items: center;
 		gap: 8px;
-		border-right: var(--rail-divider);
-		padding: 32px var(--brand-pad-right) 32px var(--brand-pad-left);
 		font: 400 12px var(--font-mono);
 		color: var(--text-faint);
 		text-transform: lowercase;
@@ -90,24 +129,61 @@ const docsHref = await docsEntryHref();
 		color: var(--text-faint);
 	}
 
-	.site-footer__right {
+	.site-footer__brand--rail {
+		/* The grid row stretches this cell to match the (taller) groups cell's height, and
+		   `.site-footer__brand`'s `align-items: center` above would then center the one-line brand
+		   mark inside that stretched box — dropping it well below the 40px top padding and out of
+		   line with the group titles beside it. Pin it to the top of its own box instead so both
+		   cells' first line start at the same y. */
+		align-items: flex-start;
+		border-right: var(--rail-divider);
+		padding: 40px var(--brand-pad-right) 32px var(--brand-pad-left);
+	}
+
+	/* Only ever shown on sidebar-less pages at desktop widths — see the `min-width: 1024px` rule
+	   below, which is the *only* place this flips to `flex` — where the rail brand cell has nowhere
+	   to go, so it moves down into the bottom bar. Below 1024px every template (docs and landing
+	   alike) uses the stacked `.site-footer__brand--rail` block instead — see the
+	   `max-width: 1023px` rule further down — so this stays hidden there. */
+	.site-footer__brand--bottom {
+		display: none;
+	}
+
+	.site-footer__groups {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+		padding: 40px var(--content-pad-x) 32px var(--content-pad-x);
+	}
+
+	.site-footer__group {
 		display: flex;
-		align-items: center;
-		gap: 28px;
-		padding: 32px var(--content-pad-x) 32px var(--nav-pad-left);
-		font: 400 12px var(--font-mono);
+		flex-direction: column;
+		gap: 14px;
+		font: 400 12px/1.9 var(--font-mono);
+		min-width: 0;
 	}
 
-	/* Sidebar-less pages (see BaseLayout's `--nav-flex`): the footer row is flex, not grid, at
-	   desktop too, so this cell needs to grow into the space the rail column used to reserve. A
-	   no-op (`initial`) on doc pages, where it's still the grid's second column filling `1fr`. */
-	@media (min-width: 1024px) {
-		.site-footer__right {
-			flex: var(--nav-flex, initial);
-		}
+	.site-footer__group-title {
+		font-size: 11.5px;
+		letter-spacing: 0.12em;
+		text-transform: uppercase;
+		color: var(--text-dim);
 	}
 
+	/* `display: contents` on desktop lets the links participate directly in .site-footer__group's
+	   flex column (and its gap) as if the wrapper weren't there; the mobile breakpoint below turns
+	   it into the reference's two-column link grid instead. */
+	.site-footer__group-links {
+		display: contents;
+	}
+
+	/* Note (e.g. a "from the same shop" URL) sits immediately after the label with a small gap, at
+	   every viewport — no `justify-content: space-between`/`margin-left: auto` pushing it off to
+	   the far edge of the row. */
 	.site-footer__link {
+		display: flex;
+		align-items: baseline;
+		gap: 8px;
 		color: var(--text-muted);
 		transition: color 0.15s ease;
 	}
@@ -116,35 +192,119 @@ const docsHref = await docsEntryHref();
 		color: var(--accent);
 	}
 
-	.site-footer__meta {
-		margin-left: auto;
+	.site-footer__note {
+		color: var(--text-faint);
+		font-size: 0.92em;
+		white-space: nowrap;
+	}
+
+	.site-footer__bottom {
+		display: flex;
+		align-items: center;
+		gap: 24px;
+		flex-wrap: wrap;
+		padding: 20px var(--content-pad-x) 24px var(--brand-pad-left);
+		border-top: 1px solid var(--hairline-08);
+		font: 400 12px var(--font-mono);
 		color: var(--text-faint);
 	}
 
+	.site-footer__meta {
+		margin-left: auto;
+	}
+
+	@media (min-width: 1024px) {
+		/* No rail column on sidebar-less pages (see BaseLayout's `--nav-flex`): the groups cell
+		   needs to grow into the space the rail column used to reserve. A no-op (`initial`) on doc
+		   pages, where it's still the top row's second column filling `1fr`.
+		   `grid-template-columns` here is the rail (docs) proportions — see the frontmatter comment
+		   above `groupsColumnsRail`/`groupsColumnsNoRail` for how the two custom properties are
+		   computed from `groups.length`; the no-rail (landing) override sits right below. */
+		.site-footer__groups {
+			grid-template-columns: var(--groups-columns-rail);
+			flex: var(--nav-flex, initial);
+			gap: 40px 48px;
+		}
+
+		:global(.page--no-sidebar) .site-footer__groups {
+			grid-template-columns: var(--groups-columns-no-rail);
+		}
+
+		/* Only meaningful in the no-rail template: the rail variant's trailing `1.4fr` track already
+		   gives the last group its extra width by position, so it needs no span there. */
+		:global(.page--no-sidebar) .site-footer__group--wide {
+			grid-column: span 2;
+		}
+
+		/* Sidebar-less pages have no rail for the brand to sit beside, so it swaps into the bottom
+		   bar instead — same swap Header.astro drives off `.page--no-sidebar`, just relocating the
+		   brand rather than reflowing it in place. Scoped to this desktop-only query on purpose: the
+		   rail brand must stay visible as the stacked top block below 1024px on every template,
+		   sidebar or not — see `.site-footer__brand--bottom`'s comment above. */
+		:global(.page--no-sidebar) .site-footer__brand--rail {
+			display: none;
+		}
+
+		:global(.page--no-sidebar) .site-footer__brand--bottom {
+			display: flex;
+		}
+	}
+
+	/* Tablet (768–1023) and mobile (≤767, further tightened below) share this single range: both
+	   restyle `.site-footer__brand--rail` into the same stacked top block, on docs and landing
+	   alike — there's no `.page--no-sidebar` override in this range (that only exists in the
+	   `min-width: 1024px` block above), so the two tiers stay identical here by construction. */
 	@media (max-width: 1023px) {
-		.site-footer-inner {
+		.site-footer__top {
 			display: grid;
 			grid-template-columns: 1fr;
 		}
 
-		.site-footer__brand {
+		/* Vertical rhythm below matches the reference's mobile frame (`26px 22px`/`22px 22px 30px`
+		   block padding, 16px title→list gap, 16px/20px 2-col link grid, 18px note-row gap) — only
+		   the horizontal insets stay on the repo's `--content-pad-x` convention (18px at mobile)
+		   instead of the reference's hard-coded 22px. */
+		.site-footer__brand--rail {
 			border-right: none;
 			border-bottom: 1px solid var(--hairline-08);
-			padding: 32px var(--content-pad-x);
+			padding: 26px var(--content-pad-x) 22px;
+		}
+
+		.site-footer__groups {
+			display: flex;
+			flex-direction: column;
+			padding: 0;
+		}
+
+		.site-footer__group {
+			padding: 26px var(--content-pad-x);
+			border-bottom: 1px solid var(--hairline-06);
+			gap: 16px;
+			font-size: 13px;
+			line-height: 1.7;
+		}
+
+		.site-footer__group-links {
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			gap: 16px 20px;
+		}
+
+		/* A group whose links carry notes (e.g. the "from the same shop" URLs) renders as a single
+		   column of full-width rows instead of the two-column grid above — two columns would crush
+		   the long note text into an awkward wrap. Plain groups are unaffected; their own row gap
+		   (18px, slightly more breathing room than the 2-col grid's 16px) comes along with it. */
+		.site-footer__group-links--notes {
+			grid-template-columns: 1fr;
+			gap: 18px;
+		}
+
+		.site-footer__bottom {
+			padding: 22px var(--content-pad-x) 30px;
 		}
 	}
 
 	@media (max-width: 767px) {
-		.site-footer__right {
-			flex-wrap: wrap;
-		}
-
-		.site-footer__link {
-			display: flex;
-			align-items: center;
-			min-height: 48px;
-		}
-
 		.site-footer__meta {
 			margin-left: 0;
 			flex-basis: 100%;

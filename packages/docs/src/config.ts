@@ -7,6 +7,8 @@ import type {
 	ConfigLinks,
 	DocsConfig,
 	FooterConfig,
+	FooterGroup,
+	FooterLink,
 	ResolvedConfig,
 	SidebarGroup,
 	SidebarItem,
@@ -24,7 +26,9 @@ const KNOWN_KEYS = new Set<string>([
 	"toc",
 ]);
 const LINKS_OBJECT_KEYS = new Set<string>(["links"]);
-const FOOTER_KEYS = new Set<string>(["links", "meta"]);
+const FOOTER_KEYS = new Set<string>(["groups", "meta"]);
+const FOOTER_GROUP_KEYS = new Set<string>(["title", "links"]);
+const FOOTER_LINK_KEYS = new Set<string>(["label", "href", "note"]);
 const LINK_KEYS = new Set<string>(["label", "href"]);
 const SIDEBAR_GROUP_KEYS = new Set<string>(["label", "items", "link"]);
 const TOC_KEYS = new Set<string>(["note", "editLink"]);
@@ -148,7 +152,7 @@ export function validateConfig(
 	return { config, warnings };
 }
 
-/** Validates the `footer` object: `{ links?: { label, href }[], meta?: string }`. */
+/** Validates the `footer` object: `{ groups?: { title, links }[], meta?: string }`. */
 function validateFooter(value: unknown, configPath: string, warnings: string[]): FooterConfig {
 	if (typeof value !== "object" || value === null || Array.isArray(value)) {
 		throw new Error(`${configPath}: "footer" must be an object (got ${describeType(value)}).`);
@@ -162,8 +166,8 @@ function validateFooter(value: unknown, configPath: string, warnings: string[]):
 	}
 
 	const result: FooterConfig = {};
-	if (obj.links !== undefined) {
-		result.links = validateLinkArray(obj.links, "footer", configPath, warnings);
+	if (obj.groups !== undefined) {
+		result.groups = validateFooterGroups(obj.groups, configPath, warnings);
 	}
 	if (obj.meta !== undefined) {
 		if (typeof obj.meta !== "string") {
@@ -174,6 +178,111 @@ function validateFooter(value: unknown, configPath: string, warnings: string[]):
 		result.meta = obj.meta;
 	}
 	return result;
+}
+
+/** Validates the `footer.groups` array: a list of group objects `{ title, links }`. */
+function validateFooterGroups(
+	value: unknown,
+	configPath: string,
+	warnings: string[],
+): FooterGroup[] {
+	if (!Array.isArray(value)) {
+		throw new Error(
+			`${configPath}: "footer.groups" must be an array (got ${describeType(value)}).`,
+		);
+	}
+	return value.map((item, i) =>
+		validateFooterGroup(item, `footer.groups[${i}]`, configPath, warnings),
+	);
+}
+
+function validateFooterGroup(
+	value: unknown,
+	label: string,
+	configPath: string,
+	warnings: string[],
+): FooterGroup {
+	if (typeof value !== "object" || value === null || Array.isArray(value)) {
+		throw new Error(`${configPath}: "${label}" must be an object (got ${describeType(value)}).`);
+	}
+	const obj = value as Record<string, unknown>;
+
+	for (const childKey of Object.keys(obj)) {
+		if (!FOOTER_GROUP_KEYS.has(childKey)) {
+			warnings.push(`${configPath}: unknown key "${label}.${childKey}" is ignored.`);
+		}
+	}
+
+	if (typeof obj.title !== "string") {
+		throw new Error(
+			`${configPath}: "${label}.title" must be a string (got ${describeType(obj.title)}).`,
+		);
+	}
+	if (obj.title.length === 0) {
+		throw new Error(`${configPath}: "${label}.title" must not be empty.`);
+	}
+
+	if (!Array.isArray(obj.links)) {
+		throw new Error(
+			`${configPath}: "${label}.links" must be an array (got ${describeType(obj.links)}).`,
+		);
+	}
+	if (obj.links.length === 0) {
+		throw new Error(`${configPath}: "${label}.links" must not be empty.`);
+	}
+
+	const links = obj.links.map((item, i) =>
+		validateFooterLink(item, `${label}.links[${i}]`, configPath, warnings),
+	);
+
+	return { title: obj.title, links };
+}
+
+function validateFooterLink(
+	value: unknown,
+	label: string,
+	configPath: string,
+	warnings: string[],
+): FooterLink {
+	if (typeof value !== "object" || value === null || Array.isArray(value)) {
+		throw new Error(`${configPath}: "${label}" must be an object (got ${describeType(value)}).`);
+	}
+	const obj = value as Record<string, unknown>;
+
+	for (const childKey of Object.keys(obj)) {
+		if (!FOOTER_LINK_KEYS.has(childKey)) {
+			warnings.push(`${configPath}: unknown key "${label}.${childKey}" is ignored.`);
+		}
+	}
+
+	if (typeof obj.label !== "string") {
+		throw new Error(
+			`${configPath}: "${label}.label" must be a string (got ${describeType(obj.label)}).`,
+		);
+	}
+	if (obj.label.length === 0) {
+		throw new Error(`${configPath}: "${label}.label" must not be empty.`);
+	}
+
+	if (typeof obj.href !== "string") {
+		throw new Error(
+			`${configPath}: "${label}.href" must be a string (got ${describeType(obj.href)}).`,
+		);
+	}
+	if (obj.href.length === 0) {
+		throw new Error(`${configPath}: "${label}.href" must not be empty.`);
+	}
+
+	const link: FooterLink = { label: obj.label, href: obj.href };
+	if (obj.note !== undefined) {
+		if (typeof obj.note !== "string") {
+			throw new Error(
+				`${configPath}: "${label}.note" must be a string (got ${describeType(obj.note)}).`,
+			);
+		}
+		link.note = obj.note;
+	}
+	return link;
 }
 
 /** Validates the `toc` object: `{ note?: string, editLink?: string }`. */

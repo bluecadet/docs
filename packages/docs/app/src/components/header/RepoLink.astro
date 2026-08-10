@@ -1,7 +1,7 @@
 ---
-// Shared external-link affordance ("<label> ↗"), reused by Header.astro and LandingHeader.astro
-// (as the default repoUrl link) and by NavLinks.astro (for any `header.links`/`footer.links` entry
-// that points off-site) so they all get the same color and hover treatment.
+// External-link affordance ("<label> ↗") for the header nav, used by NavLinks.astro for the
+// default repoUrl link and for any `header.links` entry that points off-site — so they all get
+// the same color and hover treatment.
 interface Props {
 	href: string;
 	/** Link text before the "↗". Defaults to "github" for the repoUrl fallback use. */

@@ -8,19 +8,34 @@
 // (see packages/docs/package.json's `files`, which ships `app/src/lib` but not `src/`), so it
 // can't reach across into the CLI package's source at runtime.
 
-/** A single labeled link, e.g. in `header.links` or `footer.links`. */
+/** A single labeled link, e.g. in `header.links`. */
 export interface ConfigLink {
 	label: string;
 	href: string;
 }
 
-/** An optional set of extra links rendered in the header or footer chrome. */
+/** An optional set of extra links rendered in the header chrome. */
 export interface ConfigLinks {
 	links?: ConfigLink[];
 }
 
-/** Footer chrome: optional links plus an optional right-aligned meta string. */
-export interface FooterConfig extends ConfigLinks {
+/** A single labeled link within a footer group, e.g. in `footer.groups[].links`. */
+export interface FooterLink {
+	label: string;
+	href: string;
+	/** Short muted annotation rendered after the label, e.g. a sibling project's domain. */
+	note?: string;
+}
+
+/** A titled group of footer links, e.g. `{ title: "Project", links: [...] }`. */
+export interface FooterGroup {
+	title: string;
+	links: FooterLink[];
+}
+
+/** Footer chrome: optional grouped links plus an optional right-aligned meta string. */
+export interface FooterConfig {
+	groups?: FooterGroup[];
 	/** e.g. `ISC licensed · builds to static files`. Rendered on every page. */
 	meta?: string;
 }

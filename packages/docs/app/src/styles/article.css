@@ -80,14 +80,6 @@
 	scroll-margin-top: var(--heading-scroll-offset);
 }
 
-/* `:first-of-type` (not `:first-child`) on purpose: the H1, optional lead paragraph, and the
-   tablet/mobile TOC disclosure all sit before the article body's first H2 as real siblings inside
-   `.prose` now, so the first H2 is never literally `.prose`'s first child — but the design still
-   wants it flush against the lead/disclosure with no extra top margin. */
-.prose > h2:first-of-type {
-	margin-top: 0;
-}
-
 .prose h3 {
 	margin: 40px 0 10px;
 	font: 500 20px var(--font-serif);

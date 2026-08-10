@@ -30,7 +30,13 @@
 // Root-level groups with no `link` keep the inert "section heading" treatment. Auto mode mirrors
 // the no-link case for nested directories with no index page.
 import { type CollectionEntry, getCollection } from "astro:content";
-import { getDocsConfig, type SidebarGroup, type SidebarItem } from "./config.js";
+import {
+	type DocsAppConfig,
+	type FooterGroup,
+	getDocsConfig,
+	type SidebarGroup,
+	type SidebarItem,
+} from "./config.js";
 
 export interface NavNode {
 	/** Content-collection id / route path, e.g. `reference/config/base`. Unique across the tree. */
@@ -89,7 +95,19 @@ function isPage(node: NavNode): node is NavPage {
 	return node.isPage && typeof node.href === "string";
 }
 
-export async function getNavTree(): Promise<NavTree> {
+// Every doc-page render pulls the tree several times over (sidebar, nav sheet, search, footer,
+// breadcrumb, pagination, header), and content is fixed for the lifetime of a build, so PROD
+// caches the in-flight promise after the first call. Dev stays uncached so editing content is
+// reflected without a server restart.
+let cachedTree: Promise<NavTree> | null = null;
+
+export function getNavTree(): Promise<NavTree> {
+	if (!import.meta.env.PROD) return buildNavTree();
+	cachedTree ??= buildNavTree();
+	return cachedTree;
+}
+
+async function buildNavTree(): Promise<NavTree> {
 	const base = import.meta.env.BASE_URL;
 	// `index` is the landing route (src/pages/index.astro), not a sidebar entry.
 	const entries = await getCollection("docs", ({ id }) => id !== "index");
@@ -298,6 +316,25 @@ export async function docsEntryHref(): Promise<string> {
 	const { nodes } = await getNavTree();
 	const first = nodes[0] && firstPageOf(nodes[0]);
 	return first?.href ?? import.meta.env.BASE_URL;
+}
+
+/**
+ * `config.footer.groups`, falling back to a single "project" group with the default links the
+ * footer has always shown — the docs entry point, plus the repo link when configured. Shared by
+ * Footer.astro (renders the groups as columns) and NavSheet.astro (flattens them into one link
+ * row), so the two can never drift apart.
+ */
+export async function footerGroups(config: DocsAppConfig): Promise<FooterGroup[]> {
+	if (config.footer?.groups) return config.footer.groups;
+	return [
+		{
+			title: "project",
+			links: [
+				{ label: "docs", href: await docsEntryHref() },
+				...(config.repoUrl ? [{ label: "github", href: config.repoUrl }] : []),
+			],
+		},
+	];
 }
 
 /** Root-to-node path (inclusive) for `id`, or an empty array when `id` isn't in the tree. */

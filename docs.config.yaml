@@ -31,9 +31,33 @@ sidebar:
       - explanation/architecture
 
 footer:
-  links:
-    - label: docs
-      href: /
-    - label: github
-      href: https://github.com/bluecadet/docs
+  groups:
+    - title: docs
+      links:
+        - label: add docs to your repo
+          href: /tutorials/add-docs-to-your-repo
+        - label: cli reference
+          href: /reference/cli
+        - label: configuration
+          href: /reference/docs-config-yaml
+        - label: search
+          href: /reference/search
+    - title: project
+      links:
+        - label: github
+          href: https://github.com/bluecadet/docs
+        - label: npm
+          href: https://www.npmjs.com/package/@bluecadet/docs
+        - label: issues
+          href: https://github.com/bluecadet/docs/issues
+        - label: releases
+          href: https://github.com/bluecadet/docs/releases
+    - title: from the same shop
+      links:
+        - label: preflight
+          href: https://github.com/bluecadet/preflight
+          note: github.com/bluecadet/preflight
+        - label: launchpad
+          href: https://github.com/bluecadet/launchpad
+          note: github.com/bluecadet/launchpad
   meta: ISC licensed · builds to static files

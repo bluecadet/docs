@@ -3,8 +3,10 @@
 // LandingHeader.astro and the mobile breadcrumb pill's "all pages" trigger (see Breadcrumb.astro).
 // One instance per page, mounted once from BaseLayout.astro. Renders the same recursive tree as
 // SidebarNav.astro (see ../lib/nav.ts) so the two can never drift apart, at touch-sized targets.
-import { docsEntryHref, getNavTree, type NavNode } from "../lib/nav";
+import { footerGroups, getNavTree, type NavNode } from "../lib/nav";
 import { getDocsConfig, isExternalLink } from "../lib/config";
+import type { FooterLink } from "../lib/config";
+import Wordmark from "./header/Wordmark.astro";
 
 interface Props {
 	/** Active page id, when one of the nav entries is the current page. */
@@ -19,8 +21,16 @@ const { currentId, nodes, nested = false } = Astro.props;
 const isRoot = nodes === undefined;
 const items = nodes ?? (await getNavTree()).nodes;
 const config = getDocsConfig();
-const footerLinks = config.footer?.links ?? [];
 const base = import.meta.env.BASE_URL;
+
+// Same groups Footer.astro renders as columns (see footerGroups() in lib/nav.ts, including its
+// fallback when the config declares no groups), flattened into a single list here since the nav
+// sheet's footer isn't grouped, just a row of links. Only computed for the root render, which is
+// the only one with a `.nav-sheet__footer` to fill.
+let footerLinks: FooterLink[] = [];
+if (isRoot) {
+	footerLinks = (await footerGroups(config)).flatMap((group) => group.links);
+}
 
 // Same rule as SidebarNav: root-level directories keep the flat group treatment; everything
 // deeper becomes an indented sub-page column.
@@ -40,10 +50,7 @@ function isSectionHeading(node: NavNode): boolean {
 	isRoot ? (
 		<dialog id="nav-sheet" class="nav-sheet" aria-label="Site navigation">
 			<div class="nav-sheet__header">
-				<a class="nav-sheet__brand" href={base}>
-					<span class="glyph">▞</span>
-					{config.title}
-				</a>
+				<Wordmark title={config.title} href={base} />
 				<button
 					type="button"
 					class="nav-sheet__close"
@@ -67,35 +74,17 @@ function isSectionHeading(node: NavNode): boolean {
 
 				<div class="nav-sheet__footer">
 					{
-						footerLinks.length > 0 ? (
-							footerLinks.map((link) => (
-								<a
-									class="nav-sheet__footer-link"
-									href={link.href}
-									rel={isExternalLink(link.href) ? "noopener noreferrer" : undefined}
-									target={isExternalLink(link.href) ? "_blank" : undefined}
-								>
-									{link.label}
-									{isExternalLink(link.href) && " ↗"}
-								</a>
-							))
-						) : (
-							<>
-								<a class="nav-sheet__footer-link" href={await docsEntryHref()}>
-									docs
-								</a>
-								{config.repoUrl && (
-									<a
-										class="nav-sheet__footer-link"
-										href={config.repoUrl}
-										rel="noopener noreferrer"
-										target="_blank"
-									>
-										github ↗
-									</a>
-								)}
-							</>
-						)
+						footerLinks.map((link) => (
+							<a
+								class="nav-sheet__footer-link"
+								href={link.href}
+								rel={isExternalLink(link.href) ? "noopener noreferrer" : undefined}
+								target={isExternalLink(link.href) ? "_blank" : undefined}
+							>
+								{link.label}
+								{isExternalLink(link.href) && " ↗"}
+							</a>
+						))
 					}
 				</div>
 			</div>
@@ -139,6 +128,13 @@ function isSectionHeading(node: NavNode): boolean {
 
 <style>
 	.nav-sheet {
+		/* NavSheet mounts once from BaseLayout.astro as a sibling of `.page`, not a descendant of
+		   it — so it can't inherit `--content-pad-x` / `--header-height`, which are only declared
+		   in `.page`'s own style block. The sheet is mobile-only (see the 768px query below), so
+		   these just restate `.page`'s <=767px values (BaseLayout.astro) rather than pull in the
+		   full breakpoint ladder. */
+		--content-pad-x: 18px;
+		--header-height: 56px;
 		position: fixed;
 		inset: 0;
 		width: 100vw;
@@ -149,6 +145,10 @@ function isSectionHeading(node: NavNode): boolean {
 		margin: 0;
 		padding: 0;
 		border: none;
+		/* Matches .header-shell-inner's border-inline (HeaderShell.astro) — the sheet is a
+		   full-screen fixed overlay, so these hairlines land at the same x-position as the closed
+		   header's, keeping the brand/close insets pixel-identical to the real header row. */
+		border-inline: 1px solid var(--hairline-08);
 		background: var(--surface-page);
 		color: var(--ink);
 		display: none;
@@ -180,8 +180,10 @@ function isSectionHeading(node: NavNode): boolean {
 		display: flex;
 		align-items: center;
 		gap: 12px;
-		min-height: 56px;
-		padding: 0 14px 0 26px;
+		min-height: var(--header-height);
+		/* Matches .header-shell-inner's <=767px padding (HeaderShell.astro) exactly — the sheet is
+		   mobile-only, so there's no wider breakpoint to account for here. */
+		padding: 0 var(--content-pad-x);
 		border-bottom: 1px solid var(--hairline-08);
 		/* Same background as .header-shell (Header.astro) — this bar visually replaces the site
 		   header while the sheet is open, so it must read as identically colored, not a different
@@ -190,28 +192,33 @@ function isSectionHeading(node: NavNode): boolean {
 		flex-shrink: 0;
 	}
 
-	.nav-sheet__brand {
+	/* Close button's visible glyph right-flushes to the header's content edge, exactly like
+	   NavToggle's hamburger bars (`.nav-toggle` is `align-items: flex-end`, zero padding, inside
+	   `.site-header__right`'s `margin-left: auto`) — the sheet's close and the header's hamburger
+	   must occupy the same pixel so opening/closing the sheet doesn't shift that glyph sideways.
+	   The 44x44 tap target is preserved without widening the visible box: min-height covers the
+	   vertical half, and `::after` below extends the horizontal hit area with an absolutely
+	   positioned transparent layer instead of box padding (which would push the glyph left of the
+	   hamburger's position). */
+	.nav-sheet__close {
+		position: relative;
+		margin-left: auto;
 		display: flex;
 		align-items: center;
-		gap: 8px;
-		font: 500 15px var(--font-mono);
-		color: var(--ink);
-	}
-
-	.glyph {
-		color: var(--accent);
-	}
-
-	.nav-sheet__close {
-		margin-left: auto;
 		min-height: 44px;
-		min-width: 44px;
-		padding: 0 10px;
+		padding: 0;
 		background: none;
 		border: none;
 		color: var(--text-muted);
 		font-size: 18px;
+		line-height: 1;
 		cursor: pointer;
+	}
+
+	.nav-sheet__close::after {
+		content: "";
+		position: absolute;
+		inset: 0 -12px 0 -32px;
 	}
 
 	.nav-sheet__search {
@@ -254,7 +261,15 @@ function isSectionHeading(node: NavNode): boolean {
 	}
 
 	.nav-sheet__nav {
-		padding: 8px 0 0;
+		padding: 8px 0;
+	}
+
+	/* Hairline between each top-level section of the tree. Direct-child selectors keep it off
+	   nested lists, and :not(:first-child) keeps the first section from doubling up against the
+	   search bar's own bottom border. */
+	.nav-sheet__nav > .nav-sheet__list > .nav-sheet__item:not(:first-child),
+	.nav-sheet__nav > .nav-sheet__list > .nav-sheet__label:not(:first-child) {
+		border-top: 1px solid var(--hairline-06);
 	}
 
 	.nav-sheet__list {
@@ -325,10 +340,13 @@ function isSectionHeading(node: NavNode): boolean {
 	.nav-sheet__footer {
 		display: flex;
 		flex-wrap: wrap;
-		gap: 4px 24px;
+		/* No row gap and symmetric vertical padding — the 48px-tall links carry the vertical rhythm
+		   themselves, so wrapped rows stack at the same cadence as the nav list's rows and the space
+		   above the first row equals the space below the last. */
+		gap: 0 24px;
 		border-top: 1px solid var(--hairline-08);
 		background: var(--surface-panel-1);
-		padding: 14px 26px 20px;
+		padding: 8px 26px;
 		font: 400 12px var(--font-mono);
 		flex-shrink: 0;
 	}
@@ -341,10 +359,6 @@ function isSectionHeading(node: NavNode): boolean {
 	}
 
 	@media (max-width: 767px) {
-		.nav-sheet__header {
-			padding: 0 14px 0 18px;
-		}
-
 		.nav-sheet__search {
 			padding: 0 18px;
 		}
@@ -369,7 +383,7 @@ function isSectionHeading(node: NavNode): boolean {
 		}
 
 		.nav-sheet__footer {
-			padding: 14px 18px 20px;
+			padding: 8px 18px;
 		}
 	}
 </style>

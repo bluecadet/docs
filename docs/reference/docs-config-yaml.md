@@ -20,11 +20,18 @@ header:
       href: /changelog/
 
 footer:
-  links:
-    - label: docs
-      href: /
-    - label: github
-      href: https://github.com/org/my-project
+  groups:
+    - title: Project
+      links:
+        - label: docs
+          href: /
+        - label: github
+          href: https://github.com/org/my-project
+    - title: Related
+      links:
+        - label: caliper docs
+          href: https://docs.caliper.dev
+          note: docs.caliper.dev
   meta: MIT licensed · no telemetry
 
 sidebar:
@@ -57,7 +64,7 @@ toc:
 | `base` | `string` | `/` | Base path for the deployed site. |
 | `site` | `string` | — | Absolute site origin. |
 | `header.links` | `{ label, href }[]` | — | Extra links rendered in the header after its fixed "docs" link, replacing the default GitHub link entirely when set — see [Notes](#header-footer-links). |
-| `footer.links` | `{ label, href }[]` | — | Extra links rendered in the footer, replacing the default "docs"/"github" pair entirely when set. |
+| `footer.groups` | `{ title, links: { label, href, note? }[] }[]` | — | Titled groups of links rendered in the footer, replacing the default "docs"/"github" pair entirely when set — see [Notes](#header-footer-links). |
 | `footer.meta` | `string` | — | Right-aligned meta string in the footer (e.g. `MIT licensed · no telemetry`), rendered on every page. |
 | `sidebar` | array of groups | — | Author-controlled sidebar structure. When present, replaces the default auto-generated (alphabetical, directory-mirroring) sidebar — see [Sidebar semantics](#sidebar-semantics). |
 | `version` | `string` | — | Version string (e.g. `v2.4.1`), rendered as small mono text in the header and at the bottom of the sidebar. |
@@ -67,8 +74,20 @@ toc:
 
 ## Header/footer links
 
-Both `header.links` and `footer.links` are a list of `{ label, href }` objects, rendered in the
-order written. `href` is used exactly as written — it is **not** base-prefixed or rewritten the
+`header.links` is a list of `{ label, href }` objects, rendered in the header in the order written.
+
+`footer.groups` is a list of titled groups — `{ title, links: { label, href, note? }[] }` — each
+rendered as its own labeled column in the footer, in the order written. `title` and `links` are
+required on every group (`links` must be non-empty), and `label`/`href` are required on every link.
+`note` is optional: a short muted annotation rendered after the link's label, e.g. a sibling
+project's domain (`docs.caliper.dev`).
+
+The footer's bottom bar — the row that holds `footer.meta` — is part of the fixed chrome and
+renders on every page whether or not `meta` is set. On pages where nothing else occupies that row
+(doc pages at any width, and every page below desktop widths), an unset `meta` leaves it as an
+empty hairline-bordered strip. If you configure `footer.groups`, set `footer.meta` too.
+
+In both cases, `href` is used exactly as written — it is **not** base-prefixed or rewritten the
 way links inside published markdown are (see
 [link rewriting](/reference/content-conventions/#link-and-asset-rewriting)). For an internal link
 under a non-root `base`, either hardcode the base prefix yourself (e.g. `/my-project/changelog/`)
@@ -79,7 +98,7 @@ absolute `http(s)` URL at all, when `site` isn't configured) gets the same "leav
 treatment as the default GitHub link. Anything else — a root-relative path, a relative path, or an
 absolute URL that matches `site`'s origin — renders as a plain in-site link.
 
-Setting `header.links`/`footer.links` fully replaces that chrome's default content (the GitHub
+Setting `header.links`/`footer.groups` fully replaces that chrome's default content (the GitHub
 link in the header, the "docs"/"github" pair in the footer) — there's no way to keep the default and
 add to it. Leave the field unset to keep the default. The one exception is the header's leading
 "docs" link (pointing at your first doc page): it's fixed, renders on every page, and sits before
@@ -112,9 +131,9 @@ Groups can nest.
 - An invalid or malformed `docs.config.yaml` (not valid YAML, not a YAML mapping at the top level, a
   known field with the wrong type, or a `content` array containing a non-string) is a hard build
   error naming the file path and the offending field.
-- Unknown top-level keys — and unknown keys nested inside `header`, `footer`, `toc`, a link object,
-  or a sidebar group — are reported as a console warning (not a build error) and otherwise ignored;
-  a typo'd field name won't fail your build, but it also won't do anything.
+- Unknown top-level keys — and unknown keys nested inside `header`, `footer`, a footer group, `toc`,
+  a link object, or a sidebar group — are reported as a console warning (not a build error) and
+  otherwise ignored; a typo'd field name won't fail your build, but it also won't do anything.
 - `repoUrl` normalization handles both SSH (`git@github.com:org/repo.git`) and `.git`-suffixed
   remotes, converting them to a plain `https://github.com/org/repo`.
 - If neither `docs.config.yaml` nor `git remote get-url origin` provides a repo URL, out-of-tree

@@ -107,15 +107,29 @@ const parent = ancestors.at(-1);
 			text-align: left;
 		}
 
+		.breadcrumb-pill__section,
+		.breadcrumb-pill__current {
+			overflow: hidden;
+			min-width: 0;
+			white-space: nowrap;
+			text-overflow: ellipsis;
+		}
+
 		.breadcrumb-pill__section {
+			/* Shrinks (and truncates) well before the current title does, so ancestor path
+			   segments give up space first when the pill is too narrow to fit everything. */
+			flex-shrink: 999;
 			color: var(--text-dim);
 		}
 
 		.breadcrumb-pill__current {
+			flex-shrink: 1;
 			color: var(--accent);
 		}
 
 		.breadcrumb-pill__trigger {
+			flex-shrink: 0;
+			white-space: nowrap;
 			margin-left: auto;
 			font-size: 10px;
 			color: var(--text-dim);

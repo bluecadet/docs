@@ -80,11 +80,18 @@ header:
       href: /changelog/
 
 footer:
-  links:
-    - label: docs
-      href: /
-    - label: github
-      href: https://github.com/org/my-project
+  groups:
+    - title: Project
+      links:
+        - label: docs
+          href: /
+        - label: github
+          href: https://github.com/org/my-project
+    - title: Related
+      links:
+        - label: caliper docs
+          href: https://docs.caliper.dev
+          note: docs.caliper.dev
   meta: MIT licensed · no telemetry
 
 sidebar:
@@ -103,14 +110,17 @@ sidebar:
 | `content` | `[]` | Extra glob patterns (relative to the repo root) to publish alongside `docs/`. Useful for monorepos, e.g. `"packages/*/README.md"` — each match is routed the same way as a `docs/` file (its `README`/`index` basename collapses onto its directory). A single glob can be a bare string instead of a one-element array. |
 | `base` | `/` | Base path for the deployed site. |
 | `site` | — | Absolute site origin. |
-| `header.links` / `footer.links` | — | `{ label, href }[]`. When set, fully replaces that chrome's default content (the header's GitHub link / the footer's "docs"+"github" pair); the header's leading "docs" link is fixed and always renders first. `href` isn't base-prefixed — use an absolute URL or hardcode the base for internal links under a non-root `base`. An `http(s)` `href` pointing off the configured `site` origin gets the external-link (↗) affordance. |
+| `header.links` | — | `{ label, href }[]`. When set, fully replaces the header's default GitHub link; the header's leading "docs" link is fixed and always renders first. `href` isn't base-prefixed — use an absolute URL or hardcode the base for internal links under a non-root `base`. An `http(s)` `href` pointing off the configured `site` origin gets the external-link (↗) affordance. |
+| `footer.groups` | — | `{ title, links: { label, href, note? }[] }[]`. When set, fully replaces the footer's default "docs"+"github" pair. Each group is a labeled column; `note` is an optional short muted annotation after a link's label. Same `href`/external-link rules as `header.links`. |
 | `footer.meta` | — | Right-aligned meta string in the footer (e.g. `MIT licensed · no telemetry`), rendered on every page. |
 | `sidebar` | — | Array of `{ label, items }` groups; `items` are page content ids and/or nested groups, in author order. Replaces the default auto-generated sidebar entirely. Pages left out of `sidebar` still build/route, just without a sidebar entry. A `sidebar` entry naming a page id with no matching content is a build error. |
 
 `title`/`repoUrl`/`base`/`site` must be strings if present — a wrong type (e.g. `base: 5`) is a
-build error naming the field and the value it got. Unknown top-level keys (and unknown keys nested
-inside `header`, `footer`, a link, or a sidebar group) are a warning, not an error (a typo shouldn't
-fail your build, but it also won't do anything).
+build error naming the field and the value it got. `footer.groups[].title`/`.links` and each
+link's `label`/`href` are required (non-empty) — a missing or empty one is also a build error.
+Unknown top-level keys (and unknown keys nested inside `header`, `footer`, a footer group, a link,
+or a sidebar group) are a warning, not an error (a typo shouldn't fail your build, but it also
+won't do anything).
 
 ## Link and asset rewriting
 
