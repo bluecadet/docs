@@ -6,13 +6,29 @@ import { resolveConfig, validateConfig } from "../config.js";
 
 const CONFIG_PATH = "/repo/docs.config.yaml";
 
+/** Every config below needs a `content` — it's required, so spelling it out each time is noise. */
+const CONTENT = ["docs/**/*.md"];
+const ENTRY = { base: ".", files: ["docs/**/*.md"], route: "", assets: [] };
+
+/**
+ * `content` is required, so tests aimed at any other key get a default one injected rather than
+ * repeating it. Tests about `content` itself call `validateConfig` directly.
+ */
+function validate(
+	parsed: Record<string, unknown>,
+	configPath = CONFIG_PATH,
+): ReturnType<typeof validateConfig> {
+	return validateConfig({ content: CONTENT, ...parsed }, configPath);
+}
+
 describe("validateConfig", () => {
 	it("accepts a fully valid config with no warnings", () => {
-		const { config, warnings } = validateConfig(
+		const { config, warnings } = validate(
 			{
 				title: "My Project",
 				repoUrl: "https://github.com/org/my-project",
 				content: ["Packages/*/README.md"],
+				landing: "docs/index.mdx",
 				base: "/my-project/",
 				site: "https://org.github.io",
 			},
@@ -21,64 +37,142 @@ describe("validateConfig", () => {
 		expect(config).toEqual({
 			title: "My Project",
 			repoUrl: "https://github.com/org/my-project",
-			content: ["Packages/*/README.md"],
+			content: [{ base: ".", files: ["Packages/*/README.md"], route: "", assets: [] }],
+			landing: "docs/index.mdx",
 			base: "/my-project/",
 			site: "https://org.github.io",
 		});
 		expect(warnings).toEqual([]);
 	});
 
-	it("accepts an empty config", () => {
-		const { config, warnings } = validateConfig({}, CONFIG_PATH);
-		expect(config).toEqual({});
-		expect(warnings).toEqual([]);
-	});
-
 	it("warns (not errors) on an unknown top-level key", () => {
-		const { config, warnings } = validateConfig({ typo: "oops" }, CONFIG_PATH);
-		expect(config).toEqual({});
+		const { config, warnings } = validate({ content: CONTENT, typo: "oops" }, CONFIG_PATH);
+		expect(config).toEqual({ content: [ENTRY] });
 		expect(warnings).toHaveLength(1);
 		expect(warnings[0]).toContain('"typo"');
 	});
 
-	it.each(["title", "repoUrl", "base", "site", "version", "sidebarMeta"] as const)(
+	it.each(["title", "repoUrl", "base", "site", "version", "sidebarMeta", "landing"] as const)(
 		'throws a clear error when "%s" is not a string',
 		(key) => {
-			expect(() => validateConfig({ [key]: 5 }, CONFIG_PATH)).toThrowError(
+			expect(() => validate({ content: CONTENT, [key]: 5 }, CONFIG_PATH)).toThrowError(
 				new RegExp(`"${key}" must be a string \\(got number\\)`),
 			);
 		},
 	);
 
-	it("coerces a bare content string into a one-element array", () => {
-		const { config } = validateConfig({ content: "Packages/*/README.md" }, CONFIG_PATH);
-		expect(config.content).toEqual(["Packages/*/README.md"]);
-	});
+	describe("content", () => {
+		it("expands a bare glob string into a full entry", () => {
+			const { config } = validateConfig({ content: "Packages/*/README.md" }, CONFIG_PATH);
+			expect(config.content).toEqual([
+				{ base: ".", files: ["Packages/*/README.md"], route: "", assets: [] },
+			]);
+		});
 
-	it("accepts a content array of strings unchanged", () => {
-		const { config } = validateConfig({ content: ["a/*.md", "b/*.md"] }, CONFIG_PATH);
-		expect(config.content).toEqual(["a/*.md", "b/*.md"]);
-	});
+		it("expands a bare string that isn't wrapped in an array", () => {
+			const { config } = validateConfig({ content: "docs/**/*.md" }, CONFIG_PATH);
+			expect(config.content).toEqual([ENTRY]);
+		});
 
-	it("throws naming the index when a content array element is not a string", () => {
-		expect(() => validateConfig({ content: ["a/*.md", 5] }, CONFIG_PATH)).toThrowError(
-			/"content\[1\]" must be a string \(got number\)/,
+		it("fills in defaults for an object entry that only sets files", () => {
+			const { config } = validateConfig({ content: [{ files: "a/*.md" }] }, CONFIG_PATH);
+			expect(config.content).toEqual([{ base: ".", files: ["a/*.md"], route: "", assets: [] }]);
+		});
+
+		it("keeps base, route and assets from an object entry", () => {
+			const { config } = validateConfig(
+				{
+					content: [
+						{ base: "../packages", files: ["*/README.md"], route: "packages", assets: "**/*.png" },
+					],
+				},
+				CONFIG_PATH,
+			);
+			expect(config.content).toEqual([
+				{
+					base: "../packages",
+					files: ["*/README.md"],
+					route: "packages",
+					assets: ["**/*.png"],
+				},
+			]);
+		});
+
+		it("accepts a mix of string and object entries", () => {
+			const { config } = validateConfig(
+				{ content: ["docs/**/*.md", { base: "pkg", files: "*/README.md", route: "packages" }] },
+				CONFIG_PATH,
+			);
+			expect(config.content).toEqual([
+				{ base: ".", files: ["docs/**/*.md"], route: "", assets: [] },
+				{ base: "pkg", files: ["*/README.md"], route: "packages", assets: [] },
+			]);
+		});
+
+		it("throws when content is absent", () => {
+			expect(() => validateConfig({ title: "x" }, CONFIG_PATH)).toThrowError(
+				/"content" is required/,
+			);
+		});
+
+		it("throws when content is an empty array", () => {
+			expect(() => validateConfig({ content: [] }, CONFIG_PATH)).toThrowError(
+				/"content" must not be empty/,
+			);
+		});
+
+		it("throws when an entry has no files", () => {
+			expect(() => validateConfig({ content: [{ base: "docs" }] }, CONFIG_PATH)).toThrowError(
+				/"content\[0\]\.files" is required/,
+			);
+		});
+
+		it("throws naming the index when an entry is neither a string nor an object", () => {
+			expect(() => validateConfig({ content: ["a/*.md", 5] }, CONFIG_PATH)).toThrowError(
+				/"content\[1\]" must be a glob string or an object with a "files" key \(got number\)/,
+			);
+		});
+
+		it("throws when content is null", () => {
+			expect(() => validateConfig({ content: null }, CONFIG_PATH)).toThrowError(/got null/);
+		});
+
+		it.each(["/abs", "route/", "/route", "a/../b", "a//b", "..", "."])(
+			'throws on the invalid route "%s"',
+			(route) => {
+				expect(() =>
+					validateConfig({ content: [{ files: "a/*.md", route }] }, CONFIG_PATH),
+				).toThrowError(/"content\[0\]\.route"/);
+			},
 		);
-	});
 
-	it("throws when content is neither a string nor an array", () => {
-		expect(() => validateConfig({ content: 5 }, CONFIG_PATH)).toThrowError(
-			/"content" must be a string or an array of strings \(got number\)/,
-		);
-	});
+		it("allows a base that climbs out of the config directory", () => {
+			const { config } = validateConfig(
+				{ content: [{ base: "../../shared/docs", files: "**/*.md" }] },
+				CONFIG_PATH,
+			);
+			expect(config.content?.[0]?.base).toBe("../../shared/docs");
+		});
 
-	it("throws when content is null", () => {
-		expect(() => validateConfig({ content: null }, CONFIG_PATH)).toThrowError(/got null/);
+		it("throws when base is absolute", () => {
+			expect(() =>
+				validateConfig({ content: [{ base: "/etc", files: "*.md" }] }, CONFIG_PATH),
+			).toThrowError(/"content\[0\]\.base" must be relative/);
+		});
+
+		it("warns on an unknown key inside a content entry", () => {
+			const { warnings } = validateConfig(
+				{ content: [{ files: "a/*.md", roots: "docs" }] },
+				CONFIG_PATH,
+			);
+			expect(warnings).toHaveLength(1);
+			expect(warnings[0]).toContain('"content[0].roots"');
+		});
 	});
 
 	describe("header/footer", () => {
 		it("accepts header links and footer groups", () => {
-			const { config, warnings } = validateConfig(
+			const { config, warnings } = validate(
 				{
 					header: { links: [{ label: "Changelog", href: "/changelog/" }] },
 					footer: {
@@ -105,7 +199,7 @@ describe("validateConfig", () => {
 		});
 
 		it("accepts a footer link with a note", () => {
-			const { config, warnings } = validateConfig(
+			const { config, warnings } = validate(
 				{
 					footer: {
 						groups: [
@@ -142,7 +236,7 @@ describe("validateConfig", () => {
 		});
 
 		it("accepts a footer meta string", () => {
-			const { config, warnings } = validateConfig(
+			const { config, warnings } = validate(
 				{ footer: { meta: "MIT · no telemetry" } },
 				CONFIG_PATH,
 			);
@@ -151,19 +245,19 @@ describe("validateConfig", () => {
 		});
 
 		it("throws when footer.meta is not a string", () => {
-			expect(() => validateConfig({ footer: { meta: 5 } }, CONFIG_PATH)).toThrowError(
+			expect(() => validate({ footer: { meta: 5 } }, CONFIG_PATH)).toThrowError(
 				/"footer\.meta" must be a string \(got number\)/,
 			);
 		});
 
 		it("warns on meta inside header (footer-only key)", () => {
-			const { warnings } = validateConfig({ header: { meta: "nope" } }, CONFIG_PATH);
+			const { warnings } = validate({ header: { meta: "nope" } }, CONFIG_PATH);
 			expect(warnings).toHaveLength(1);
 			expect(warnings[0]).toContain('"header.meta"');
 		});
 
 		it("warns on links inside footer (footer uses groups, not links)", () => {
-			const { warnings } = validateConfig(
+			const { warnings } = validate(
 				{ footer: { links: [{ label: "x", href: "/x/" }] } },
 				CONFIG_PATH,
 			);
@@ -172,42 +266,42 @@ describe("validateConfig", () => {
 		});
 
 		it("accepts a header with no links", () => {
-			const { config } = validateConfig({ header: {} }, CONFIG_PATH);
+			const { config } = validate({ header: {} }, CONFIG_PATH);
 			expect(config.header).toEqual({});
 		});
 
 		it.each(["header", "footer"] as const)('throws when "%s" is not an object', (key) => {
-			expect(() => validateConfig({ [key]: "nope" }, CONFIG_PATH)).toThrowError(
+			expect(() => validate({ [key]: "nope" }, CONFIG_PATH)).toThrowError(
 				new RegExp(`"${key}" must be an object \\(got string\\)`),
 			);
 		});
 
 		it("throws when header.links is not an array", () => {
-			expect(() => validateConfig({ header: { links: "nope" } }, CONFIG_PATH)).toThrowError(
+			expect(() => validate({ header: { links: "nope" } }, CONFIG_PATH)).toThrowError(
 				/"header\.links" must be an array \(got string\)/,
 			);
 		});
 
 		it("throws when a link is missing a label", () => {
-			expect(() =>
-				validateConfig({ header: { links: [{ href: "/x/" }] } }, CONFIG_PATH),
-			).toThrowError(/"header\.links\[0\]\.label" must be a string \(got undefined\)/);
+			expect(() => validate({ header: { links: [{ href: "/x/" }] } }, CONFIG_PATH)).toThrowError(
+				/"header\.links\[0\]\.label" must be a string \(got undefined\)/,
+			);
 		});
 
 		it("throws when a link href is not a string", () => {
 			expect(() =>
-				validateConfig({ header: { links: [{ label: "x", href: 5 }] } }, CONFIG_PATH),
+				validate({ header: { links: [{ label: "x", href: 5 }] } }, CONFIG_PATH),
 			).toThrowError(/"header\.links\[0\]\.href" must be a string \(got number\)/);
 		});
 
 		it("warns on an unknown key inside header", () => {
-			const { warnings } = validateConfig({ header: { typo: true } }, CONFIG_PATH);
+			const { warnings } = validate({ header: { typo: true } }, CONFIG_PATH);
 			expect(warnings).toHaveLength(1);
 			expect(warnings[0]).toContain('"header.typo"');
 		});
 
 		it("warns on an unknown key inside a link", () => {
-			const { warnings } = validateConfig(
+			const { warnings } = validate(
 				{ header: { links: [{ label: "x", href: "/x/", extra: 1 }] } },
 				CONFIG_PATH,
 			);
@@ -218,26 +312,26 @@ describe("validateConfig", () => {
 
 	describe("footer.groups", () => {
 		it("throws when footer.groups is not an array", () => {
-			expect(() => validateConfig({ footer: { groups: "nope" } }, CONFIG_PATH)).toThrowError(
+			expect(() => validate({ footer: { groups: "nope" } }, CONFIG_PATH)).toThrowError(
 				/"footer\.groups" must be an array \(got string\)/,
 			);
 		});
 
 		it("throws when a footer group is not an object", () => {
-			expect(() => validateConfig({ footer: { groups: ["nope"] } }, CONFIG_PATH)).toThrowError(
+			expect(() => validate({ footer: { groups: ["nope"] } }, CONFIG_PATH)).toThrowError(
 				/"footer\.groups\[0\]" must be an object \(got string\)/,
 			);
 		});
 
 		it("throws when a footer group is missing a title", () => {
 			expect(() =>
-				validateConfig({ footer: { groups: [{ links: [{ label: "x", href: "/x/" }] }] } }, CONFIG_PATH),
+				validate({ footer: { groups: [{ links: [{ label: "x", href: "/x/" }] }] } }, CONFIG_PATH),
 			).toThrowError(/"footer\.groups\[0\]\.title" must be a string \(got undefined\)/);
 		});
 
 		it("throws when a footer group's title is an empty string", () => {
 			expect(() =>
-				validateConfig(
+				validate(
 					{ footer: { groups: [{ title: "", links: [{ label: "x", href: "/x/" }] }] } },
 					CONFIG_PATH,
 				),
@@ -246,19 +340,19 @@ describe("validateConfig", () => {
 
 		it("throws when a footer group is missing links", () => {
 			expect(() =>
-				validateConfig({ footer: { groups: [{ title: "Project" }] } }, CONFIG_PATH),
+				validate({ footer: { groups: [{ title: "Project" }] } }, CONFIG_PATH),
 			).toThrowError(/"footer\.groups\[0\]\.links" must be an array \(got undefined\)/);
 		});
 
 		it("throws when a footer group's links array is empty", () => {
 			expect(() =>
-				validateConfig({ footer: { groups: [{ title: "Project", links: [] }] } }, CONFIG_PATH),
+				validate({ footer: { groups: [{ title: "Project", links: [] }] } }, CONFIG_PATH),
 			).toThrowError(/"footer\.groups\[0\]\.links" must not be empty/);
 		});
 
 		it("throws when a footer link is missing a label", () => {
 			expect(() =>
-				validateConfig(
+				validate(
 					{ footer: { groups: [{ title: "Project", links: [{ href: "/x/" }] }] } },
 					CONFIG_PATH,
 				),
@@ -267,7 +361,7 @@ describe("validateConfig", () => {
 
 		it("throws when a footer link's label is an empty string", () => {
 			expect(() =>
-				validateConfig(
+				validate(
 					{ footer: { groups: [{ title: "Project", links: [{ label: "", href: "/x/" }] }] } },
 					CONFIG_PATH,
 				),
@@ -276,7 +370,7 @@ describe("validateConfig", () => {
 
 		it("throws when a footer link's href is an empty string", () => {
 			expect(() =>
-				validateConfig(
+				validate(
 					{ footer: { groups: [{ title: "Project", links: [{ label: "x", href: "" }] }] } },
 					CONFIG_PATH,
 				),
@@ -285,7 +379,7 @@ describe("validateConfig", () => {
 
 		it("throws when a footer link's note is not a string", () => {
 			expect(() =>
-				validateConfig(
+				validate(
 					{
 						footer: {
 							groups: [{ title: "Project", links: [{ label: "x", href: "/x/", note: 5 }] }],
@@ -297,14 +391,16 @@ describe("validateConfig", () => {
 		});
 
 		it("warns on an unknown key inside footer", () => {
-			const { warnings } = validateConfig({ footer: { typo: true } }, CONFIG_PATH);
+			const { warnings } = validate({ footer: { typo: true } }, CONFIG_PATH);
 			expect(warnings).toHaveLength(1);
 			expect(warnings[0]).toContain('"footer.typo"');
 		});
 
 		it("warns on an unknown key inside a footer group", () => {
-			const { warnings } = validateConfig(
-				{ footer: { groups: [{ title: "Project", links: [{ label: "x", href: "/x/" }], typo: 1 }] } },
+			const { warnings } = validate(
+				{
+					footer: { groups: [{ title: "Project", links: [{ label: "x", href: "/x/" }], typo: 1 }] },
+				},
 				CONFIG_PATH,
 			);
 			expect(warnings).toHaveLength(1);
@@ -312,7 +408,7 @@ describe("validateConfig", () => {
 		});
 
 		it("warns on an unknown key inside a footer link", () => {
-			const { warnings } = validateConfig(
+			const { warnings } = validate(
 				{
 					footer: {
 						groups: [{ title: "Project", links: [{ label: "x", href: "/x/", extra: 1 }] }],
@@ -327,7 +423,7 @@ describe("validateConfig", () => {
 
 	describe("sidebar", () => {
 		it("accepts a flat sidebar of page ids", () => {
-			const { config, warnings } = validateConfig(
+			const { config, warnings } = validate(
 				{
 					sidebar: [
 						{
@@ -348,7 +444,7 @@ describe("validateConfig", () => {
 		});
 
 		it("accepts nested sidebar groups", () => {
-			const { config } = validateConfig(
+			const { config } = validate(
 				{
 					sidebar: [
 						{
@@ -368,32 +464,32 @@ describe("validateConfig", () => {
 		});
 
 		it("throws when sidebar is not an array", () => {
-			expect(() => validateConfig({ sidebar: "nope" }, CONFIG_PATH)).toThrowError(
+			expect(() => validate({ sidebar: "nope" }, CONFIG_PATH)).toThrowError(
 				/"sidebar" must be an array \(got string\)/,
 			);
 		});
 
 		it("throws when a sidebar group is not an object", () => {
-			expect(() => validateConfig({ sidebar: ["nope"] }, CONFIG_PATH)).toThrowError(
+			expect(() => validate({ sidebar: ["nope"] }, CONFIG_PATH)).toThrowError(
 				/"sidebar\[0\]" must be an object \(got string\)/,
 			);
 		});
 
 		it("throws when a sidebar group label is missing", () => {
-			expect(() => validateConfig({ sidebar: [{ items: [] }] }, CONFIG_PATH)).toThrowError(
+			expect(() => validate({ sidebar: [{ items: [] }] }, CONFIG_PATH)).toThrowError(
 				/"sidebar\[0\]\.label" must be a string \(got undefined\)/,
 			);
 		});
 
 		it("throws when a sidebar group's items is not an array", () => {
 			expect(() =>
-				validateConfig({ sidebar: [{ label: "x", items: "nope" }] }, CONFIG_PATH),
+				validate({ sidebar: [{ label: "x", items: "nope" }] }, CONFIG_PATH),
 			).toThrowError(/"sidebar\[0\]\.items" must be an array \(got string\)/);
 		});
 
 		it("throws naming the nested path when a deeply nested item is invalid", () => {
 			expect(() =>
-				validateConfig(
+				validate(
 					{
 						sidebar: [
 							{
@@ -410,16 +506,13 @@ describe("validateConfig", () => {
 		});
 
 		it("warns on an unknown key inside a sidebar group", () => {
-			const { warnings } = validateConfig(
-				{ sidebar: [{ label: "x", items: [], typo: 1 }] },
-				CONFIG_PATH,
-			);
+			const { warnings } = validate({ sidebar: [{ label: "x", items: [], typo: 1 }] }, CONFIG_PATH);
 			expect(warnings).toHaveLength(1);
 			expect(warnings[0]).toContain('"sidebar[0].typo"');
 		});
 
 		it("accepts a sidebar group with a link", () => {
-			const { config, warnings } = validateConfig(
+			const { config, warnings } = validate(
 				{
 					sidebar: [
 						{
@@ -442,14 +535,12 @@ describe("validateConfig", () => {
 		});
 
 		it("accepts a link on a nested sidebar group", () => {
-			const { config } = validateConfig(
+			const { config } = validate(
 				{
 					sidebar: [
 						{
 							label: "Guides",
-							items: [
-								{ label: "Advanced", link: "guides/advanced", items: ["guides/ci"] },
-							],
+							items: [{ label: "Advanced", link: "guides/advanced", items: ["guides/ci"] }],
 						},
 					],
 				},
@@ -465,14 +556,14 @@ describe("validateConfig", () => {
 
 		it("throws when a sidebar group's link is not a string", () => {
 			expect(() =>
-				validateConfig({ sidebar: [{ label: "x", items: [], link: 5 }] }, CONFIG_PATH),
+				validate({ sidebar: [{ label: "x", items: [], link: 5 }] }, CONFIG_PATH),
 			).toThrowError(/"sidebar\[0\]\.link" must be a string \(got number\)/);
 		});
 	});
 
 	describe("version/sidebarMeta", () => {
 		it("accepts a version and sidebarMeta string", () => {
-			const { config, warnings } = validateConfig(
+			const { config, warnings } = validate(
 				{ version: "v2.4.1", sidebarMeta: "MIT licensed\nno telemetry" },
 				CONFIG_PATH,
 			);
@@ -484,8 +575,13 @@ describe("validateConfig", () => {
 
 	describe("toc", () => {
 		it("accepts a toc note and editLink", () => {
-			const { config, warnings } = validateConfig(
-				{ toc: { note: "updated for 2.4", editLink: "https://github.com/acme/proj/edit/main/{path}" } },
+			const { config, warnings } = validate(
+				{
+					toc: {
+						note: "updated for 2.4",
+						editLink: "https://github.com/acme/proj/edit/main/{path}",
+					},
+				},
 				CONFIG_PATH,
 			);
 			expect(config.toc).toEqual({
@@ -496,37 +592,37 @@ describe("validateConfig", () => {
 		});
 
 		it("accepts a toc with no keys set", () => {
-			const { config } = validateConfig({ toc: {} }, CONFIG_PATH);
+			const { config } = validate({ toc: {} }, CONFIG_PATH);
 			expect(config.toc).toEqual({});
 		});
 
 		it("throws when toc is not an object", () => {
-			expect(() => validateConfig({ toc: "nope" }, CONFIG_PATH)).toThrowError(
+			expect(() => validate({ toc: "nope" }, CONFIG_PATH)).toThrowError(
 				/"toc" must be an object \(got string\)/,
 			);
 		});
 
 		it("throws when toc.note is not a string", () => {
-			expect(() => validateConfig({ toc: { note: 5 } }, CONFIG_PATH)).toThrowError(
+			expect(() => validate({ toc: { note: 5 } }, CONFIG_PATH)).toThrowError(
 				/"toc\.note" must be a string \(got number\)/,
 			);
 		});
 
 		it("throws when toc.editLink is not a string", () => {
-			expect(() => validateConfig({ toc: { editLink: 5 } }, CONFIG_PATH)).toThrowError(
+			expect(() => validate({ toc: { editLink: 5 } }, CONFIG_PATH)).toThrowError(
 				/"toc\.editLink" must be a string \(got number\)/,
 			);
 		});
 
 		it("warns on an unknown key inside toc", () => {
-			const { warnings } = validateConfig({ toc: { typo: true } }, CONFIG_PATH);
+			const { warnings } = validate({ toc: { typo: true } }, CONFIG_PATH);
 			expect(warnings).toHaveLength(1);
 			expect(warnings[0]).toContain('"toc.typo"');
 		});
 	});
 
 	it("warns once per unknown top-level key even alongside header/footer/sidebar", () => {
-		const { warnings } = validateConfig(
+		const { warnings } = validate(
 			{ header: { links: [] }, footer: { meta: "MIT" }, sidebar: [], typo: 1 },
 			CONFIG_PATH,
 		);
@@ -544,6 +640,15 @@ describe("resolveConfig (YAML file loading)", () => {
 	function makeRoot(): string {
 		tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), "docs-config-test-"));
 		return tmpRoot;
+	}
+
+	/** CLI overrides pointing at `dir`'s `docs.config.yaml`, exactly as cli.ts builds them. */
+	function overrides(dir: string): { configPath: string; out: string } {
+		return { configPath: path.join(dir, "docs.config.yaml"), out: path.join(dir, "dist") };
+	}
+
+	function writeConfig(dir: string, lines: string[]): void {
+		fs.writeFileSync(path.join(dir, "docs.config.yaml"), `${lines.join("\n")}\n`);
 	}
 
 	it("parses a full docs.config.yaml, including header/footer/sidebar", () => {
@@ -589,13 +694,17 @@ describe("resolveConfig (YAML file loading)", () => {
 			].join("\n"),
 		);
 
-		const cfg = resolveConfig({ root, out: path.join(root, "dist") });
+		const cfg = resolveConfig(overrides(root));
 
+		expect(cfg.configPath).toBe(path.join(root, "docs.config.yaml"));
+		expect(cfg.configDir).toBe(root);
 		expect(cfg.title).toBe("My Project");
 		expect(cfg.repoUrl).toBe("https://github.com/acme/proj");
 		expect(cfg.site).toBe("https://acme.github.io");
 		expect(cfg.base).toBe("/proj/");
-		expect(cfg.content).toEqual(["packages/*/README.md"]);
+		expect(cfg.content).toEqual([
+			{ base: ".", files: ["packages/*/README.md"], route: "", assets: [] },
+		]);
 		expect(cfg.header).toEqual({ links: [{ label: "Changelog", href: "/changelog/" }] });
 		expect(cfg.footer).toEqual({
 			groups: [
@@ -623,23 +732,72 @@ describe("resolveConfig (YAML file loading)", () => {
 		]);
 	});
 
-	it("returns defaults when no docs.config.yaml exists", () => {
+	it("errors naming the path and the --config flag when the config file is missing", () => {
 		const root = makeRoot();
-		const cfg = resolveConfig({ root, out: path.join(root, "dist") });
-		expect(cfg.content).toEqual([]);
-		expect(cfg.header).toBeUndefined();
-		expect(cfg.footer).toBeUndefined();
-		expect(cfg.sidebar).toBeUndefined();
-		expect(cfg.version).toBeUndefined();
-		expect(cfg.sidebarMeta).toBeUndefined();
-		expect(cfg.toc).toBeUndefined();
+		let thrown: Error | undefined;
+		try {
+			resolveConfig(overrides(root));
+		} catch (err) {
+			thrown = err as Error;
+		}
+		expect(thrown?.message).toContain(path.join(root, "docs.config.yaml"));
+		expect(thrown?.message).toContain("--config");
 	});
 
 	it("throws naming the file and the parser's message on invalid YAML", () => {
 		const root = makeRoot();
 		fs.writeFileSync(path.join(root, "docs.config.yaml"), "title: [unterminated");
-		expect(() => resolveConfig({ root, out: path.join(root, "dist") })).toThrowError(
+		expect(() => resolveConfig(overrides(root))).toThrowError(
 			/Failed to parse .*docs\.config\.yaml/,
 		);
+	});
+
+	it("throws when title is missing", () => {
+		const root = makeRoot();
+		writeConfig(root, ["content:", "  - docs/**/*.md"]);
+		expect(() => resolveConfig(overrides(root))).toThrowError(/"title" is required/);
+	});
+
+	it("accepts --title in place of a configured title", () => {
+		const root = makeRoot();
+		writeConfig(root, ["content:", "  - docs/**/*.md"]);
+		expect(resolveConfig({ ...overrides(root), title: "From The Flag" }).title).toBe(
+			"From The Flag",
+		);
+	});
+
+	it("resolves landing to an absolute path", () => {
+		const root = makeRoot();
+		fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+		fs.writeFileSync(path.join(root, "docs", "index.mdx"), "# Home\n");
+		writeConfig(root, ["title: T", "content:", "  - docs/**/*.md", "landing: docs/index.mdx"]);
+		expect(resolveConfig(overrides(root)).landing).toBe(path.join(root, "docs", "index.mdx"));
+	});
+
+	it("leaves landing undefined when the key is absent", () => {
+		const root = makeRoot();
+		writeConfig(root, ["title: T", "content:", "  - docs/**/*.md"]);
+		expect(resolveConfig(overrides(root)).landing).toBeUndefined();
+	});
+
+	it("throws naming the missing file when landing does not exist", () => {
+		const root = makeRoot();
+		writeConfig(root, ["title: T", "content:", "  - docs/**/*.md", "landing: docs/nope.md"]);
+		expect(() => resolveConfig(overrides(root))).toThrowError(/does not exist/);
+	});
+
+	it("throws when landing is not a .md/.mdx file", () => {
+		const root = makeRoot();
+		writeConfig(root, ["title: T", "content:", "  - docs/**/*.md", "landing: docs/home.astro"]);
+		expect(() => resolveConfig(overrides(root))).toThrowError(/must point at a \.md or \.mdx file/);
+	});
+
+	it("resolves relative to the config file's directory, not cwd", () => {
+		const root = makeRoot();
+		const nested = path.join(root, "site");
+		fs.mkdirSync(nested, { recursive: true });
+		writeConfig(nested, ["title: T", "content:", "  - docs/**/*.md"]);
+		const cfg = resolveConfig(overrides(nested));
+		expect(cfg.configDir).toBe(nested);
 	});
 });

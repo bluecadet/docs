@@ -71,16 +71,51 @@ jobs:
 
       - name: Write a minimal fixture repo
         run: |
-          mkdir -p "$RUNNER_TEMP/fixture/docs"
-          cat > "$RUNNER_TEMP/fixture/README.md" <<'EOF'
+          mkdir -p "$RUNNER_TEMP/fixture/docs/img" "$RUNNER_TEMP/fixture/packages/widget"
+          # The config is the whole content contract — nothing is discovered by convention — so this
+          # exercises both entry forms: a bare glob string (base "." , so its directory stays in the
+          # route) and object entries with base/route/assets, one of them pointing outside the docs
+          # tree entirely.
+          cat > "$RUNNER_TEMP/fixture/docs.config.yaml" <<'EOF'
+          title: Fixture Repo
+          landing: docs/index.md
+          content:
+            - "CHANGELOG.md"
+            - base: docs
+              files: "**/*.{md,mdx,astro}"
+              assets: "img/**/*"
+            - base: packages
+              files: "*/README.md"
+              route: packages
+              assets: "**/*.svg"
+          EOF
+          cat > "$RUNNER_TEMP/fixture/CHANGELOG.md" <<'EOF'
+          # Changelog
+
+          Published by a bare string entry, so its path relative to the config file *is* its route.
+          EOF
+          cat > "$RUNNER_TEMP/fixture/docs/index.md" <<'EOF'
           # Fixture Repo
 
           Minimal fixture repo for smoke-testing the packed @bluecadet/docs tarball.
+
+          ![a diagram](../packages/widget/diagram.svg)
           EOF
+          cat > "$RUNNER_TEMP/fixture/packages/widget/README.md" <<'EOF'
+          # Widget Package
+
+          Fixture package README, published under the `packages` route prefix.
+          EOF
+          printf '%s\n' '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1"></svg>' \
+            > "$RUNNER_TEMP/fixture/packages/widget/diagram.svg"
+          printf '%s\n' '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2 2"></svg>' \
+            > "$RUNNER_TEMP/fixture/docs/img/logo.svg"
           cat > "$RUNNER_TEMP/fixture/docs/getting-started.md" <<'EOF'
           # Getting Started
 
           Fixture page with a little prose so the build has something to render.
+
+          ![the logo](./img/logo.svg)
           EOF
           cat > "$RUNNER_TEMP/fixture/docs/component-demo.astro" <<'EOF'
           ---
@@ -127,7 +162,7 @@ jobs:
       - name: Build the fixture repo from the installed tarball
         run: |
           cd "$RUNNER_TEMP/install"
-          npx docs build --root "$RUNNER_TEMP/fixture" --out "$RUNNER_TEMP/fixture-dist"
+          npx docs build --config "$RUNNER_TEMP/fixture/docs.config.yaml" --out "$RUNNER_TEMP/fixture-dist"
 
       - name: Verify build output
         run: |
@@ -135,7 +170,30 @@ jobs:
           test -f "$RUNNER_TEMP/fixture-dist/getting-started/index.html"
           test -f "$RUNNER_TEMP/fixture-dist/pagefind/pagefind.js"
 
-          # .astro page, layout "docs": renders in the normal chrome and carries its title.
+          # `landing:` owns "/", and its relative image resolves to the single path the packages
+          # entry's `assets` glob published it at — under that entry's `route` prefix.
+          grep -q 'src="/packages/widget/diagram.svg"' "$RUNNER_TEMP/fixture-dist/index.html"
+          test -f "$RUNNER_TEMP/fixture-dist/packages/widget/diagram.svg"
+
+          # An entry with no `route` publishes its assets at the site root instead.
+          grep -q 'src="/img/logo.svg"' "$RUNNER_TEMP/fixture-dist/getting-started/index.html"
+          test -f "$RUNNER_TEMP/fixture-dist/img/logo.svg"
+
+          # Bare string entry: base is ".", so the file's own directory stays in the route.
+          test -f "$RUNNER_TEMP/fixture-dist/changelog/index.html"
+
+          # Object-form entry: base outside the docs tree, published under its `route` prefix, with
+          # the README basename collapsed onto its directory.
+          test -f "$RUNNER_TEMP/fixture-dist/packages/widget/index.html"
+          grep -q 'Widget Package' "$RUNNER_TEMP/fixture-dist/packages/widget/index.html"
+
+          # Nothing the `assets` globs didn't name reaches the output — no blind directory sweep.
+          if [ -f "$RUNNER_TEMP/fixture-dist/packages/widget/README.md" ]; then
+            echo "README.md shipped as a raw asset — pages are published as pages, not downloads" >&2
+            exit 1
+          fi
+
+          # .astro page via a content glob, layout "docs": renders in the normal chrome with its title.
           test -f "$RUNNER_TEMP/fixture-dist/component-demo/index.html"
           grep -q 'class="sidebar-rail"' "$RUNNER_TEMP/fixture-dist/component-demo/index.html"
           grep -q 'Component Demo' "$RUNNER_TEMP/fixture-dist/component-demo/index.html"
@@ -151,3 +209,27 @@ jobs:
           # .mdx page importing a barrel component: the component's own markup rendered.
           test -f "$RUNNER_TEMP/fixture-dist/mdx-demo/index.html"
           grep -q 'class="ok"' "$RUNNER_TEMP/fixture-dist/mdx-demo/index.html"
+
+      # A landing page is optional. With no `landing:`, "/" must still resolve — it becomes a
+      # meta-refresh to the first page in the sidebar, so the site has no dead entry point.
+      - name: Build the same fixture with no landing page
+        run: |
+          cd "$RUNNER_TEMP/install"
+          # Same docs entry as above, with `landing:` removed — that key is the only difference.
+          cat > "$RUNNER_TEMP/fixture/docs.config.yaml" <<'EOF'
+          title: Fixture Repo
+          content:
+            - base: docs
+              files: "**/*.{md,mdx,astro}"
+              assets: "img/**/*"
+          EOF
+          rm "$RUNNER_TEMP/fixture/docs/index.md"
+          npx docs build --config "$RUNNER_TEMP/fixture/docs.config.yaml" --out "$RUNNER_TEMP/no-landing-dist"
+
+      - name: Verify the no-landing redirect
+        run: |
+          test -f "$RUNNER_TEMP/no-landing-dist/index.html"
+          grep -q 'http-equiv="refresh"' "$RUNNER_TEMP/no-landing-dist/index.html"
+          # The target is the first sidebar page (alphabetical in auto mode), not a hardcoded route.
+          grep -q 'url=/component-demo/' "$RUNNER_TEMP/no-landing-dist/index.html"
+          test -f "$RUNNER_TEMP/no-landing-dist/getting-started/index.html"

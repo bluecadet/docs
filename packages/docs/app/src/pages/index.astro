@@ -1,5 +1,10 @@
 ---
-// Landing page — route "/". Uses the shared page shell (BaseLayout) so its header and footer
+// Landing page — route "/". Optional: `docs.config.yaml`'s `landing:` key names the file published
+// here, and when it's absent there is no landing content at all, so this route renders a redirect to
+// the first sidebar page instead (see LandingRedirect.astro). Everything below describes the
+// landing-page case.
+//
+// Uses the shared page shell (BaseLayout) so its header and footer
 // columns are identical to every doc page, but opts out of the left nav rail (`sidebar={false}`)
 // in favor of a single full-bleed main column with its own wider gutters (see the .landing-body
 // override below) — only the header/footer variants and the full-bleed main differ otherwise.
@@ -13,13 +18,14 @@ import { getCollection, render } from "astro:content";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import LandingHeader from "../components/landing/LandingHeader.astro";
 import LandingHero from "../components/landing/LandingHero.astro";
+import LandingRedirect from "../components/landing/LandingRedirect.astro";
 import { docsEntryHref } from "../lib/nav";
 import { getDocsConfig } from "../lib/config";
 
-const { title: siteTitle } = getDocsConfig();
+const { title: siteTitle, hasLanding } = getDocsConfig();
 
 const entries = await getCollection("docs");
-const indexEntry = entries.find((entry) => entry.id === "index");
+const indexEntry = hasLanding ? entries.find((entry) => entry.id === "index") : undefined;
 const { Content } = indexEntry ? await render(indexEntry) : { Content: undefined };
 
 const docsHref = await docsEntryHref();
@@ -29,37 +35,41 @@ const pageTitle = data?.title ?? siteTitle;
 const pageDescription = data?.description;
 ---
 
-<BaseLayout
-	title={pageTitle}
-	description={pageDescription}
-	main="full"
-	appendSiteTitle={false}
-	sidebar={false}
->
-	<LandingHeader slot="header" />
-
-	{/* data-pagefind-body scopes the search index to the landing page's own content — see the
-	    pagefindIndex() comment in astro.config.mjs for why this also determines which pages are
-	    indexed at all. Everything the landing route renders into BaseLayout's default slot lives
-	    here, so it's all wrapped together rather than piecemeal. */}
-	<div class="landing-body" data-pagefind-body data-pagefind-meta={`title:${pageTitle}`}>
-		<LandingHero
+{
+	indexEntry ? (
+		<BaseLayout
 			title={pageTitle}
-			lead={pageDescription}
-			eyebrows={data?.eyebrows}
-			installCommand={data?.installCommand}
-			notes={data?.heroNotes}
-			quickstartHref={docsHref}
-		/>
-		{
-			Content && (
-				<article class="landing-content">
-					<Content />
-				</article>
-			)
-		}
-	</div>
-</BaseLayout>
+			description={pageDescription}
+			main="full"
+			appendSiteTitle={false}
+			sidebar={false}
+		>
+			<LandingHeader slot="header" />
+
+			{/* data-pagefind-body scopes the search index to the landing page's own content — see the
+			    pagefindIndex() comment in astro.config.mjs for why this also determines which pages are
+			    indexed at all. Everything the landing route renders into BaseLayout's default slot lives
+			    here, so it's all wrapped together rather than piecemeal. */}
+			<div class="landing-body" data-pagefind-body data-pagefind-meta={`title:${pageTitle}`}>
+				<LandingHero
+					title={pageTitle}
+					lead={pageDescription}
+					eyebrows={data?.eyebrows}
+					installCommand={data?.installCommand}
+					notes={data?.heroNotes}
+					quickstartHref={docsHref}
+				/>
+				{Content && (
+					<article class="landing-content">
+						<Content />
+					</article>
+				)}
+			</div>
+		</BaseLayout>
+	) : (
+		<LandingRedirect href={docsHref} />
+	)
+}
 
 <style>
 	/* Without the sidebar rail (see BaseLayout's `sidebar={false}`), the landing page is one full-

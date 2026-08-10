@@ -3,11 +3,11 @@ import path from "node:path";
 import matter from "gray-matter";
 import type { RewriteContext } from "./links.js";
 import { transformMarkdown } from "./links.js";
-import type { AssetCopy, ResolvedConfig, RouteMap } from "./types.js";
+import type { AssetMap, ContentEntry, ResolvedConfig, RouteMap } from "./types.js";
 
 const H1 = /^#[ \t]+(.+?)[ \t]*$/m;
-const MD_EXT = /\.(md|mdx)$/i;
 const ASTRO_EXT = /\.astro$/i;
+/** Extensions that become pages rather than published assets. */
 const ROUTABLE_EXT = /\.(md|mdx|astro)$/i;
 
 export interface SyncResult {
@@ -18,11 +18,14 @@ export interface SyncResult {
 }
 
 /**
- * Syncs a consumer repo's markdown into the bundled Astro app's `src/content/docs/`, copies any
- * `docs/**\/*.astro` pages verbatim into `src/astro-pages/`, and copies referenced assets into
- * `public/`. Must run before every `astro build`/`astro dev` — Astro's `docsLoader()` reads from
- * disk, it doesn't see the consumer repo directly (see package README, "Copy, don't glob-load in
- * place").
+ * Syncs the configured content into the bundled Astro app: markdown into `src/content/docs/`,
+ * `.astro` pages verbatim into `src/astro-pages/`, and each entry's `assets` globs into `public/`.
+ * Must run before every `astro build`/`astro dev` — Astro's `docsLoader()` reads from disk, it
+ * doesn't see the consumer repo directly (see package README, "Copy, don't glob-load in place").
+ *
+ * Everything published here comes from `cfg.content` and `cfg.landing`. There is no discovery by
+ * convention: no `docs/` directory is special, no `README.md` is read implicitly, and nothing is
+ * copied to `public/` that an `assets` glob didn't name.
  */
 export function syncContent(cfg: ResolvedConfig, appRoot: string): SyncResult {
 	const contentDir = path.join(appRoot, "src", "content", "docs");
@@ -34,48 +37,42 @@ export function syncContent(cfg: ResolvedConfig, appRoot: string): SyncResult {
 	fs.mkdirSync(astroPagesDir, { recursive: true });
 	resetPublicDir(publicDir);
 
-	const { docsDir, landing, displaced, notices, files } = discoverContent(cfg.root, cfg.content);
-	if (!landing) {
-		throw new Error(
-			`No landing page found under ${cfg.root}. Add a README.md at the repo root, a docs/index.md, or a docs/index.mdx.`,
-		);
-	}
-	const routes = buildRouteMap(cfg.root, docsDir, landing, displaced, files);
+	const { pages, routes, assets, notices } = discoverContent(
+		cfg.configDir,
+		cfg.content,
+		cfg.landing,
+	);
 
 	const warnings: string[] = [];
-	const pendingAssets: AssetCopy[] = [];
 	let pageCount = 0;
 
-	for (const absPath of files) {
+	for (const absPath of pages) {
 		const route = routes.get(absPath);
 		if (!route) continue;
 		if (ASTRO_EXT.test(absPath)) {
 			writeAstroPage(absPath, route, astroPagesDir);
 		} else {
-			writePage(absPath, route, { cfg, docsDir, routes, contentDir, pendingAssets, warnings });
+			writePage(absPath, route, { cfg, routes, assets, contentDir, warnings });
 		}
 		pageCount++;
 	}
 
-	let assetCount = 0;
-	if (docsDir) assetCount += blindCopyDocsAssets(docsDir, cfg.root, publicDir);
-	assetCount += flushAssetCopies(pendingAssets, publicDir);
+	const assetCount = publishAssets(assets, publicDir);
 
 	return { pageCount, assetCount, warnings, notices };
 }
 
 interface WriteCtx {
 	cfg: ResolvedConfig;
-	docsDir: string | undefined;
 	routes: RouteMap;
+	assets: AssetMap;
 	contentDir: string;
-	pendingAssets: AssetCopy[];
 	warnings: string[];
 }
 
 function writePage(absPath: string, route: string, ctx: WriteCtx): void {
 	const raw = fs.readFileSync(absPath, "utf8");
-	const label = toPosix(path.relative(ctx.cfg.root, absPath));
+	const label = toPosix(path.relative(ctx.cfg.configDir, absPath));
 	const isMdx = /\.mdx$/i.test(absPath);
 	const parsed = matter(raw);
 	let title = typeof parsed.data.title === "string" ? parsed.data.title : undefined;
@@ -96,8 +93,8 @@ function writePage(absPath: string, route: string, ctx: WriteCtx): void {
 			fromAbsDir: path.dirname(absPath),
 			fromLabel: label,
 			routes: ctx.routes,
-			docsDir: ctx.docsDir,
-			repoRoot: ctx.cfg.root,
+			assets: ctx.assets,
+			configDir: ctx.cfg.configDir,
 			repoUrl: ctx.cfg.repoUrl,
 			branch: ctx.cfg.branch,
 			base: ctx.cfg.base ?? "/",
@@ -105,7 +102,6 @@ function writePage(absPath: string, route: string, ctx: WriteCtx): void {
 		const result = transformMarkdown(parsed.content, rewriteCtx, title);
 		body = result.body;
 		title = result.title;
-		ctx.pendingAssets.push(...result.assets);
 		ctx.warnings.push(...result.warnings);
 	}
 
@@ -113,10 +109,10 @@ function writePage(absPath: string, route: string, ctx: WriteCtx): void {
 
 	const outPath = contentPathFor(ctx.contentDir, route, isMdx);
 	fs.mkdirSync(path.dirname(outPath), { recursive: true });
-	// sourcePath is the repo-root-relative path to this file (e.g. "docs/how-to/foo.md") — the
-	// same `label` used for the GitHub blob URL rewriting above. It lets `toc.editLink` templates
-	// resolve a per-page edit URL without the app needing to know anything about the consumer
-	// repo's directory layout (see content.config.ts and pages/[...slug].astro).
+	// sourcePath is this file's path relative to the config file's directory (e.g.
+	// "docs/how-to/foo.md") — the same `label` used for the GitHub blob URL rewriting above. It lets
+	// `toc.editLink` templates resolve a per-page edit URL without the app needing to know anything
+	// about the consumer repo's layout (see content.config.ts and pages/[...slug].astro).
 	fs.writeFileSync(outPath, matter.stringify(body, { ...parsed.data, title, sourcePath: label }));
 }
 
@@ -133,147 +129,145 @@ function writeAstroPage(absPath: string, route: string, astroPagesDir: string): 
 	fs.copyFileSync(absPath, outPath);
 }
 
+export interface DiscoveredContent {
+	/** Every page to publish, landing page first, then entries in config order. */
+	pages: string[];
+	routes: RouteMap;
+	assets: AssetMap;
+	notices: string[];
+}
+
 /**
- * Finds the docs/ tree, the landing page, and every markdown/astro file that should be published.
+ * Expands `content` (and the optional `landing`) into the exact set of pages and assets to publish.
  *
- * Landing precedence: `docs/index.mdx` > `docs/index.md` > root `README.md`. `docs/index.md` and
- * `docs/index.mdx` are mutually exclusive (an error, not a precedence rule — a repo authoring a
- * rich MDX landing page has no reason to also keep a plain `index.md` around). Whichever of
- * `docs/index.*`/`README.md` loses out to the other still gets published, at `/overview/` instead
- * of colliding at `/`.
+ * Route ids come from each file's path relative to its entry's `base`, prefixed with the entry's
+ * `route`, extension stripped and lowercased. Two naming conventions survive from the old
+ * discovery-based model because they're about naming, not discovery: a trailing `index` or `README`
+ * segment collapses onto its parent directory, so `reference/index.md` is `/reference/` and
+ * `packages/docs/README.md` is `/packages/docs/`.
  *
- * `.astro` files under `docs/` join the same published file set as a raw-component escape hatch
- * (see `writeAstroPage`) — but only from `docs/`, not from the extra `content` config globs, which
- * stay markdown-only (documented limitation). An `.astro` file can never become the landing page;
- * `buildRouteMap` rejects one that resolves to `/`.
+ * A configured `landing` always owns `/`. If a `content` glob also matches it, the page is skipped
+ * there (it's already published) and a notice explains why rather than failing the build.
  */
 export function discoverContent(
-	root: string,
-	extraGlobs: string[],
-): {
-	docsDir: string | undefined;
-	landing: string | undefined;
-	displaced: string | undefined;
-	notices: string[];
-	files: string[];
-} {
-	const docsDirCandidate = path.join(root, "docs");
-	const docsDir =
-		fs.existsSync(docsDirCandidate) && fs.statSync(docsDirCandidate).isDirectory()
-			? docsDirCandidate
-			: undefined;
+	configDir: string,
+	content: ContentEntry[],
+	landing: string | undefined,
+): DiscoveredContent {
+	const pages: string[] = [];
+	const routes: RouteMap = new Map();
+	const assets: AssetMap = new Map();
+	const notices: string[] = [];
+	/** Route id -> the file that claimed it, so a collision can name both sources. */
+	const claimedBy = new Map<string, string>();
+	/** Absolute file -> the entry that published it, so a double-claim can name both entries. */
+	const claimedFrom = new Map<string, string>();
 
-	const files = new Set<string>();
-	if (docsDir) {
-		for (const rel of fs.globSync("**/*.{md,mdx}", { cwd: docsDir })) {
-			files.add(path.join(docsDir, rel));
+	if (landing) {
+		pages.push(landing);
+		routes.set(landing, "/");
+		claimedBy.set("/", landing);
+		claimedFrom.set(landing, "landing");
+	}
+
+	for (const [i, entry] of content.entries()) {
+		const label = `content[${i}]`;
+		const baseDir = path.resolve(configDir, entry.base);
+		if (!fs.existsSync(baseDir)) {
+			throw new Error(`${label}.base resolves to ${baseDir}, which does not exist.`);
 		}
-		for (const rel of fs.globSync("**/*.astro", { cwd: docsDir })) {
-			files.add(path.join(docsDir, rel));
+
+		for (const absPath of globFiles(baseDir, entry.files, label, "files")) {
+			if (!ROUTABLE_EXT.test(absPath)) continue;
+			if (absPath === landing) {
+				notices.push(
+					`${toPosix(path.relative(configDir, absPath))} is the landing page (/), so it is skipped where ${label} also matches it.`,
+				);
+				continue;
+			}
+			const route = routeFor(entry, baseDir, absPath);
+			if (ASTRO_EXT.test(absPath) && route === "/") {
+				throw new Error(
+					`${absPath} resolves to the landing route (/), but .astro pages can't be the landing page — set \`landing:\` to a .md/.mdx file instead, or give this entry a \`route\`.`,
+				);
+			}
+			// One file can only have one route: link rewriting maps a source path to a single route, so
+			// two entries matching the same file is an ambiguity to report, not one to pick a winner for.
+			const owner = claimedFrom.get(absPath);
+			if (owner) {
+				throw new Error(
+					`${absPath} is matched by both ${owner} and ${label}. A file can only be published once — narrow one entry's \`files\` glob.`,
+				);
+			}
+			const claimant = claimedBy.get(route);
+			if (claimant) {
+				throw new Error(
+					`Two source files map to the same route "${route}":\n  - ${claimant}\n  - ${absPath}`,
+				);
+			}
+			claimedBy.set(route, absPath);
+			claimedFrom.set(absPath, label);
+			routes.set(absPath, route);
+			pages.push(absPath);
+		}
+
+		for (const absPath of globFiles(baseDir, entry.assets, label, "assets")) {
+			// Pages are published as pages, never as raw downloadable source, so a broad assets glob
+			// like "**/*" stays safe to write.
+			if (ROUTABLE_EXT.test(absPath)) continue;
+			if (assets.has(absPath)) continue;
+			const rel = toPosix(path.relative(baseDir, absPath));
+			assets.set(absPath, entry.route === "" ? rel : `${entry.route}/${rel}`);
 		}
 	}
 
-	const readmePath = path.join(root, "README.md");
-	const hasReadme = fs.existsSync(readmePath);
-	const docsIndexMdPath = docsDir ? path.join(docsDir, "index.md") : undefined;
-	const docsIndexMdxPath = docsDir ? path.join(docsDir, "index.mdx") : undefined;
-	const hasDocsIndexMd = docsIndexMdPath !== undefined && fs.existsSync(docsIndexMdPath);
-	const hasDocsIndexMdx = docsIndexMdxPath !== undefined && fs.existsSync(docsIndexMdxPath);
-
-	if (hasDocsIndexMd && hasDocsIndexMdx) {
+	if (pages.length === 0) {
 		throw new Error(
-			"docs/index.md and docs/index.mdx cannot both exist — they're mutually exclusive landing pages. Delete one.",
+			"No pages to publish: no `content` glob matched a .md/.mdx/.astro file and no `landing` is set.",
 		);
 	}
-	const docsIndexPath = hasDocsIndexMdx
-		? docsIndexMdxPath
-		: hasDocsIndexMd
-			? docsIndexMdPath
-			: undefined;
 
-	if (hasReadme) files.add(readmePath);
-
-	let landing: string | undefined;
-	let displaced: string | undefined;
-	const notices: string[] = [];
-	if (docsIndexPath) {
-		landing = docsIndexPath;
-		if (hasReadme) {
-			displaced = readmePath;
-			notices.push(
-				`${toPosix(path.relative(root, docsIndexPath))} is the landing page (/); README.md moved to /overview/ to avoid a collision.`,
-			);
-		}
-	} else if (hasReadme) {
-		landing = readmePath;
-	}
-
-	for (const pattern of extraGlobs) {
-		for (const rel of fs.globSync(pattern, { cwd: root })) {
-			if (MD_EXT.test(rel)) files.add(path.join(root, rel));
-		}
-	}
-
-	return { docsDir, landing, displaced, notices, files: [...files] };
+	return { pages, routes, assets, notices };
 }
 
 /**
- * Maps every discovered file to a site route. `index`/`README` basenames collapse onto their
- * parent directory. The landing page always wins `/`; a displaced file (see `discoverContent`)
- * moves to `/overview/` instead. Fails loudly if any two files still end up mapped to the same
- * route (e.g. `docs/how-to.md` and `docs/index.md` both naturally routing to `/how-to/`), and if
- * an `.astro` file naturally resolves to `/` — the landing page belongs to `index.mdx`/`README.md`.
+ * Resolves glob patterns against `baseDir`, returning absolute paths of regular files in a stable
+ * (sorted, deduped) order. Matches are required to stay inside `baseDir`: a pattern that climbs out
+ * with `..` would produce route ids containing `..`, and `base` already exists for that job.
  */
-export function buildRouteMap(
-	root: string,
-	docsDir: string | undefined,
-	landing: string | undefined,
-	displaced: string | undefined,
-	files: string[],
-): RouteMap {
-	const routes: RouteMap = new Map();
-	for (const absPath of files) {
-		const base = docsDir && !path.relative(docsDir, absPath).startsWith("..") ? docsDir : root;
-		const route = routeFromRelPath(path.relative(base, absPath));
-		if (ASTRO_EXT.test(absPath) && route === "/") {
-			throw new Error(
-				`${absPath} resolves to the landing route (/), but .astro pages can't be the landing page — that's reserved for docs/index.mdx, docs/index.md, or README.md. Rename or move this file.`,
-			);
-		}
-		routes.set(absPath, route);
-	}
-	if (displaced) routes.set(displaced, "/overview/");
-	if (landing) routes.set(landing, "/");
-	assertNoRouteCollisions(routes);
-	return routes;
-}
-
-function assertNoRouteCollisions(routes: RouteMap): void {
-	const byRoute = new Map<string, string[]>();
-	for (const [absPath, route] of routes) {
-		const list = byRoute.get(route);
-		if (list) list.push(absPath);
-		else byRoute.set(route, [absPath]);
-	}
-	for (const [route, absPaths] of byRoute) {
-		if (absPaths.length > 1) {
-			throw new Error(
-				`Multiple source files map to the same route "${route}":\n${absPaths.map((p) => `  - ${p}`).join("\n")}`,
-			);
+function globFiles(
+	baseDir: string,
+	patterns: string[],
+	label: string,
+	field: "files" | "assets",
+): string[] {
+	const found = new Set<string>();
+	for (const pattern of patterns) {
+		for (const rel of fs.globSync(pattern, { cwd: baseDir })) {
+			if (rel.split(path.sep).includes("..")) {
+				throw new Error(
+					`${label}.${field} pattern "${pattern}" matches "${rel}", which is outside ${baseDir}. Point \`base\` at that directory instead of climbing out of it with "..".`,
+				);
+			}
+			const abs = path.join(baseDir, rel);
+			if (!fs.existsSync(abs) || !fs.statSync(abs).isFile()) continue;
+			found.add(abs);
 		}
 	}
+	return [...found].sort();
 }
 
-function routeFromRelPath(relWithExt: string): string {
-	let r = toPosix(relWithExt).replace(ROUTABLE_EXT, "");
-	const parts = r.split("/");
-	const base = (parts.at(-1) ?? "").toLowerCase();
-	if (base === "index" || base === "readme") {
-		parts.pop();
-		r = parts.join("/");
-	}
-	r = r.toLowerCase();
-	return r === "" ? "/" : `/${r}/`;
+/** Route for `absPath` within `entry`: `route` prefix + base-relative path, index/README collapsed. */
+function routeFor(entry: ContentEntry, baseDir: string, absPath: string): string {
+	const segments = toPosix(path.relative(baseDir, absPath))
+		.replace(ROUTABLE_EXT, "")
+		.split("/")
+		.filter(Boolean);
+	const last = (segments.at(-1) ?? "").toLowerCase();
+	if (last === "index" || last === "readme") segments.pop();
+	const prefix = entry.route === "" ? [] : entry.route.split("/");
+	const id = [...prefix, ...segments].join("/").toLowerCase();
+	return id === "" ? "/" : `/${id}/`;
 }
 
 function contentPathFor(contentDir: string, route: string, isMdx: boolean): string {
@@ -287,42 +281,11 @@ function titleCaseFromFilename(absPath: string): string {
 	return stem.replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-/**
- * Copies every non-markdown, non-`.astro` file under `docs/` into `public/`, duplicated under both
- * its docs-relative path and its repo-root-relative path, so images resolve whether they're
- * referenced from a `docs/*.md` page (docs-relative) or from the root README (repo-root-relative).
- * `.astro` files are excluded — they're published via `writeAstroPage` into `astro-pages/`, not as
- * downloadable raw source in `public/`.
- */
-function blindCopyDocsAssets(docsDir: string, repoRoot: string, publicDir: string): number {
+/** Copies every asset named by an `assets` glob to its single published path under `public/`. */
+function publishAssets(assets: AssetMap, publicDir: string): number {
 	let count = 0;
-	for (const dirent of fs.globSync("**/*", { cwd: docsDir, withFileTypes: true })) {
-		if (!dirent.isFile()) continue;
-		const absSrc = path.join(dirent.parentPath, dirent.name);
-		if (MD_EXT.test(absSrc) || ASTRO_EXT.test(absSrc)) continue;
-
-		const docsRel = path.relative(docsDir, absSrc);
-		copyInto(absSrc, path.join(publicDir, docsRel));
-
-		const rootRel = path.relative(repoRoot, absSrc);
-		if (!rootRel.startsWith("..")) copyInto(absSrc, path.join(publicDir, rootRel));
-
-		count++;
-	}
-	return count;
-}
-
-/** Copies every asset referenced by a rewritten link/image, deduped by destination path. */
-function flushAssetCopies(pending: AssetCopy[], publicDir: string): number {
-	const seen = new Set<string>();
-	let count = 0;
-	for (const { from, to } of pending) {
-		const dest = path.join(publicDir, to);
-		if (seen.has(dest)) continue;
-		seen.add(dest);
-		if (!fs.existsSync(from)) continue;
-		if (fs.existsSync(dest)) continue; // already published by the blind docs/ copy pass
-		copyInto(from, dest);
+	for (const [from, to] of assets) {
+		copyInto(from, path.join(publicDir, to));
 		count++;
 	}
 	return count;

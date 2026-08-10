@@ -34,9 +34,7 @@ export function logSyncResult(result: {
 	for (const notice of result.notices) console.log(`[docs] ${notice}`);
 	if (result.warnings.length > 0) {
 		const unique = [...new Set(result.warnings)];
-		console.log(
-			`[docs] ${unique.length} link(s) could not be resolved and were left as-is or unwrapped:`,
-		);
+		console.log(`[docs] ${unique.length} unresolved link(s)/asset(s), left as-is or unwrapped:`);
 		for (const w of unique.slice(0, 10)) console.log(`  - ${w}`);
 		if (unique.length > 10) console.log(`  ...and ${unique.length - 10} more`);
 	}
@@ -50,7 +48,13 @@ export function applyEnv(cfg: ResolvedConfig): void {
 	if (cfg.base) process.env.DOCS_BASE = cfg.base;
 	if (cfg.site) process.env.DOCS_SITE = cfg.site;
 
-	const payload: Record<string, unknown> = { title: cfg.title };
+	// `hasLanding` tells the app whether route "/" is a real page or has to become a redirect to the
+	// first sidebar page (see app/src/pages/index.astro). The redirect *target* is resolved app-side
+	// from the nav tree rather than passed in here — the CLI has no view of sidebar ordering.
+	const payload: Record<string, unknown> = {
+		title: cfg.title,
+		hasLanding: cfg.landing !== undefined,
+	};
 	if (cfg.repoUrl) payload.repoUrl = cfg.repoUrl;
 	if (cfg.base) payload.base = cfg.base;
 	if (cfg.site) payload.site = cfg.site;

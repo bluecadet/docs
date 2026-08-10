@@ -38,9 +38,9 @@ export const collections = {
 			title: z.string(),
 			description: z.string().optional(),
 			/**
-			 * Repo-root-relative path to this page's source markdown (see sync.ts), e.g.
-			 * `docs/how-to/foo.md`. Used to build `toc.editLink` URLs; omitted for pages with no
-			 * on-disk source.
+			 * This page's source markdown path relative to the directory holding `docs.config.yaml`
+			 * (see sync.ts), e.g. `docs/how-to/foo.md`. Used to build `toc.editLink` URLs; omitted for
+			 * pages with no on-disk source.
 			 */
 			sourcePath: z.string().optional(),
 			...landingFields,

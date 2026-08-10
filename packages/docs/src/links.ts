@@ -7,7 +7,7 @@ import remarkStringify from "remark-stringify";
 import { unified } from "unified";
 import type { Parent } from "unist";
 import { visit } from "unist-util-visit";
-import type { AssetCopy, RouteMap } from "./types.js";
+import type { AssetMap, RouteMap } from "./types.js";
 
 const IMAGE_EXT = /\.(png|jpe?g|gif|svg|webp|avif|ico|bmp)$/i;
 // External schemes ("https:", "mailto:") and bare fragments ("#x") — never touched.
@@ -16,12 +16,13 @@ const EXTERNAL = /^(?:[a-z][a-z0-9+.-]*:|#)/i;
 export interface RewriteContext {
 	/** Directory the source markdown file lives in; relative links resolve against this. */
 	fromAbsDir: string;
-	/** Repo-relative path, for warning messages. */
+	/** Path relative to the config file's directory, for warning messages. */
 	fromLabel: string;
 	routes: RouteMap;
-	/** Absolute path to the repo's `docs/` directory, if it exists. */
-	docsDir: string | undefined;
-	repoRoot: string;
+	/** Every published asset, keyed by absolute source path (see `AssetMap`). */
+	assets: AssetMap;
+	/** Directory holding `docs.config.yaml`; GitHub blob URLs are built relative to it. */
+	configDir: string;
 	repoUrl: string | undefined;
 	branch: string;
 	/** Deployed base path, e.g. "/launchpad/". Defaults to "/". */
@@ -31,7 +32,6 @@ export interface RewriteContext {
 export interface TransformResult {
 	title: string | undefined;
 	body: string;
-	assets: AssetCopy[];
 	warnings: string[];
 }
 
@@ -52,7 +52,6 @@ export function transformMarkdown(
 	existingTitle: string | undefined,
 ): TransformResult {
 	const tree = processor.parse(raw) as Root;
-	const assets: AssetCopy[] = [];
 	const warnings: string[] = [];
 
 	let title = existingTitle;
@@ -64,21 +63,16 @@ export function transformMarkdown(
 		}
 	}
 
-	rewriteTree(tree, ctx, assets, warnings);
+	rewriteTree(tree, ctx, warnings);
 
 	const body = processor.stringify(tree).trim();
-	return { title, body, assets, warnings };
+	return { title, body, warnings };
 }
 
-function rewriteTree(
-	tree: Root,
-	ctx: RewriteContext,
-	assets: AssetCopy[],
-	warnings: string[],
-): void {
+function rewriteTree(tree: Root, ctx: RewriteContext, warnings: string[]): void {
 	visit(tree, "image", (node) => {
 		const image = node as Image;
-		image.url = resolveAsset(image.url, ctx, assets);
+		image.url = resolveAsset(image.url, ctx, warnings);
 	});
 
 	// Reference-style links/images (`[text][id]` + `[id]: url`) carry their url on the
@@ -86,12 +80,12 @@ function rewriteTree(
 	// fall back to the extension heuristic used elsewhere in this file.
 	visit(tree, "definition", (node) => {
 		const def = node as Definition;
-		def.url = resolveLinkOrAsset(def.url, ctx, assets, warnings);
+		def.url = resolveLinkOrAsset(def.url, ctx, warnings);
 	});
 
 	visit(tree, "html", (node) => {
 		const html = node as { type: "html"; value: string };
-		html.value = rewriteRawHtml(html.value, ctx, assets, warnings);
+		html.value = rewriteRawHtml(html.value, ctx, warnings);
 	});
 
 	visit(tree, "link", (node, index, parent) => {
@@ -102,7 +96,7 @@ function rewriteTree(
 			return;
 		}
 		if (IMAGE_EXT.test(splitUrl(link.url).pathPart)) {
-			link.url = resolveAsset(link.url, ctx, assets);
+			link.url = resolveAsset(link.url, ctx, warnings);
 			return;
 		}
 		const resolved = resolveDocLink(link.url, ctx, warnings);
@@ -125,7 +119,7 @@ function resolveDocLink(rawUrl: string, ctx: RewriteContext, warnings: string[])
 	const route = ctx.routes.get(abs);
 	if (route) return withBase(route, ctx.base) + suffix;
 	if (ctx.repoUrl) {
-		const relFromRoot = toPosix(path.relative(ctx.repoRoot, abs));
+		const relFromRoot = toPosix(path.relative(ctx.configDir, abs));
 		if (!relFromRoot.startsWith("..")) {
 			return `${ctx.repoUrl}/blob/${ctx.branch}/${relFromRoot}${suffix}`;
 		}
@@ -134,24 +128,35 @@ function resolveDocLink(rawUrl: string, ctx: RewriteContext, warnings: string[])
 	return null;
 }
 
-/** Resolves a relative asset reference to a published `/`-rooted path, registering a copy job. */
-function resolveAsset(rawUrl: string, ctx: RewriteContext, assets: AssetCopy[]): string {
+/**
+ * Rewrites a relative asset reference to the path the asset is actually published at. Publishing is
+ * driven entirely by the `assets` globs in `docs.config.yaml`, so this is a lookup: an asset no glob
+ * covers has no published path to point at, and gets a warning naming the page and the file rather
+ * than a silently broken `<img>`.
+ *
+ * An unpublished asset is still rewritten, to the site-root path it *would* occupy. Leaving the
+ * original relative url in place is not an option: Astro resolves relative image urls in synced
+ * markdown against its own content directory and aborts the whole build with `ImageNotFound`, so a
+ * missing `assets:` glob would surface as a stack trace from deep inside Astro instead of the
+ * warning above. A `/`-rooted url is treated as a public-dir path and left alone, which keeps the
+ * build finishing and leaves one visibly-broken image plus a warning that says what to add.
+ */
+function resolveAsset(rawUrl: string, ctx: RewriteContext, warnings: string[]): string {
 	if (EXTERNAL.test(rawUrl) || rawUrl.startsWith("data:")) return rawUrl;
 	if (isRootRelative(rawUrl)) return withBase(rawUrl, ctx.base);
 	const { pathPart, suffix } = splitUrl(rawUrl);
 	const abs = path.resolve(ctx.fromAbsDir, pathPart);
 
-	let rel: string | undefined;
-	if (ctx.docsDir && !path.relative(ctx.docsDir, abs).startsWith("..")) {
-		rel = toPosix(path.relative(ctx.docsDir, abs));
-	} else {
-		const relFromRoot = toPosix(path.relative(ctx.repoRoot, abs));
-		if (!relFromRoot.startsWith("..")) rel = relFromRoot;
-	}
-	if (!rel) return rawUrl; // Outside the repo entirely; leave it (broken link, documented limitation).
+	const published = ctx.assets.get(abs);
+	if (published !== undefined) return withBase(`/${published}`, ctx.base) + suffix;
 
-	assets.push({ from: abs, to: rel });
-	return withBase(`/${rel}`, ctx.base) + suffix;
+	warnings.push(
+		`${ctx.fromLabel}: asset not published -> ${rawUrl} (add a glob covering ${abs} to an \`assets\` key in docs.config.yaml)`,
+	);
+	const fallback = toPosix(path.relative(ctx.configDir, abs));
+	// Outside the config's own directory there's no sensible site path to invent; leave it be.
+	if (fallback.startsWith("..")) return rawUrl;
+	return withBase(`/${fallback}`, ctx.base) + suffix;
 }
 
 /**
@@ -171,27 +176,17 @@ function isRootRelative(url: string): boolean {
 }
 
 /** Reference-definition variant: guesses image vs. doc-link from the file extension. */
-function resolveLinkOrAsset(
-	rawUrl: string,
-	ctx: RewriteContext,
-	assets: AssetCopy[],
-	warnings: string[],
-): string {
+function resolveLinkOrAsset(rawUrl: string, ctx: RewriteContext, warnings: string[]): string {
 	if (EXTERNAL.test(rawUrl) || rawUrl.startsWith("data:")) return rawUrl;
 	if (isRootRelative(rawUrl)) return withBase(rawUrl, ctx.base);
-	if (IMAGE_EXT.test(splitUrl(rawUrl).pathPart)) return resolveAsset(rawUrl, ctx, assets);
+	if (IMAGE_EXT.test(splitUrl(rawUrl).pathPart)) return resolveAsset(rawUrl, ctx, warnings);
 	return resolveDocLink(rawUrl, ctx, warnings) ?? rawUrl;
 }
 
-function rewriteRawHtml(
-	value: string,
-	ctx: RewriteContext,
-	assets: AssetCopy[],
-	warnings: string[],
-): string {
+function rewriteRawHtml(value: string, ctx: RewriteContext, warnings: string[]): string {
 	let out = value.replace(
 		/(<img[^>]*\ssrc=")([^"]+)(")/gi,
-		(_m, pre: string, url: string, post: string) => pre + resolveAsset(url, ctx, assets) + post,
+		(_m, pre: string, url: string, post: string) => pre + resolveAsset(url, ctx, warnings) + post,
 	);
 	out = out.replace(
 		/(<a[^>]*\shref=")([^"]+)(")/gi,
@@ -199,7 +194,7 @@ function rewriteRawHtml(
 			if (EXTERNAL.test(url)) return pre + url + post;
 			if (isRootRelative(url)) return pre + withBase(url, ctx.base) + post;
 			const resolved = IMAGE_EXT.test(splitUrl(url).pathPart)
-				? resolveAsset(url, ctx, assets)
+				? resolveAsset(url, ctx, warnings)
 				: (resolveDocLink(url, ctx, warnings) ?? url);
 			return pre + resolved + post;
 		},

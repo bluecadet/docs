@@ -31,8 +31,8 @@ describe("shouldIgnoreWatchPath", () => {
 	});
 
 	it("ignores paths inside the sync destination when it's nested in the watched root", () => {
-		// Mirrors `docs dev --root .` in this repo: the bundled app (and thus the sync destination
-		// inside it) lives under the same root that's being watched for content changes.
+		// Mirrors `docs dev` in this repo, whose config sits at the monorepo root: the bundled app
+		// (and thus the sync destination inside it) lives under the same directory being watched.
 		const appPrefix = path.join("packages", "docs", "app");
 		expect(
 			shouldIgnoreWatchPath(path.join(appPrefix, "src", "content", "docs", "index.md"), [

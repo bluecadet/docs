@@ -4,19 +4,19 @@ description: Shows how to add hero eyebrows, stat strips, transcripts, and featu
 
 # Build a rich landing page
 
-Your site's `/` route is generated from whichever landing source the CLI finds — `docs/index.mdx`,
-`docs/index.md`, or your root `README.md`. All three give you a working landing page: a headline
-and a lead paragraph, rendered from the file's title and description.
+Your site's `/` route comes from `landing:` in `docs.config.yaml` — a path to one `.md`/`.mdx`
+file. Either extension gives you a working landing page: a headline and a lead paragraph, rendered
+from the file's title and description.
 
 Everything else — eyebrow chips, a copyable install command, a stat strip, a terminal transcript,
 feature pillars, the section card grid, a closing call to action — is optional, and only available
-from `docs/index.mdx`: plain markdown has no way to import a component. Switch the landing source
-to `docs/index.mdx` and add the pieces you want; every piece is independent, so skipping one just
-leaves it out.
+from an `.mdx` landing file: plain markdown has no way to import a component. Point `landing:` at
+an `.mdx` file and add the pieces you want; every piece is independent, so skipping one just leaves
+it out.
 
 > [!NOTE]
-> `docs/index.md` and `docs/index.mdx` are mutually exclusive. If you have an `index.md`, rename it
-> to `index.mdx` rather than adding a second file.
+> With no `landing:` key at all, `/` redirects to the first page in the sidebar instead of showing
+> a landing page — see [docs.config.yaml](/reference/docs-config-yaml/#landing).
 
 ## Hero pieces go in frontmatter
 

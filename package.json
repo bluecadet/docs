@@ -5,7 +5,7 @@
   "description": "monorepo for @bluecadet/docs and friends",
   "scripts": {
     "changeset": "changeset",
-    "dev": "npm run build -w @bluecadet/docs && node packages/docs/dist/cli.js dev --root .",
+    "dev": "npm run build -w @bluecadet/docs && node packages/docs/dist/cli.js dev --config ./docs.config.yaml",
     "lint": "npx @biomejs/biome check",
     "lint:fix": "npx @biomejs/biome check --fix",
     "release": "changeset publish"

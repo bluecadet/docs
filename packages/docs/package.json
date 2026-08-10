@@ -18,7 +18,7 @@
   },
   "homepage": "https://github.com/bluecadet/docs#readme",
   "publishConfig": {
-    "access": "public"
+    "registry": "https://npm.pkg.github.com"
   },
   "bin": {
     "docs": "./dist/cli.js"

@@ -6,29 +6,36 @@ description: Details which files get published, how routes and titles are derive
 
 ## What gets published
 
-- Landing page precedence: `docs/index.mdx` > `docs/index.md` > root `README.md`. The
-  highest-precedence file present becomes `/`.
-- `docs/index.md` and `docs/index.mdx` are mutually exclusive — the build errors if both exist.
-- Everything else under `docs/` (any depth, any folder names) is published, one page per
-  `.md`/`.mdx` file.
-- Extra glob patterns from `docs.config.yaml`'s `content` field are published the same way — see
-  [Include package READMEs from a monorepo](/how-to/include-package-readmes-from-a-monorepo/).
-- A repo needs a `README.md` at its root, a `docs/index.md`, or a `docs/index.mdx` to have a
-  landing page at all; the build hard-errors if none of the three exist.
+`content` in `docs.config.yaml` is the only source of pages — required, non-empty, and nothing is
+discovered by convention. Each entry is a `base` directory, one or more `files` globs relative to
+it, an optional `route` prefix, and an optional `assets` globs list; see
+[docs.config.yaml](/reference/docs-config-yaml/#content) for the full shape. A bare glob string is
+sugar for `{ base: ".", files: "<string>", route: "" }`.
+
+- Every file a `files` glob matches is published, one page per `.md`/`.mdx`/`.astro` file. Matches
+  of any other extension are ignored.
+- A file matched by more than one `content` entry is a build error naming both entries.
+- `landing` (optional, top-level) points at one `.md`/`.mdx` file that becomes `/`. If a `content`
+  glob also matches it, that entry skips it — it's already published — and a notice is printed, not
+  an error.
+- With no `landing` set, there is no `/` page: the build emits a meta-refresh redirect from `/` to
+  the first page in the resolved sidebar instead. A build with zero pages at all (no matching
+  `content` glob and no `landing`) is an error.
 
 ## Routing
 
+- A page's route is its path relative to its entry's `base`, prefixed with the entry's `route`,
+  extension stripped and lowercased. `docs/How-To/Deploy.md` with `base: docs` is
+  `/how-to/deploy/`.
 - `index`/`README` basenames (case-insensitive) collapse onto their parent directory's route:
-  `docs/how-to/index.md` → `/how-to/`, `packages/docs/README.md` (via a `content` glob) →
-  `/packages/docs/`.
-- Routes are lowercased, e.g. `docs/How-To/Deploy.md` → `/how-to/deploy/`.
-- If the file that wins `/` displaces another landing candidate (e.g. `docs/index.mdx` beats an
-  also-present root `README.md`, or — with no `index.mdx` — `docs/index.md` beats `README.md`),
-  the displaced file still gets published, at `/overview/` instead of colliding at `/`. A one-line
-  notice is printed during sync when this happens.
-- If two files still map to the same route after that (e.g. `docs/how-to.md` and
-  `docs/how-to/index.md` both naturally routing to `/how-to/`), the build fails with an error
-  naming both files.
+  `docs/how-to/index.md` (`base: docs`) → `/how-to/`; `packages/docs/README.md`
+  (`base: packages, route: packages`) → `/packages/docs/`.
+- **`base` is what gets stripped, not `route`.** With the default `base: "."`, a glob like
+  `"docs/**/*.md"` keeps the `docs/` segment in every route (`/docs/reference/cli/`) — set
+  `base: docs` to publish at `/reference/cli/` instead.
+- Two files resolving to the same route (e.g. `docs/how-to.md` and `docs/how-to/index.md` both
+  naturally routing to `/how-to/`) is a build error naming both files. Routes are never
+  silently overwritten.
 
 ## Title derivation
 
@@ -51,7 +58,7 @@ Two fields are read by the site, both optional:
 | Field | Effect |
 | --- | --- |
 | `title` | The page title. If omitted, derived per [Title derivation](#title-derivation) above. |
-| `description` | Rendered as the page's `<meta name="description">`. On `docs/index.mdx` specifically, it's also the landing page's hero lead paragraph, under the `title`-driven headline. |
+| `description` | Rendered as the page's `<meta name="description">`. On the `landing:` page specifically, it's also the landing page's hero lead paragraph, under the `title`-driven headline. |
 
 No other frontmatter fields are read — the content schema is just `{ title, description? }`.
 
@@ -111,10 +118,12 @@ during the sync step:
   (`/how-to/y/`), preserving any `?query` and/or `#hash` suffix, including reference-style links
   (`[x][ref]` + `[ref]: ../y.md`), and links inside raw HTML (`<a href="...">`, double-quoted
   attributes only).
-- **Relative image/asset references** are copied into the site's `public/` directory and rewritten
-  to a `/`-rooted path. Every non-markdown file under `docs/` is published at *both* its
-  docs-relative and repo-root-relative path, since the same image is often referenced both ways
-  (from a `docs/*.md` page vs. the root `README.md`).
+- **Relative image/asset references** are rewritten to the single path an `assets` glob published
+  the file at (`<route>/<path relative to base>`). This is a lookup against the published asset
+  map, not a guess — a page never sees an asset it didn't declare in `assets`. A reference to a
+  file no `assets` glob covers gets a build warning naming the page and the file, and is still
+  rewritten to a `/`-rooted path so the build finishes with one visibly broken image instead of
+  aborting — see [docs.config.yaml](/reference/docs-config-yaml/#content) for the `assets` field.
 - **Relative links pointing outside the published set** (source directories, `LICENSE`,
   `CONTRIBUTING.md`, etc.) become a GitHub blob URL (`{repoUrl}/blob/{branch}/{path}`) when a
   `repoUrl` is known; otherwise the link is unwrapped to plain text (the hyperlink is dropped, the
@@ -127,21 +136,21 @@ during the sync step:
 
 ### MDX passthrough
 
-`.mdx` files (currently: an opt-in `docs/index.mdx` landing page) are copied through
-untransformed — no link/asset rewriting, no heading extraction beyond a best-effort regex for the
-title. This is deliberate: a full markdown AST pass doesn't understand JSX or component imports
-and would corrupt them. One consequence: MDX gets **no base-path prefixing either**, since that
-prefixing happens in the same rewrite pass. Give MDX files explicit `title:` frontmatter, and
-**prefer relative links** (`reference/cli/`, not `/reference/cli/`) for anything internal —
-they resolve correctly under any `base` because the browser resolves them against the current
-page's URL. This applies to plain markdown links as well as any JSX component `href`/`src` props
-or frontmatter-driven links you author in the MDX yourself.
+`.mdx` files (typically a rich `landing:` page) are copied through untransformed — no link/asset
+rewriting, no heading extraction beyond a best-effort regex for the title. This is deliberate: a
+full markdown AST pass doesn't understand JSX or component imports and would corrupt them. One
+consequence: MDX gets **no base-path prefixing either**, since that prefixing happens in the same
+rewrite pass. Give MDX files explicit `title:` frontmatter, and **prefer relative links**
+(`reference/cli/`, not `/reference/cli/`) for anything internal — they resolve correctly under any
+`base` because the browser resolves them against the current page's URL. This applies to plain
+markdown links as well as any JSX component `href`/`src` props or frontmatter-driven links you
+author in the MDX yourself.
 
 ## `.astro` pages
 
-Any `docs/**/*.astro` file is published verbatim as a real Astro component — an escape hatch for
-pages that need more than markdown/MDX can express. (Only `docs/`; the extra `content` config
-globs stay markdown-only.) Each page exports a small contract:
+Any file a `content` glob matches ending in `.astro` is published verbatim as a real Astro
+component — an escape hatch for pages that need more than markdown/MDX can express, and it works
+from any `content` entry, not just a `docs/` tree. Each page exports a small contract:
 
 ```astro
 ---
@@ -169,9 +178,10 @@ Known limitations:
 - No relative imports between consumer `.astro` files. Each page is synced standalone into the
   app's own source tree; import shared UI only from `@bluecadet/docs/components` (see
   [Import paths](/how-to/build-a-rich-landing-page/#import-paths) — the same barrel MDX pages use).
-- Assets referenced from an `.astro` page use the same base-prefixed public URL as any other
-  asset under `docs/` (see [Link and asset rewriting](#link-and-asset-rewriting)) — `.astro` files
-  themselves aren't rewritten, so reference assets by their published path, not a relative import.
+- Assets referenced from an `.astro` page use the same published-path lookup as any other asset
+  (see [Link and asset rewriting](#link-and-asset-rewriting)) — `.astro` files themselves aren't
+  rewritten, so reference assets by their published path, not a relative import, and make sure an
+  `assets` glob on that entry actually covers them.
 
 ## Terminal transcripts and asciinema playback
 
@@ -180,8 +190,15 @@ transcript or, given a `cast` prop, plays back an asciinema v2 recording with cu
 matched to the terminal chrome. `TerminalBand` wraps it with the landing page's full-bleed
 caption/duration band — see [Build a rich landing page](/how-to/build-a-rich-landing-page/#terminalband)
 for the transcript form and prop reference. To use recorded playback instead of a hand-authored
-transcript, put the `.cast` file anywhere under your repo's `docs/` tree and pass it by its
-published path:
+transcript, put the `.cast` file under a `content` entry's `base` and cover it with that entry's
+`assets` glob, then pass it by its published path:
+
+```yaml
+content:
+  - base: docs
+    files: "**/*.{md,mdx}"
+    assets: "**/*.cast"
+```
 
 ```mdx
 import { TerminalBand } from "@bluecadet/docs/components";
@@ -189,18 +206,24 @@ import { TerminalBand } from "@bluecadet/docs/components";
 <TerminalBand cwd="~/repos/acme" cast="/build.cast" caption="a full build" duration="3.4s" />
 ```
 
-`.cast` files are copied like any other non-markdown asset under `docs/` (see
-[Link and asset rewriting](#link-and-asset-rewriting)) — not specially recognized by the sync
-step — so the same docs-relative/repo-root-relative publishing and base-prefixing rules apply.
+A `.cast` file with no `assets` glob covering it isn't published at all — passing its would-be
+path to `cast` just points at a 404, silently, since `cast` is a plain string prop the sync step
+never inspects.
 
 ## Known limitations
 
-- `docs dev` does not watch the consumer repo; content is synced once at startup.
+- **`base: "."` (the default) keeps the leading path segment in every route.** A glob like
+  `"docs/**/*.md"` on the default base publishes at `/docs/reference/cli/`, not `/reference/cli/`
+  — set `base: docs` on that entry to strip it.
+- **An asset matched by two `content` entries publishes at whichever entry claimed it first**
+  (config order). Each asset has exactly one published path; there's no merge or override for a
+  second entry that happens to cover the same file.
+- **With no `landing` configured, `/` is a meta-refresh redirect to the first sidebar page, not a
+  real page** — it carries no content, isn't indexed by search, and briefly flashes a
+  "Redirecting…" document before the browser follows it.
 - Raw HTML link/image rewriting only handles double-quoted attributes.
 - Reference-style links/images that can't be resolved and have no configured `repoUrl` are left
   pointing at their original (broken) relative target, rather than unwrapped to plain text like
   inline links are.
-- Assets outside `docs/` are copied once, at their repo-root-relative path — the
-  publish-at-both-paths duplication only applies to files under `docs/`.
 - The theme targets horizontal writing modes only (LTR and RTL); vertical writing modes
   (`writing-mode: vertical-*`) are unsupported.

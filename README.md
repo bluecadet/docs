@@ -9,7 +9,26 @@ repo.
 
 ## Quick start
 
-From any repo (no install required):
+`@bluecadet/docs` is published to [GitHub Packages](https://github.com/bluecadet/docs/pkgs/npm/docs), not npmjs.com, so it needs a one-time registry setup before the first `npx` call.
+
+### One-time setup
+
+Add an `.npmrc` at your repo root:
+
+```
+@bluecadet:registry=https://npm.pkg.github.com
+//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}
+```
+
+- **Local dev:** create a classic GitHub personal access token with the `read:packages` scope, then
+  export it as `NODE_AUTH_TOKEN` (e.g. in your shell profile). Never commit the token.
+- **GitHub Actions:** set `NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}` on the install step and
+  `permissions: packages: read` on the job. For repos other than `bluecadet/docs` itself, the
+  package must also grant the repo access (package settings → Manage Actions access), or use a PAT
+  stored as a secret. Repos using the reusable `build-docs.yml` workflow below get the registry
+  wiring for free but still need `permissions: packages: read` on the calling job.
+
+From any repo:
 
 ```sh
 npx @bluecadet/docs build

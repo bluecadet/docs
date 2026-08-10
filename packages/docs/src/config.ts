@@ -5,6 +5,7 @@ import { getGitBranch, getGitRemoteUrl } from "./git.js";
 import type {
 	ConfigLink,
 	ConfigLinks,
+	ContentEntry,
 	DocsConfig,
 	FooterConfig,
 	FooterGroup,
@@ -15,8 +16,19 @@ import type {
 	TocConfig,
 } from "./types.js";
 
-const H1 = /^#[ \t]+(.+?)[ \t]*$/m;
-const STRING_KEYS = ["title", "repoUrl", "base", "site", "version", "sidebarMeta"] as const;
+/** Default config filename, resolved against cwd when `--config` isn't passed. */
+export const CONFIG_FILENAME = "docs.config.yaml";
+
+const LANDING_EXT = /\.(md|mdx)$/i;
+const STRING_KEYS = [
+	"title",
+	"repoUrl",
+	"base",
+	"site",
+	"version",
+	"sidebarMeta",
+	"landing",
+] as const;
 const KNOWN_KEYS = new Set<string>([
 	...STRING_KEYS,
 	"content",
@@ -25,6 +37,7 @@ const KNOWN_KEYS = new Set<string>([
 	"sidebar",
 	"toc",
 ]);
+const CONTENT_ENTRY_KEYS = new Set<string>(["base", "files", "route", "assets"]);
 const LINKS_OBJECT_KEYS = new Set<string>(["links"]);
 const FOOTER_KEYS = new Set<string>(["groups", "meta"]);
 const FOOTER_GROUP_KEYS = new Set<string>(["title", "links"]);
@@ -34,7 +47,8 @@ const SIDEBAR_GROUP_KEYS = new Set<string>(["label", "items", "link"]);
 const TOC_KEYS = new Set<string>(["note", "editLink"]);
 
 export interface CliOverrides {
-	root: string;
+	/** Absolute path to the config file. Everything else in the build resolves from its directory. */
+	configPath: string;
 	out: string;
 	title?: string;
 	repoUrl?: string;
@@ -42,26 +56,31 @@ export interface CliOverrides {
 	site?: string;
 }
 
-/** Reads `docs.config.yaml` (if present), merges CLI overrides, and fills in sensible defaults. */
+/**
+ * Reads the config file at `overrides.configPath` and merges CLI overrides. The config file is the
+ * anchor for the whole build: it is required (there is no discovery by convention to fall back on),
+ * and its directory — not cwd — is what every relative path in it, and every derived route id,
+ * resolves against.
+ */
 export function resolveConfig(overrides: CliOverrides): ResolvedConfig {
-	const root = overrides.root;
-	const configPath = path.join(root, "docs.config.yaml");
-	const fileConfig = readConfigFile(configPath, root);
+	const configPath = overrides.configPath;
+	const configDir = path.dirname(configPath);
+	const fileConfig = readConfigFile(configPath);
 
-	const repoUrl = overrides.repoUrl ?? fileConfig.repoUrl ?? getGitRemoteUrl(root);
-	const title =
-		overrides.title ??
-		fileConfig.title ??
-		deriveTitleFromReadme(root) ??
-		titleCase(path.basename(root));
+	const title = overrides.title ?? fileConfig.title;
+	if (title === undefined || title === "") {
+		throw new Error(`${configPath}: "title" is required (add a \`title:\` line, or pass --title).`);
+	}
 
 	return {
-		root,
+		configPath,
+		configDir,
 		out: overrides.out,
 		title,
-		repoUrl,
-		branch: getGitBranch(root),
+		repoUrl: overrides.repoUrl ?? fileConfig.repoUrl ?? getGitRemoteUrl(configDir),
+		branch: getGitBranch(configDir),
 		content: fileConfig.content ?? [],
+		landing: resolveLanding(fileConfig.landing, configDir, configPath),
 		base: overrides.base ?? fileConfig.base,
 		site: overrides.site ?? fileConfig.site,
 		header: fileConfig.header,
@@ -73,15 +92,40 @@ export function resolveConfig(overrides: CliOverrides): ResolvedConfig {
 	};
 }
 
-function readConfigFile(configPath: string, root: string): DocsConfig {
+/**
+ * Resolves `landing` to an absolute path, checking up front that it exists and is markdown — a
+ * typo'd landing page should name itself at config-load time, not surface as a missing `/` route
+ * after a full sync.
+ */
+function resolveLanding(
+	landing: string | undefined,
+	configDir: string,
+	configPath: string,
+): string | undefined {
+	if (landing === undefined) return undefined;
+	if (!LANDING_EXT.test(landing)) {
+		throw new Error(
+			`${configPath}: "landing" must point at a .md or .mdx file (got "${landing}").`,
+		);
+	}
+	const abs = path.resolve(configDir, landing);
+	if (!fs.existsSync(abs)) {
+		throw new Error(`${configPath}: "landing" points at ${abs}, which does not exist.`);
+	}
+	return abs;
+}
+
+function readConfigFile(configPath: string): DocsConfig {
 	if (!fs.existsSync(configPath)) {
-		const legacyPath = path.join(root, "docs.config.json");
-		if (fs.existsSync(legacyPath)) {
+		const legacyPath = configPath.replace(/\.ya?ml$/i, ".json");
+		if (legacyPath !== configPath && fs.existsSync(legacyPath)) {
 			console.error(
 				`[docs] found ${legacyPath} but config files are now YAML — rename/convert it to ${configPath}.`,
 			);
 		}
-		return {};
+		throw new Error(
+			`no config file at ${configPath}. Every site is driven by a ${CONFIG_FILENAME} — create one there, or point at a different one with --config <path>.`,
+		);
 	}
 	let raw: string;
 	try {
@@ -106,9 +150,12 @@ function readConfigFile(configPath: string, root: string): DocsConfig {
 
 /**
  * Validates a parsed `docs.config.yaml` object: known string fields must actually be strings,
- * `content` may be a single glob string (coerced to a one-element array) or an array of glob
- * strings, and unknown keys are reported as warnings rather than errors (typos shouldn't be
- * fatal, but silently ignoring them entirely makes them hard to notice).
+ * `content` is required and normalized to a list of fully-populated entries, and unknown keys are
+ * reported as warnings rather than errors (typos shouldn't be fatal, but silently ignoring them
+ * entirely makes them hard to notice).
+ *
+ * `title` is deliberately NOT checked here even though it's required — the CLI's `--title` can
+ * supply it, so the "is it there at all" check belongs in `resolveConfig`, after the merge.
  */
 export function validateConfig(
 	parsed: Record<string, unknown>,
@@ -132,9 +179,7 @@ export function validateConfig(
 		config[key] = value;
 	}
 
-	if (parsed.content !== undefined) {
-		config.content = validateContent(parsed.content, configPath);
-	}
+	config.content = validateContent(parsed.content, configPath, warnings);
 
 	if (parsed.header !== undefined) {
 		config.header = validateLinksObject(parsed.header, "header", configPath, warnings);
@@ -301,7 +346,9 @@ function validateToc(value: unknown, configPath: string, warnings: string[]): To
 	const result: TocConfig = {};
 	if (obj.note !== undefined) {
 		if (typeof obj.note !== "string") {
-			throw new Error(`${configPath}: "toc.note" must be a string (got ${describeType(obj.note)}).`);
+			throw new Error(
+				`${configPath}: "toc.note" must be a string (got ${describeType(obj.note)}).`,
+			);
 		}
 		result.note = obj.note;
 	}
@@ -445,38 +492,139 @@ function validateSidebarItem(
 	return validateSidebarGroup(value, label, configPath, warnings);
 }
 
-function validateContent(value: unknown, configPath: string): string[] {
-	// A bare glob string is friendlier than forcing a single-element array on every consumer.
-	if (typeof value === "string") return [value];
-	if (Array.isArray(value)) {
-		value.forEach((item, i) => {
-			if (typeof item !== "string") {
-				throw new Error(
-					`${configPath}: "content[${i}]" must be a string (got ${describeType(item)}).`,
-				);
-			}
-		});
-		return value as string[];
+/**
+ * Validates the required `content` array. Each element is either a bare glob string — sugar for
+ * `{ base: ".", files: "<string>", route: "" }` — or an object entry, and both normalize to the
+ * same fully-populated `ContentEntry` so nothing downstream has to re-handle the sugar.
+ */
+function validateContent(value: unknown, configPath: string, warnings: string[]): ContentEntry[] {
+	if (value === undefined) {
+		throw new Error(
+			`${configPath}: "content" is required — list the files this site publishes, e.g.\ncontent:\n  - "docs/**/*.md"`,
+		);
 	}
-	throw new Error(
-		`${configPath}: "content" must be a string or an array of strings (got ${describeType(value)}).`,
+	const raw = Array.isArray(value) ? value : [value];
+	if (raw.length === 0) {
+		throw new Error(`${configPath}: "content" must not be empty.`);
+	}
+	return raw.map((item, i) => validateContentEntry(item, `content[${i}]`, configPath, warnings));
+}
+
+function validateContentEntry(
+	value: unknown,
+	label: string,
+	configPath: string,
+	warnings: string[],
+): ContentEntry {
+	if (typeof value === "string") {
+		return {
+			base: ".",
+			files: [requireNonEmpty(value, `${label}`, configPath)],
+			route: "",
+			assets: [],
+		};
+	}
+	if (typeof value !== "object" || value === null || Array.isArray(value)) {
+		throw new Error(
+			`${configPath}: "${label}" must be a glob string or an object with a "files" key (got ${describeType(value)}).`,
+		);
+	}
+	const obj = value as Record<string, unknown>;
+
+	for (const childKey of Object.keys(obj)) {
+		if (!CONTENT_ENTRY_KEYS.has(childKey)) {
+			warnings.push(`${configPath}: unknown key "${label}.${childKey}" is ignored.`);
+		}
+	}
+
+	return {
+		base: validateBase(obj.base, label, configPath),
+		files: validateGlobList(obj.files, `${label}.files`, configPath, true),
+		route: validateRoute(obj.route, label, configPath),
+		assets: validateGlobList(obj.assets, `${label}.assets`, configPath, false),
+	};
+}
+
+/** `base` is an ordinary relative directory path; `..` is explicitly allowed (sibling dirs, packages). */
+function validateBase(value: unknown, label: string, configPath: string): string {
+	if (value === undefined) return ".";
+	if (typeof value !== "string") {
+		throw new Error(
+			`${configPath}: "${label}.base" must be a string (got ${describeType(value)}).`,
+		);
+	}
+	if (value === "") {
+		throw new Error(`${configPath}: "${label}.base" must not be empty (omit it for ".").`);
+	}
+	if (path.isAbsolute(value)) {
+		throw new Error(
+			`${configPath}: "${label}.base" must be relative to the config file, not absolute (got "${value}").`,
+		);
+	}
+	return value;
+}
+
+/**
+ * `route` is a route prefix, not a filesystem path: it has to be a clean sequence of segments so
+ * the ids it produces are stable and can't escape the site (`..`) or double up separators.
+ */
+function validateRoute(value: unknown, label: string, configPath: string): string {
+	if (value === undefined) return "";
+	if (typeof value !== "string") {
+		throw new Error(
+			`${configPath}: "${label}.route" must be a string (got ${describeType(value)}).`,
+		);
+	}
+	if (value === "") return "";
+	const posix = value.split(path.sep).join("/");
+	if (posix.startsWith("/") || posix.endsWith("/")) {
+		throw new Error(
+			`${configPath}: "${label}.route" must not start or end with "/" (got "${value}").`,
+		);
+	}
+	const segments = posix.split("/");
+	if (segments.some((s) => s === "" || s === "." || s === "..")) {
+		throw new Error(
+			`${configPath}: "${label}.route" must be a plain route prefix — no empty, "." or ".." segments (got "${value}").`,
+		);
+	}
+	return posix;
+}
+
+/** Normalizes a `string | string[]` glob field, optionally requiring at least one pattern. */
+function validateGlobList(
+	value: unknown,
+	label: string,
+	configPath: string,
+	required: boolean,
+): string[] {
+	if (value === undefined) {
+		if (required) {
+			throw new Error(`${configPath}: "${label}" is required (a glob string or array of globs).`);
+		}
+		return [];
+	}
+	const raw = Array.isArray(value) ? value : [value];
+	if (required && raw.length === 0) {
+		throw new Error(`${configPath}: "${label}" must not be empty.`);
+	}
+	return raw.map((item, i) =>
+		requireNonEmpty(item, Array.isArray(value) ? `${label}[${i}]` : label, configPath),
 	);
+}
+
+function requireNonEmpty(value: unknown, label: string, configPath: string): string {
+	if (typeof value !== "string") {
+		throw new Error(`${configPath}: "${label}" must be a string (got ${describeType(value)}).`);
+	}
+	if (value === "") {
+		throw new Error(`${configPath}: "${label}" must not be empty.`);
+	}
+	return value;
 }
 
 function describeType(value: unknown): string {
 	if (value === null) return "null";
 	if (Array.isArray(value)) return "array";
 	return typeof value;
-}
-
-function deriveTitleFromReadme(root: string): string | undefined {
-	const readmePath = path.join(root, "README.md");
-	if (!fs.existsSync(readmePath)) return undefined;
-	const raw = fs.readFileSync(readmePath, "utf8");
-	const match = raw.match(H1);
-	return match?.[1]?.replace(/[`*_]/g, "").trim();
-}
-
-function titleCase(stem: string): string {
-	return stem.replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }

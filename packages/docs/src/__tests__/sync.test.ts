@@ -2,8 +2,8 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { buildRouteMap, discoverContent, syncContent } from "../sync.js";
-import type { ResolvedConfig } from "../types.js";
+import { discoverContent, syncContent } from "../sync.js";
+import type { ContentEntry, ResolvedConfig } from "../types.js";
 
 let root: string;
 
@@ -22,144 +22,149 @@ function write(relPath: string, content = "# Title\n\nBody.\n"): string {
 	return abs;
 }
 
-describe("discoverContent - landing precedence", () => {
-	it("uses README.md when it's the only candidate", () => {
-		const readme = write("README.md");
-		const { landing, displaced, notices } = discoverContent(root, []);
-		expect(landing).toBe(readme);
-		expect(displaced).toBeUndefined();
-		expect(notices).toEqual([]);
+/** A content entry with every field defaulted the way `validateConfig` would leave it. */
+function entry(overrides: Partial<ContentEntry> = {}): ContentEntry {
+	return { base: ".", files: ["**/*.md"], route: "", assets: [], ...overrides };
+}
+
+describe("discoverContent - route derivation", () => {
+	it("routes files relative to the entry's base, extension stripped and lowercased", () => {
+		const foo = write("docs/How-To/Foo.md");
+		const { routes } = discoverContent(root, [entry({ base: "docs" })], undefined);
+		expect(routes.get(foo)).toBe("/how-to/foo/");
 	});
 
-	it("uses docs/index.md when there's no README", () => {
-		const indexMd = write("docs/index.md");
-		const { landing } = discoverContent(root, []);
-		expect(landing).toBe(indexMd);
+	it("collapses a trailing index segment onto its directory", () => {
+		const index = write("docs/reference/index.md");
+		const { routes } = discoverContent(root, [entry({ base: "docs" })], undefined);
+		expect(routes.get(index)).toBe("/reference/");
 	});
 
-	it("uses docs/index.mdx alone with no README and no docs/index.md (MDX-only repo)", () => {
-		const indexMdx = write("docs/index.mdx", "---\ntitle: Splash\n---\nBody\n");
-		const { landing, displaced } = discoverContent(root, []);
-		expect(landing).toBe(indexMdx);
-		expect(displaced).toBeUndefined();
+	it("collapses a trailing README segment onto its directory", () => {
+		const readme = write("packages/docs/README.md");
+		const { routes } = discoverContent(
+			root,
+			[entry({ files: ["packages/*/README.md"] })],
+			undefined,
+		);
+		expect(routes.get(readme)).toBe("/packages/docs/");
 	});
 
-	it("prefers docs/index.mdx over README.md and displaces the README to /overview/", () => {
-		const readme = write("README.md");
-		const indexMdx = write("docs/index.mdx", "---\ntitle: Splash\n---\nBody\n");
-		const { landing, displaced, notices } = discoverContent(root, []);
-		expect(landing).toBe(indexMdx);
-		expect(displaced).toBe(readme);
-		expect(notices).toHaveLength(1);
-		expect(notices[0]).toContain("docs/index.mdx");
-		expect(notices[0]).toContain("README.md");
+	it("prefixes every route in an entry with its route key", () => {
+		const readme = write("packages/docs/README.md");
+		const { routes } = discoverContent(
+			root,
+			[entry({ base: "packages", files: ["*/README.md"], route: "pkg" })],
+			undefined,
+		);
+		expect(routes.get(readme)).toBe("/pkg/docs/");
 	});
 
-	it("prefers docs/index.md over README.md and displaces the README to /overview/", () => {
-		const readme = write("README.md");
-		const indexMd = write("docs/index.md");
-		const { landing, displaced } = discoverContent(root, []);
-		expect(landing).toBe(indexMd);
-		expect(displaced).toBe(readme);
+	it("supports a multi-segment route prefix", () => {
+		const foo = write("extra/foo.md");
+		const { routes } = discoverContent(
+			root,
+			[entry({ base: "extra", route: "reference/api" })],
+			undefined,
+		);
+		expect(routes.get(foo)).toBe("/reference/api/foo/");
 	});
 
-	it("errors when docs/index.md and docs/index.mdx both exist", () => {
-		write("docs/index.md");
-		write("docs/index.mdx", "---\ntitle: Splash\n---\nBody\n");
-		expect(() => discoverContent(root, [])).toThrow(/mutually exclusive/);
+	it("resolves a base that climbs out of the config directory with ..", () => {
+		const sibling = path.join(root, "sibling");
+		fs.mkdirSync(path.join(sibling, "notes"), { recursive: true });
+		fs.writeFileSync(path.join(sibling, "notes", "a.md"), "# A\n");
+		const configDir = path.join(root, "site");
+		fs.mkdirSync(configDir, { recursive: true });
+
+		const { routes } = discoverContent(
+			configDir,
+			[entry({ base: "../sibling/notes", route: "notes" })],
+			undefined,
+		);
+		expect(routes.get(path.join(sibling, "notes", "a.md"))).toBe("/notes/a/");
 	});
 
-	it("has no landing page when none of the three candidates exist", () => {
-		write("docs/how-to/foo.md");
-		const { landing, displaced } = discoverContent(root, []);
-		expect(landing).toBeUndefined();
-		expect(displaced).toBeUndefined();
-	});
-});
-
-describe("discoverContent - extra content globs", () => {
-	it("includes files matched by an extra glob pattern", () => {
-		write("README.md");
-		write("Packages/foo/README.md");
-		const { files } = discoverContent(root, ["Packages/*/README.md"]);
-		expect(files).toContain(path.join(root, "Packages/foo/README.md"));
-	});
-});
-
-describe("buildRouteMap", () => {
-	it("routes docs/ files relative to docs/, collapsing index/README basenames", () => {
-		const readme = write("README.md");
-		const howTo = write("docs/how-to/foo.md");
-		const { landing, displaced, docsDir, files } = discoverContent(root, []);
-		const routes = buildRouteMap(root, docsDir, landing, displaced, files);
-		expect(routes.get(readme)).toBe("/");
-		expect(routes.get(howTo)).toBe("/how-to/foo/");
-	});
-
-	it("displaces the losing landing candidate to /overview/", () => {
-		const readme = write("README.md");
-		const indexMdx = write("docs/index.mdx", "---\ntitle: Splash\n---\nBody\n");
-		const { landing, displaced, docsDir, files } = discoverContent(root, []);
-		const routes = buildRouteMap(root, docsDir, landing, displaced, files);
-		expect(routes.get(indexMdx)).toBe("/");
-		expect(routes.get(readme)).toBe("/overview/");
-	});
-
-	it("throws naming both files when two files map to the same route", () => {
-		write("README.md");
+	it("errors naming both files when two files resolve to the same route", () => {
 		const flat = write("docs/how-to.md");
 		const nested = write("docs/how-to/index.md");
-		const { landing, displaced, docsDir, files } = discoverContent(root, []);
 		let thrown: Error | undefined;
 		try {
-			buildRouteMap(root, docsDir, landing, displaced, files);
+			discoverContent(root, [entry({ base: "docs" })], undefined);
 		} catch (err) {
 			thrown = err as Error;
 		}
 		expect(thrown?.message).toContain(flat);
 		expect(thrown?.message).toContain(nested);
 	});
-});
 
-describe("discoverContent - .astro files", () => {
-	it("includes .astro files under docs/ in the file set", () => {
-		write("docs/how-to/demo.astro", "<h1>Demo</h1>\n");
-		const { files } = discoverContent(root, []);
-		expect(files).toContain(path.join(root, "docs/how-to/demo.astro"));
+	it("errors naming both entries when two entries match the same file", () => {
+		const foo = write("docs/foo.md");
+		let thrown: Error | undefined;
+		try {
+			discoverContent(
+				root,
+				[entry({ base: "docs" }), entry({ base: "docs", files: ["foo.md"], route: "extra" })],
+				undefined,
+			);
+		} catch (err) {
+			thrown = err as Error;
+		}
+		expect(thrown?.message).toContain(foo);
+		expect(thrown?.message).toContain("content[0]");
+		expect(thrown?.message).toContain("content[1]");
 	});
 
-	it("does not pick up .astro files matched by an extra content glob", () => {
-		write("Packages/foo/widget.astro", "<h1>Widget</h1>\n");
-		const { files } = discoverContent(root, ["Packages/*/*.astro"]);
-		expect(files).not.toContain(path.join(root, "Packages/foo/widget.astro"));
+	it("errors when a files pattern climbs out of its base", () => {
+		write("outside.md");
+		fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+		expect(() =>
+			discoverContent(root, [entry({ base: "docs", files: ["../outside.md"] })], undefined),
+		).toThrowError(/outside/);
+	});
+
+	it("errors when base does not exist", () => {
+		expect(() => discoverContent(root, [entry({ base: "nope" })], undefined)).toThrowError(
+			/does not exist/,
+		);
+	});
+
+	it("errors when nothing at all is published", () => {
+		fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+		expect(() => discoverContent(root, [entry({ base: "docs" })], undefined)).toThrowError(
+			/No pages to publish/,
+		);
 	});
 });
 
-describe("buildRouteMap - .astro routing", () => {
-	it("strips .astro exactly like .md, including nesting and case normalization", () => {
-		const demo = write("docs/How-To/Demo.astro", "<h1>Demo</h1>\n");
-		write("README.md");
-		const { landing, displaced, docsDir, files } = discoverContent(root, []);
-		const routes = buildRouteMap(root, docsDir, landing, displaced, files);
+describe("discoverContent - .astro via content globs", () => {
+	it("publishes an .astro file matched by a files glob", () => {
+		const demo = write("docs/how-to/demo.astro", "<h1>Demo</h1>\n");
+		const { pages, routes } = discoverContent(
+			root,
+			[entry({ base: "docs", files: ["**/*.{md,astro}"] })],
+			undefined,
+		);
+		expect(pages).toContain(demo);
 		expect(routes.get(demo)).toBe("/how-to/demo/");
 	});
 
 	it("collapses index.astro onto its parent directory route", () => {
 		const index = write("docs/how-to/index.astro", "<h1>How To</h1>\n");
-		write("README.md");
-		const { landing, displaced, docsDir, files } = discoverContent(root, []);
-		const routes = buildRouteMap(root, docsDir, landing, displaced, files);
+		const { routes } = discoverContent(
+			root,
+			[entry({ base: "docs", files: ["**/*.astro"] })],
+			undefined,
+		);
 		expect(routes.get(index)).toBe("/how-to/");
 	});
 
-	it("throws when a .md file and a .astro file collide on the same route", () => {
-		write("README.md");
+	it("errors when a .md file and an .astro file collide on the same route", () => {
 		const md = write("docs/how-to.md");
 		const astro = write("docs/how-to/index.astro", "<h1>How To</h1>\n");
-		const { landing, displaced, docsDir, files } = discoverContent(root, []);
 		let thrown: Error | undefined;
 		try {
-			buildRouteMap(root, docsDir, landing, displaced, files);
+			discoverContent(root, [entry({ base: "docs", files: ["**/*.{md,astro}"] })], undefined);
 		} catch (err) {
 			thrown = err as Error;
 		}
@@ -168,107 +173,257 @@ describe("buildRouteMap - .astro routing", () => {
 	});
 
 	it("rejects an .astro file that resolves to the landing route (/)", () => {
-		write("README.md");
 		write("docs/index.astro", "<h1>Home</h1>\n");
-		const { landing, displaced, docsDir, files } = discoverContent(root, []);
-		expect(() => buildRouteMap(root, docsDir, landing, displaced, files)).toThrow(
-			/landing page/,
-		);
+		expect(() =>
+			discoverContent(root, [entry({ base: "docs", files: ["**/*.astro"] })], undefined),
+		).toThrowError(/landing page/);
 	});
 });
 
-describe("syncContent - .astro pages", () => {
+describe("discoverContent - landing page", () => {
+	it("publishes the configured landing file at /", () => {
+		const landing = write("docs/index.mdx", "---\ntitle: Splash\n---\nBody\n");
+		write("docs/how-to/foo.md");
+		const { routes } = discoverContent(root, [entry({ base: "docs" })], landing);
+		expect(routes.get(landing)).toBe("/");
+	});
+
+	it("skips the landing file when a content glob also matches it, with a notice", () => {
+		const landing = write("docs/index.md");
+		write("docs/how-to/foo.md");
+		const { routes, pages, notices } = discoverContent(root, [entry({ base: "docs" })], landing);
+		expect(routes.get(landing)).toBe("/");
+		expect(pages.filter((p) => p === landing)).toHaveLength(1);
+		expect(notices).toHaveLength(1);
+		expect(notices[0]).toContain("docs/index.md");
+	});
+
+	it("leaves / unclaimed when no landing is configured", () => {
+		write("docs/how-to/foo.md");
+		const { routes } = discoverContent(root, [entry({ base: "docs" })], undefined);
+		expect([...routes.values()]).not.toContain("/");
+	});
+
+	it("errors when a content file collides with the landing page on /", () => {
+		const landing = write("landing.md");
+		const other = write("docs/index.md");
+		let thrown: Error | undefined;
+		try {
+			discoverContent(root, [entry({ base: "docs" })], landing);
+		} catch (err) {
+			thrown = err as Error;
+		}
+		expect(thrown?.message).toContain(landing);
+		expect(thrown?.message).toContain(other);
+	});
+});
+
+describe("discoverContent - assets", () => {
+	it("publishes only files matched by an assets glob", () => {
+		write("docs/index.md");
+		const png = write("docs/img/logo.png", "png");
+		write("docs/img/notes.txt", "txt");
+		const { assets } = discoverContent(
+			root,
+			[entry({ base: "docs", assets: ["**/*.png"] })],
+			undefined,
+		);
+		expect([...assets.entries()]).toEqual([[png, "img/logo.png"]]);
+	});
+
+	it("publishes nothing when an entry has no assets glob", () => {
+		write("docs/index.md");
+		write("docs/img/logo.png", "png");
+		const { assets } = discoverContent(root, [entry({ base: "docs" })], undefined);
+		expect(assets.size).toBe(0);
+	});
+
+	it("publishes assets under the entry's route prefix", () => {
+		write("pkg/foo/README.md");
+		const png = write("pkg/foo/diagram.png", "png");
+		const { assets } = discoverContent(
+			root,
+			[entry({ base: "pkg", files: ["*/README.md"], route: "packages", assets: ["**/*.png"] })],
+			undefined,
+		);
+		expect(assets.get(png)).toBe("packages/foo/diagram.png");
+	});
+
+	it("never publishes md/mdx/astro as raw assets, even under a catch-all glob", () => {
+		write("docs/index.md");
+		write("docs/page.mdx", "body\n");
+		write("docs/widget.astro", "<p/>\n");
+		const png = write("docs/logo.png", "png");
+		const { assets } = discoverContent(
+			root,
+			[entry({ base: "docs", files: ["**/*.md"], assets: ["**/*"] })],
+			undefined,
+		);
+		expect([...assets.keys()]).toEqual([png]);
+	});
+});
+
+describe("syncContent", () => {
 	function makeCfg(overrides: Partial<ResolvedConfig> = {}): ResolvedConfig {
-		return { root, out: path.join(root, "dist"), title: "Test", branch: "main", content: [], ...overrides };
+		return {
+			configPath: path.join(root, "docs.config.yaml"),
+			configDir: root,
+			out: path.join(root, "dist"),
+			title: "Test",
+			branch: "main",
+			content: [entry({ base: "docs" })],
+			...overrides,
+		};
 	}
 
-	it("copies an .astro file verbatim to astro-pages/, written under its route path", () => {
-		write("README.md");
-		write("docs/how-to/demo.astro", "<h1>Demo</h1>\n<p>Raw markup, untouched.</p>\n");
-
+	function withAppRoot(fn: (appRoot: string) => void): void {
 		const appRoot = fs.mkdtempSync(path.join(os.tmpdir(), "docs-sync-app-test-"));
 		try {
-			const result = syncContent(makeCfg(), appRoot);
-			const outPath = path.join(appRoot, "src", "astro-pages", "how-to", "demo.astro");
-			expect(fs.existsSync(outPath)).toBe(true);
-			const written = fs.readFileSync(outPath, "utf8");
-			expect(written).toBe("<h1>Demo</h1>\n<p>Raw markup, untouched.</p>\n");
-			expect(written).not.toContain("sourcePath");
-			expect(result.pageCount).toBe(2); // README.md + demo.astro
+			fn(appRoot);
 		} finally {
 			fs.rmSync(appRoot, { recursive: true, force: true });
 		}
+	}
+
+	it("copies an .astro file verbatim to astro-pages/, written under its route path", () => {
+		write("docs/index.md");
+		write("docs/how-to/demo.astro", "<h1>Demo</h1>\n<p>Raw markup, untouched.</p>\n");
+
+		withAppRoot((appRoot) => {
+			const result = syncContent(
+				makeCfg({ content: [entry({ base: "docs", files: ["**/*.{md,astro}"] })] }),
+				appRoot,
+			);
+			const outPath = path.join(appRoot, "src", "astro-pages", "how-to", "demo.astro");
+			const written = fs.readFileSync(outPath, "utf8");
+			expect(written).toBe("<h1>Demo</h1>\n<p>Raw markup, untouched.</p>\n");
+			expect(written).not.toContain("sourcePath");
+			expect(result.pageCount).toBe(2); // index.md + demo.astro
+		});
 	});
 
 	it("wipes astro-pages/ on every sync, preserving nothing from a previous run", () => {
-		write("README.md");
+		write("docs/index.md");
 		write("docs/how-to/demo.astro", "<h1>Demo</h1>\n");
+		const cfg = makeCfg({ content: [entry({ base: "docs", files: ["**/*.{md,astro}"] })] });
 
-		const appRoot = fs.mkdtempSync(path.join(os.tmpdir(), "docs-sync-app-test-"));
-		try {
-			syncContent(makeCfg(), appRoot);
+		withAppRoot((appRoot) => {
+			syncContent(cfg, appRoot);
 			const staleDir = path.join(appRoot, "src", "astro-pages", "stale");
 			fs.mkdirSync(staleDir, { recursive: true });
 			fs.writeFileSync(path.join(staleDir, "old.astro"), "<p>old</p>\n");
 
 			fs.rmSync(path.join(root, "docs", "how-to", "demo.astro"));
-			syncContent(makeCfg(), appRoot);
+			syncContent(cfg, appRoot);
 
 			expect(fs.existsSync(staleDir)).toBe(false);
 			expect(fs.existsSync(path.join(appRoot, "src", "astro-pages", "how-to"))).toBe(false);
-		} finally {
-			fs.rmSync(appRoot, { recursive: true, force: true });
-		}
+		});
 	});
 
-	it("excludes .astro files from blindCopyDocsAssets (no raw source shipped to public/)", () => {
-		write("README.md");
+	it("publishes an asset to public/ under its route-prefixed path", () => {
+		write("pkg/foo/README.md");
+		write("pkg/foo/diagram.png", "png");
+
+		withAppRoot((appRoot) => {
+			const result = syncContent(
+				makeCfg({
+					content: [
+						entry({
+							base: "pkg",
+							files: ["*/README.md"],
+							route: "packages",
+							assets: ["**/*.png"],
+						}),
+					],
+				}),
+				appRoot,
+			);
+			expect(result.assetCount).toBe(1);
+			expect(fs.existsSync(path.join(appRoot, "public", "packages", "foo", "diagram.png"))).toBe(
+				true,
+			);
+		});
+	});
+
+	it("does not ship .astro source to public/, even under a catch-all assets glob", () => {
+		write("docs/index.md");
 		write("docs/how-to/demo.astro", "<h1>Demo</h1>\n");
 
-		const appRoot = fs.mkdtempSync(path.join(os.tmpdir(), "docs-sync-app-test-"));
-		try {
-			syncContent(makeCfg(), appRoot);
+		withAppRoot((appRoot) => {
+			syncContent(
+				makeCfg({
+					content: [entry({ base: "docs", files: ["**/*.{md,astro}"], assets: ["**/*"] })],
+				}),
+				appRoot,
+			);
 			expect(fs.existsSync(path.join(appRoot, "public", "how-to", "demo.astro"))).toBe(false);
-			expect(fs.existsSync(path.join(appRoot, "public", "demo.astro"))).toBe(false);
-		} finally {
-			fs.rmSync(appRoot, { recursive: true, force: true });
-		}
+		});
 	});
 
 	it("rewrites a markdown link to an .astro page to its site route", () => {
-		write("README.md");
+		write("docs/index.md");
 		write("docs/how-to/demo.astro", "<h1>Demo</h1>\n");
 		write("docs/how-to/guide.md", "# Guide\n\nSee [the demo](./demo.astro).\n");
 
-		const appRoot = fs.mkdtempSync(path.join(os.tmpdir(), "docs-sync-app-test-"));
-		try {
-			syncContent(makeCfg(), appRoot);
+		withAppRoot((appRoot) => {
+			syncContent(
+				makeCfg({ content: [entry({ base: "docs", files: ["**/*.{md,astro}"] })] }),
+				appRoot,
+			);
 			const synced = fs.readFileSync(
 				path.join(appRoot, "src", "content", "docs", "how-to", "guide.md"),
 				"utf8",
 			);
 			expect(synced).toContain("(/how-to/demo/)");
-		} finally {
-			fs.rmSync(appRoot, { recursive: true, force: true });
-		}
+		});
 	});
-});
 
-describe("syncContent - sourcePath frontmatter", () => {
-	it("injects the repo-root-relative source path into every synced page's frontmatter", () => {
-		write("README.md");
+	it("rewrites an image reference to its published asset path", () => {
+		write("docs/how-to/guide.md", "# Guide\n\n![logo](../img/logo.png)\n");
+		write("docs/img/logo.png", "png");
+
+		withAppRoot((appRoot) => {
+			const result = syncContent(
+				makeCfg({ content: [entry({ base: "docs", assets: ["**/*.png"] })] }),
+				appRoot,
+			);
+			const synced = fs.readFileSync(
+				path.join(appRoot, "src", "content", "docs", "how-to", "guide.md"),
+				"utf8",
+			);
+			expect(synced).toContain("(/img/logo.png)");
+			expect(result.warnings).toEqual([]);
+		});
+	});
+
+	it("warns naming the page and the asset when no assets glob covers a referenced file", () => {
+		write("docs/how-to/guide.md", "# Guide\n\n![logo](../img/logo.png)\n");
+		write("docs/img/logo.png", "png");
+
+		withAppRoot((appRoot) => {
+			const result = syncContent(makeCfg(), appRoot);
+			expect(result.assetCount).toBe(0);
+			expect(result.warnings).toHaveLength(1);
+			expect(result.warnings[0]).toContain("docs/how-to/guide.md");
+			expect(result.warnings[0]).toContain("logo.png");
+
+			// Rewritten anyway, root-relative: a leftover relative url aborts Astro's build with
+			// ImageNotFound, which would bury the warning above under a stack trace.
+			const synced = fs.readFileSync(
+				path.join(appRoot, "src", "content", "docs", "how-to", "guide.md"),
+				"utf8",
+			);
+			expect(synced).toContain("(/docs/img/logo.png)");
+		});
+	});
+
+	it("injects the config-relative source path into every synced page's frontmatter", () => {
+		const landing = write("docs/index.mdx", "---\ntitle: Splash\n---\nBody\n");
 		write("docs/how-to/foo.md", "# Foo\n\nBody.\n");
 
-		const appRoot = fs.mkdtempSync(path.join(os.tmpdir(), "docs-sync-app-test-"));
-		try {
-			const cfg: ResolvedConfig = {
-				root,
-				out: path.join(root, "dist"),
-				title: "Test",
-				branch: "main",
-				content: [],
-			};
-			syncContent(cfg, appRoot);
+		withAppRoot((appRoot) => {
+			syncContent(makeCfg({ landing }), appRoot);
 
 			const synced = fs.readFileSync(
 				path.join(appRoot, "src", "content", "docs", "how-to", "foo.md"),
@@ -276,13 +431,11 @@ describe("syncContent - sourcePath frontmatter", () => {
 			);
 			expect(synced).toContain("sourcePath: docs/how-to/foo.md");
 
-			const landing = fs.readFileSync(
-				path.join(appRoot, "src", "content", "docs", "index.md"),
+			const index = fs.readFileSync(
+				path.join(appRoot, "src", "content", "docs", "index.mdx"),
 				"utf8",
 			);
-			expect(landing).toContain("sourcePath: README.md");
-		} finally {
-			fs.rmSync(appRoot, { recursive: true, force: true });
-		}
+			expect(index).toContain("sourcePath: docs/index.mdx");
+		});
 	});
 });

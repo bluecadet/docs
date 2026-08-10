@@ -52,14 +52,46 @@ export interface SidebarGroup {
 	link?: string;
 }
 
-/** Optional `docs.config.yaml` at the root of a consumer repo. */
+/**
+ * One `content` entry after validation: the string sugar has been expanded, every field is filled
+ * in, and paths are still relative (to the config file's directory for `base`, to `base` for the
+ * globs). See `resolveContentEntry` in config.ts.
+ */
+export interface ContentEntry {
+	/**
+	 * Directory the globs below are relative to, itself relative to the config file's directory.
+	 * `"."` by default. May climb out with `..` — pointing at a sibling checkout or a package
+	 * directory outside the docs tree is a first-class use case.
+	 */
+	base: string;
+	/** Glob patterns relative to `base` matching the `.md`/`.mdx`/`.astro` files to publish. Non-empty. */
+	files: string[];
+	/**
+	 * Route prefix for every page this entry publishes, e.g. `"packages"` puts `foo/README.md` at
+	 * `/packages/foo/`. `""` (the default) publishes at the site root.
+	 */
+	route: string;
+	/**
+	 * Glob patterns relative to `base` matching non-content files to publish (images, casts,
+	 * downloads). Empty by default — nothing is published implicitly, so an entry pointed at a
+	 * source directory never sweeps up code.
+	 */
+	assets: string[];
+}
+
+/** `docs.config.yaml` — the single source of truth for a site. */
 export interface DocsConfig {
-	/** Site title. Falls back to the README's first heading, then the repo directory name. */
+	/** Site title. Required. */
 	title?: string;
 	/** Repo URL used for social links and for rewriting out-of-tree links to GitHub blob URLs. */
 	repoUrl?: string;
-	/** Extra glob patterns (relative to the repo root) to publish, e.g. a monorepo's per-package READMEs. */
-	content?: string[];
+	/** Where the site's pages come from. Required and non-empty — there is no discovery by convention. */
+	content?: ContentEntry[];
+	/**
+	 * Path (relative to the config file) of the `.md`/`.mdx` file published at `/`. Optional: with
+	 * no landing page, `/` redirects to the first page in the sidebar.
+	 */
+	landing?: string;
 	/** Base path for the deployed site, e.g. `/launchpad/` for a GitHub Pages project site. */
 	base?: string;
 	/** Absolute site origin, e.g. `https://bluecadet.github.io`. */
@@ -83,15 +115,22 @@ export interface DocsConfig {
 
 /** Fully-resolved settings after merging `docs.config.yaml`, CLI flags, and defaults. */
 export interface ResolvedConfig {
-	/** Absolute path to the consumer repo. */
-	root: string;
+	/** Absolute path to the `docs.config.yaml` this config came from. */
+	configPath: string;
+	/**
+	 * Absolute path to the directory holding the config file. Every relative path in the config —
+	 * and every route id derived from a source file — resolves against this, never against cwd.
+	 */
+	configDir: string;
 	/** Absolute path to the output directory for `build`. */
 	out: string;
 	title: string;
 	repoUrl?: string;
 	/** Default branch used when building GitHub blob URLs, e.g. "main". */
 	branch: string;
-	content: string[];
+	content: ContentEntry[];
+	/** Absolute path to the landing page source file, when one is configured. */
+	landing?: string;
 	base?: string;
 	site?: string;
 	header?: ConfigLinks;
@@ -102,19 +141,13 @@ export interface ResolvedConfig {
 	toc?: TocConfig;
 }
 
-/** A single markdown/mdx source file destined for the published site. */
-export interface SourceFile {
-	/** Absolute path on disk. */
-	absPath: string;
-	/** Site route, e.g. "/how-to/install/" or "/" for the landing page. */
-	route: string;
-}
-
 /** Maps an absolute source file path to its resolved site route. */
 export type RouteMap = Map<string, string>;
 
-/** A pending asset copy discovered while rewriting links/images. */
-export interface AssetCopy {
-	from: string;
-	to: string;
-}
+/**
+ * Maps an absolute asset file path to the single site-root-relative path it is published at, e.g.
+ * `/repo/docs/img/x.png` -> `img/x.png`. Built from the `assets` globs before any page is written,
+ * so link rewriting resolves a reference by lookup rather than by re-deriving a path — there is
+ * exactly one published location per asset, and an asset no glob covers simply isn't in the map.
+ */
+export type AssetMap = Map<string, string>;

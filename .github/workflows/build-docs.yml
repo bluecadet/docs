@@ -1,7 +1,7 @@
 # Reusable workflow: build a repo's markdown into a static Astro site and deploy it to GitHub Pages.
 #
 # Any bluecadet repo (Go, C#, Node, whatever) can call this without a package.json — it installs
-# and runs @bluecadet/docs from the npm registry via npx. Example consumer usage:
+# and runs @bluecadet/docs from the GitHub Packages npm registry via npx. Example consumer usage:
 #
 #   name: Docs
 #   on:
@@ -9,6 +9,7 @@
 #       branches: [main]
 #   permissions:
 #     contents: read
+#     packages: read
 #     pages: write
 #     id-token: write
 #   concurrency:
@@ -17,6 +18,13 @@
 #   jobs:
 #     docs:
 #       uses: bluecadet/docs/.github/workflows/build-docs.yml@main
+#
+# GitHub Packages requirements (unlike public npmjs.com, installing is not anonymous):
+#   - The calling job above must grant `permissions: packages: read` so its GITHUB_TOKEN can
+#     install @bluecadet/docs.
+#   - The @bluecadet/docs package must have granted Actions access to the calling repo (on the
+#     package: Package settings -> Manage Actions access) — otherwise the caller's GITHUB_TOKEN,
+#     even with `packages: read`, is refused by npm.pkg.github.com.
 #
 # Assumptions (see also packages/docs/README.md for CLI behavior):
 #   - GitHub Pages is already enabled on the caller repo with source set to "GitHub Actions".
@@ -66,6 +74,7 @@ on:
 
 permissions:
   contents: read
+  packages: read # to install @bluecadet/docs from GitHub Packages (npx step)
   pages: write
   id-token: write
 
@@ -82,6 +91,11 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: 24 # satisfies @bluecadet/docs' engines >=23
+          # Maps @bluecadet-scoped installs to GitHub Packages. Only used (auth'd via
+          # NODE_AUTH_TOKEN) by the npx step below; workspace mode resolves @bluecadet/docs
+          # locally via npm workspaces and never touches this registry.
+          registry-url: "https://npm.pkg.github.com"
+          scope: "@bluecadet"
 
       - name: Setup Pages
         id: pages
@@ -108,6 +122,10 @@ jobs:
           # See the top-of-file note: avoids an `allow-scripts` warning for esbuild's postinstall
           # since there's no consumer package.json to carry an approval.
           npm_config_dangerously_allow_all_scripts: "true"
+          # Authenticates the npx install against npm.pkg.github.com (see top-of-file note on
+          # GitHub Packages access requirements). Requires the calling job to grant
+          # `permissions: packages: read`.
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           npx --yes "@bluecadet/docs@${{ inputs.docs-version }}" build \
             --out ./dist \

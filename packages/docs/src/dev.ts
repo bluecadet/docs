@@ -8,13 +8,12 @@ import { syncContent } from "./sync.js";
 import type { ResolvedConfig } from "./types.js";
 import { debounce, shouldIgnoreWatchPath } from "./watch.js";
 
-const CONFIG_FILENAME = "docs.config.yaml";
 const WATCH_DEBOUNCE_MS = 200;
 
 /**
  * `target`'s path relative to `root`, or `undefined` if `target` isn't inside `root` (or is
  * `root` itself). Used to find which of the dev process's own write targets — build out-dir,
- * bundled Astro app dir — fall inside the watched root and so need to be ignored by the watcher.
+ * bundled Astro app dir — fall inside a watched directory and so need to be ignored by the watcher.
  */
 function relPrefixIfInside(root: string, target: string): string | undefined {
 	const rel = path.relative(root, target);
@@ -23,17 +22,43 @@ function relPrefixIfInside(root: string, target: string): string | undefined {
 }
 
 /**
- * Syncs the consumer repo's markdown into the bundled app, starts Astro's dev server, then
- * watches the consumer repo for changes: markdown/asset edits trigger a debounced re-sync (Astro's
- * own dev server watches the synced copy and HMRs on top of that), and edits to `docs.config.yaml`
- * re-resolve the config, re-sync, and restart the Astro dev server so the new config takes effect.
+ * Every directory the dev server needs to watch: the config file's directory, plus the resolved
+ * `base` of any content entry that lives outside it (a `base: "../sibling"` entry is legitimate,
+ * and editing files there should still trigger a re-sync). Deduped, and a base already covered by
+ * an ancestor in the list is dropped so one edit doesn't fire two watchers.
+ */
+function watchDirs(cfg: ResolvedConfig): string[] {
+	const candidates = [
+		cfg.configDir,
+		...cfg.content.map((e) => path.resolve(cfg.configDir, e.base)),
+	];
+	const dirs: string[] = [];
+	for (const dir of candidates) {
+		if (!fs.existsSync(dir)) continue;
+		if (
+			dirs.some((existing) => relPrefixIfInside(existing, dir) !== undefined || existing === dir)
+		) {
+			continue;
+		}
+		dirs.push(dir);
+	}
+	return dirs;
+}
+
+/**
+ * Syncs the configured content into the bundled app, starts Astro's dev server, then watches the
+ * config file's directory (and any content `base` outside it) for changes: content/asset edits
+ * trigger a debounced re-sync (Astro's own dev server watches the synced copy and HMRs on top of
+ * that), and edits to the config file re-resolve the config, re-sync, and restart the Astro dev
+ * server so the new config takes effect.
  *
- * Known limitation: uses `fs.watch(root, { recursive: true })`, which is only reliably recursive
- * on macOS and Windows — on Linux it watches the root directory non-recursively, so edits in
+ * Known limitation: uses `fs.watch(dir, { recursive: true })`, which is only reliably recursive
+ * on macOS and Windows — on Linux it watches each directory non-recursively, so edits in
  * subdirectories won't be picked up there (restart `docs dev` to pick up edits in that case).
  */
 export async function runDev(overrides: CliOverrides): Promise<void> {
 	let cfg = resolveConfig(overrides);
+	const configName = path.basename(cfg.configPath);
 
 	const sync = (): void => {
 		try {
@@ -54,13 +79,13 @@ export async function runDev(overrides: CliOverrides): Promise<void> {
 	}, WATCH_DEBOUNCE_MS);
 
 	async function handleConfigChange(): Promise<void> {
-		console.log(`[docs] ${CONFIG_FILENAME} changed — reloading config...`);
+		console.log(`[docs] ${configName} changed — reloading config...`);
 		let nextCfg: ResolvedConfig;
 		try {
 			nextCfg = resolveConfig(overrides);
 		} catch (err) {
 			console.error(
-				`[docs] failed to load ${CONFIG_FILENAME}, keeping previous config running: ${(err as Error).message}`,
+				`[docs] failed to load ${configName}, keeping previous config running: ${(err as Error).message}`,
 			);
 			return;
 		}
@@ -83,27 +108,33 @@ export async function runDev(overrides: CliOverrides): Promise<void> {
 		});
 	}
 
-	// Paths the dev process itself writes to, which must never be treated as watched content
-	// changes (otherwise a sync/build write is picked up by the watcher and triggers another
-	// sync — an infinite loop). Only relevant when they land inside the watched root, which
-	// happens when a consumer repo IS the monorepo root the docs package lives in.
-	const ignoredRelPrefixes = [
-		relPrefixIfInside(cfg.root, cfg.out), // build output dir
-		relPrefixIfInside(cfg.root, APP_ROOT), // bundled Astro app: content/public sync destination, .cache, etc.
-	].filter((p): p is string => p !== undefined);
+	// Content `base` dirs are only re-read on the next sync, so a new one added to the config won't
+	// be watched until the dev server is restarted — the initial set is what we watch for this run.
+	for (const dir of watchDirs(cfg)) {
+		// Paths the dev process itself writes to, which must never be treated as watched content
+		// changes (otherwise a sync/build write is picked up by the watcher and triggers another
+		// sync — an infinite loop). Only relevant when they land inside a watched directory, which
+		// happens when the config sits in the monorepo root the docs package itself lives in.
+		const ignoredRelPrefixes = [
+			relPrefixIfInside(dir, cfg.out), // build output dir
+			relPrefixIfInside(dir, APP_ROOT), // bundled Astro app: content/public sync destination, .cache, etc.
+		].filter((p): p is string => p !== undefined);
 
-	fs.watch(cfg.root, { recursive: true }, (_event, filename) => {
-		if (!filename) return;
-		const relPath = filename.toString();
-		if (relPath === CONFIG_FILENAME) {
-			reloadConfig();
-			return;
-		}
-		if (shouldIgnoreWatchPath(relPath, ignoredRelPrefixes)) return;
-		resync();
-	});
+		const watchesConfigFile = dir === cfg.configDir;
 
-	console.log(
-		`[docs] watching ${cfg.root} for content changes and ${CONFIG_FILENAME} for config changes.`,
-	);
+		fs.watch(dir, { recursive: true }, (_event, filename) => {
+			if (!filename) return;
+			const relPath = filename.toString();
+			if (watchesConfigFile && relPath === configName) {
+				reloadConfig();
+				return;
+			}
+			if (shouldIgnoreWatchPath(relPath, ignoredRelPrefixes)) return;
+			resync();
+		});
+
+		console.log(`[docs] watching ${dir} for content changes.`);
+	}
+
+	console.log(`[docs] watching ${cfg.configPath} for config changes.`);
 }

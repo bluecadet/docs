@@ -1,10 +1,10 @@
-# Changesets version/publish flow for @bluecadet/docs, mirroring bluecadet/launchpad's
-# release.yml.
+# Changesets version/publish flow for @bluecadet/docs.
 #
-# Assumes npm Trusted Publishing (OIDC) is configured for the package on npmjs.com, linked to
-# this repo — same convention launchpad uses. No NPM_TOKEN secret is needed: `id-token: write`
-# lets `npm run release` (changesets publish -> npm publish) exchange the job's OIDC token for
-# provenance/publish access.
+# Publishes to the GitHub Packages npm registry (npm.pkg.github.com), not public npmjs.com.
+# GitHub Packages doesn't support npm trusted publishing/OIDC or provenance, so auth is the
+# job's own GITHUB_TOKEN (needs `packages: write`) instead of an OIDC exchange. setup-node's
+# registry-url + scope config points `@bluecadet` installs/publishes at GitHub Packages while
+# leaving unscoped transitive deps resolving from the default npm registry.
 
 on:
   workflow_dispatch:
@@ -23,7 +23,7 @@ jobs:
 
     permissions:
       contents: write # to create release (changesets/action)
-      id-token: write # OpenID Connect token needed for provenance
+      packages: write # to publish @bluecadet/docs to GitHub Packages
       pull-requests: write # to create pull request (changesets/action)
 
     name: Release
@@ -40,14 +40,19 @@ jobs:
         with:
           node-version: 24
           cache: "npm"
-          registry-url: "https://registry.npmjs.org"
+          registry-url: "https://npm.pkg.github.com"
+          scope: "@bluecadet"
           package-manager-cache: false # never use caching in release builds
 
       - name: Install Dependencies
         run: npm ci
 
-      - name: Create Release Pull Request or Publish to npm
+      - name: Create Release Pull Request or Publish to GitHub Packages
         id: changesets
         uses: changesets/action@v1
         with:
           publish: npm run release
+        env:
+          # setup-node's registry-url config reads this at publish time to auth against
+          # npm.pkg.github.com for the @bluecadet scope.
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

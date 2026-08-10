@@ -65,6 +65,12 @@ export interface SidebarGroup {
 /** The parsed shape of `DOCS_CONFIG`, with fallbacks already applied. */
 export interface DocsAppConfig {
 	title: string;
+	/**
+	 * True when `docs.config.yaml` declared a `landing:` page, i.e. route `/` is a real page. When
+	 * false there is no landing content and `/` renders a redirect to the first page in the sidebar
+	 * instead (see src/pages/index.astro).
+	 */
+	hasLanding?: boolean;
 	repoUrl?: string;
 	base?: string;
 	site?: string;

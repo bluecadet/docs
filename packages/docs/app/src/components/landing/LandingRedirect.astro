@@ -1,0 +1,31 @@
+---
+/**
+ * Route "/" when `docs.config.yaml` declares no `landing:` page. A landing page is optional — a
+ * repo whose docs are just a set of pages shouldn't be forced to invent a splash page — but "/"
+ * still has to go somewhere, so it becomes a meta-refresh document pointing at the first page in
+ * the sidebar (`docsEntryHref()`, the same target every "docs" link in the chrome uses).
+ *
+ * Deliberately carries no `data-pagefind-body`: Pagefind's opt-in rule is global once any page
+ * declares one (see astro.config.mjs), so this page drops out of the search index exactly the way
+ * 404.html does, and searches land on real content instead of a redirect stub.
+ */
+interface Props {
+	/** Already base-prefixed — it comes straight from the nav tree. */
+	href: string;
+}
+
+const { href } = Astro.props;
+---
+
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta http-equiv="refresh" content={`0;url=${href}`} />
+		<meta name="robots" content="noindex" />
+		<link rel="canonical" href={href} />
+		<title>Redirecting…</title>
+	</head>
+	<body>
+		<p>Redirecting to <a href={href}>{href}</a>.</p>
+	</body>
+</html>

@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 import type { RewriteContext } from "../links.js";
 import { transformMarkdown } from "../links.js";
-import type { RouteMap } from "../types.js";
+import type { AssetMap, RouteMap } from "../types.js";
 
-const REPO_ROOT = "/repo";
+const CONFIG_DIR = "/repo";
 const DOCS_DIR = "/repo/docs";
 
 function makeCtx(overrides: Partial<RewriteContext> = {}): RewriteContext {
@@ -11,8 +11,8 @@ function makeCtx(overrides: Partial<RewriteContext> = {}): RewriteContext {
 		fromAbsDir: DOCS_DIR,
 		fromLabel: "docs/index.md",
 		routes: new Map(),
-		docsDir: DOCS_DIR,
-		repoRoot: REPO_ROOT,
+		assets: new Map(),
+		configDir: CONFIG_DIR,
 		repoUrl: undefined,
 		branch: "main",
 		base: "/",
@@ -54,29 +54,75 @@ describe("transformMarkdown - reference-style links/images", () => {
 		expect(body).toContain("/how-to/install/");
 	});
 
-	it("rewrites a reference-style image definition to a published asset path", () => {
-		const ctx = makeCtx();
+	it("rewrites a reference-style image definition to its published asset path", () => {
+		const assets: AssetMap = new Map([["/repo/docs/assets/diagram.png", "assets/diagram.png"]]);
+		const ctx = makeCtx({ assets });
 		const raw = ["![a diagram][diagram-ref]", "", "[diagram-ref]: ./assets/diagram.png"].join("\n");
-		const { body, assets } = transformMarkdown(raw, ctx, undefined);
+		const { body, warnings } = transformMarkdown(raw, ctx, undefined);
 		expect(body).toContain("/assets/diagram.png");
-		expect(assets).toEqual([{ from: "/repo/docs/assets/diagram.png", to: "assets/diagram.png" }]);
+		expect(warnings).toEqual([]);
+	});
+});
+
+describe("transformMarkdown - asset publishing", () => {
+	it("rewrites an image to the single path its assets glob published it at", () => {
+		const assets: AssetMap = new Map([["/repo/docs/img/x.png", "packages/foo/img/x.png"]]);
+		const { body, warnings } = transformMarkdown(
+			"![alt](img/x.png)",
+			makeCtx({ assets }),
+			undefined,
+		);
+		expect(body).toContain("(/packages/foo/img/x.png)");
+		expect(warnings).toEqual([]);
+	});
+
+	it("warns naming the page and the file when no assets glob published it", () => {
+		const { warnings } = transformMarkdown("![alt](img/x.png)", makeCtx(), undefined);
+		expect(warnings).toHaveLength(1);
+		expect(warnings[0]).toContain("docs/index.md");
+		expect(warnings[0]).toContain("/repo/docs/img/x.png");
+	});
+
+	it("still rewrites an unpublished asset to a root-relative path, so Astro can finish the build", () => {
+		// A relative url here would make Astro resolve it against its own content dir and abort with
+		// ImageNotFound; a "/"-rooted one is treated as a public-dir path and left alone.
+		const { body } = transformMarkdown("![alt](img/x.png)", makeCtx(), undefined);
+		expect(body).toContain("(/docs/img/x.png)");
+	});
+
+	it("leaves an unpublished asset outside the config directory untouched", () => {
+		const ctx = makeCtx({ fromAbsDir: "/repo" });
+		const { body, warnings } = transformMarkdown("![alt](../outside/x.png)", ctx, undefined);
+		expect(body).toContain("(../outside/x.png)");
+		expect(warnings).toHaveLength(1);
+	});
+
+	it("preserves a query string on a published asset path", () => {
+		const assets: AssetMap = new Map([["/repo/docs/img/x.png", "img/x.png"]]);
+		const { body } = transformMarkdown(
+			"[full size](img/x.png?w=2000)",
+			makeCtx({ assets }),
+			undefined,
+		);
+		expect(body).toContain("(/img/x.png?w=2000)");
 	});
 });
 
 describe("transformMarkdown - raw HTML", () => {
 	it("rewrites <img src> and <a href> inside a raw HTML block (double-quoted)", () => {
 		const routes: RouteMap = new Map([["/repo/docs/how-to/install.md", "/how-to/install/"]]);
-		const ctx = makeCtx({ routes });
+		const assets: AssetMap = new Map([["/repo/docs/assets/header.gif", "assets/header.gif"]]);
+		const ctx = makeCtx({ routes, assets });
 		const raw = [
 			'<p align="center">',
 			'  <img src="assets/header.gif" alt="header" />',
 			'  <a href="./how-to/install.md">Install</a>',
 			"</p>",
 		].join("\n");
-		const { body, assets } = transformMarkdown(raw, ctx, undefined);
+		const { body, warnings } = transformMarkdown(raw, ctx, undefined);
 		expect(body).toContain('src="/assets/header.gif"');
 		expect(body).toContain('href="/how-to/install/"');
-		expect(assets).toEqual([{ from: "/repo/docs/assets/header.gif", to: "assets/header.gif" }]);
+		expect(warnings).toEqual([]);
 	});
 
 	it("does not rewrite single-quoted HTML attributes (documented limitation)", () => {
@@ -130,10 +176,11 @@ describe("transformMarkdown - base path prefixing", () => {
 		expect(body).toContain("(/launchpad/reference/config/)");
 	});
 
-	it("prefixes a resolved asset path with the configured base", () => {
+	it("prefixes a published asset path with the configured base", () => {
+		const assets: AssetMap = new Map([["/repo/docs/assets/x.png", "assets/x.png"]]);
 		const { body } = transformMarkdown(
 			"![alt](assets/x.png)",
-			makeCtx({ base: "/launchpad/" }),
+			makeCtx({ assets, base: "/launchpad/" }),
 			undefined,
 		);
 		expect(body).toContain("(/launchpad/assets/x.png)");

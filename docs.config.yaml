@@ -1,15 +1,23 @@
 title: bluecadet docs
 repoUrl: https://github.com/bluecadet/docs
 
+landing: docs/index.mdx
+
 content:
-  - "packages/*/README.md"
+  # base: docs so routes are /reference/cli/, not /docs/reference/cli/.
+  - base: docs
+    files: "**/*.{md,mdx,astro}"
+    assets: "**/*.cast"
+  - base: packages
+    files: "*/README.md"
+    route: packages
 
 header:
   links:
     - label: github
       href: https://github.com/bluecadet/docs
-    - label: npm
-      href: https://www.npmjs.com/package/@bluecadet/docs
+    - label: package
+      href: https://github.com/bluecadet/docs/pkgs/npm/docs
 
 sidebar:
   - label: Tutorials
@@ -47,8 +55,8 @@ footer:
       links:
         - label: github
           href: https://github.com/bluecadet/docs
-        - label: npm
-          href: https://www.npmjs.com/package/@bluecadet/docs
+        - label: package
+          href: https://github.com/bluecadet/docs/pkgs/npm/docs
         - label: issues
           href: https://github.com/bluecadet/docs/issues
         - label: releases

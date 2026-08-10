@@ -1,16 +1,16 @@
 ---
 title: bluecadet docs
-description: A CLI that turns a repo's colocated markdown into a static docs site — no Astro project, no config, no build pipeline to maintain.
+description: A CLI that turns a docs.config.yaml and the files it names into a static docs site — no Astro project, no build pipeline to maintain.
 eyebrows:
   - label: static output
     tone: state
-  - label: no config
+  - label: yaml config
     tone: attention
   - label: any repo
     tone: neutral
 installCommand: npx @bluecadet/docs build
 heroNotes:
-  - "↖ one required input: a README.md, or a docs/index.md. everything else is optional."
+  - "↖ one required input: a docs.config.yaml naming a title and where your content lives."
   - the repo you point it at needs no package.json, no dependencies and no astro config.
 ---
 
@@ -32,27 +32,30 @@ import {
 
 <StatStrip>
   <Stat value="1" label="command to build the whole site" />
-  <Stat value="0" label="config files required" />
-  <Stat value="2" label="inputs read: README.md and docs/" />
+  <Stat value="1" label="config file required" />
+  <Stat value="0" label="files discovered by convention" />
   <Stat value="0" label="dependencies added to your repo" />
 </StatStrip>
 
-<TerminalBand cwd="~/repos/docs" caption="a full build of this site" duration="449ms">
+<TerminalBand cwd="~/repos/docs" caption="a full build of this site" duration="440ms">
   <Line prompt>npx @bluecadet/docs build</Line>
-  <Line label="reading">README.md + docs/</Line>
-  <Line label="syncing">11 page(s), 0 asset(s) <Ok>✓</Ok></Line>
+  <Line label="reading">docs.config.yaml</Line>
+  <Line label="syncing">12 page(s), 0 asset(s) <Ok>✓</Ok></Line>
   <Line label="building">astro static output</Line>
-  <Line label="indexing">pagefind → <Warn>12 page(s)</Warn></Line>
+  <Line label="indexing">pagefind → <Warn>13 page(s)</Warn></Line>
   <Line label="writing">./dist</Line>
   <Line />
-  <Line><Ok>done</Ok> · 12 page(s) built in 449ms</Line>
+  <Line><Ok>done</Ok> · 13 page(s) built in 440ms</Line>
 </TerminalBand>
 
+`@bluecadet/docs` is published on GitHub Packages, not npmjs.com — see
+[registry setup](/tutorials/add-docs-to-your-repo/#1-set-up-registry-access) before the first `npx` call.
+
 <Features>
-  <Feature title="Markdown you already wrote">
-    It reads the root README.md and the docs/ tree as-is. Titles come from frontmatter or the first
-    heading, relative links between files are rewritten to routes, and images beside a page are
-    copied along with it.
+  <Feature title="Config is the source of truth">
+    Nothing is discovered by convention. `docs.config.yaml` names the globs that become pages, an
+    optional landing file, and everything else about the site — one file to read to know what gets
+    published.
   </Feature>
   <Feature title="No project to maintain">
     The CLI ships its own Astro app and its own node_modules. The repo you point it at keeps no
@@ -61,7 +64,7 @@ import {
   </Feature>
   <Feature title="Navigation and search, derived">
     The sidebar, breadcrumbs, prev/next links and a Pagefind full-text index are all built from the
-    file tree. There is no navigation file to keep in sync with reality.
+    routes your config produces. There is no separate navigation file to keep in sync with reality.
   </Feature>
 </Features>
 
@@ -76,7 +79,7 @@ import {
   </GlyphItem>
   <GlyphItem lead="Let you restyle it.">
     The palette, typography and layout are the same for every repo that uses it. Configuration
-    covers the title, repo URL, base path and extra content globs — not design.
+    covers the title, content sources, repo URL and base path — not design.
   </GlyphItem>
   <GlyphItem lead="Read your source code.">
     There is no API-reference generator here. If you want types or CLI flags documented, write them
@@ -92,7 +95,7 @@ import {
     Turns a bare repo into a built, browsable static site and deploys it through CI.
   </CtaCard>
   <CtaCard label="how-to" title="Configure docs.config.yaml" href="/how-to/configure-docs-config-yaml/">
-    Covers when and how to add a docs.config.yaml to override the CLI's defaults.
+    Covers the fields beyond title and content: base path, header/footer links, a hand-ordered sidebar.
   </CtaCard>
   <CtaCard label="reference" title="CLI" href="/reference/cli/">
     Lists every CLI flag for build and dev, their defaults, and when the build hard-errors.
