@@ -27,7 +27,7 @@ const { prompt, label } = Astro.props;
 	.terminal-line {
 		display: block;
 		white-space: pre;
-		min-height: 1lh;
+		min-block-size: 1lh;
 	}
 
 	.terminal-prompt,
@@ -37,7 +37,7 @@ const { prompt, label } = Astro.props;
 
 	.terminal-line-label {
 		display: inline-block;
-		min-width: 15ch;
+		min-inline-size: 15ch;
 		padding-inline-start: 2ch;
 	}
 </style>

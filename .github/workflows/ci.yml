@@ -82,6 +82,40 @@ jobs:
 
           Fixture page with a little prose so the build has something to render.
           EOF
+          cat > "$RUNNER_TEMP/fixture/docs/component-demo.astro" <<'EOF'
+          ---
+          import { Ok } from "@bluecadet/docs/components";
+
+          export const layout = "docs";
+          export const title = "Component Demo";
+          ---
+
+          <p>Fixture <code>.astro</code> page in the docs layout. <Ok>this word</Ok> comes from the barrel.</p>
+          EOF
+          cat > "$RUNNER_TEMP/fixture/docs/component-demo-raw.astro" <<'EOF'
+          ---
+          export const layout = "raw";
+          ---
+
+          <html lang="en">
+            <head>
+              <meta charset="utf-8" />
+              <title>Raw Fixture Page</title>
+            </head>
+            <body>
+              <p>Fixture raw page — owns its whole document, outside the docs chrome.</p>
+            </body>
+          </html>
+          EOF
+          cat > "$RUNNER_TEMP/fixture/docs/mdx-demo.mdx" <<'EOF'
+          ---
+          title: MDX Demo
+          ---
+
+          import { Ok } from "@bluecadet/docs/components";
+
+          Fixture MDX page importing a component from the barrel: <Ok>this word</Ok>.
+          EOF
 
       - name: Install the packed tarball into a scratch project
         run: |
@@ -100,3 +134,20 @@ jobs:
           test -f "$RUNNER_TEMP/fixture-dist/index.html"
           test -f "$RUNNER_TEMP/fixture-dist/getting-started/index.html"
           test -f "$RUNNER_TEMP/fixture-dist/pagefind/pagefind.js"
+
+          # .astro page, layout "docs": renders in the normal chrome and carries its title.
+          test -f "$RUNNER_TEMP/fixture-dist/component-demo/index.html"
+          grep -q 'class="sidebar-rail"' "$RUNNER_TEMP/fixture-dist/component-demo/index.html"
+          grep -q 'Component Demo' "$RUNNER_TEMP/fixture-dist/component-demo/index.html"
+
+          # .astro page, layout "raw": owns its whole document, no docs chrome.
+          test -f "$RUNNER_TEMP/fixture-dist/component-demo-raw/index.html"
+          grep -q 'Raw Fixture Page' "$RUNNER_TEMP/fixture-dist/component-demo-raw/index.html"
+          if grep -q 'class="sidebar-rail"' "$RUNNER_TEMP/fixture-dist/component-demo-raw/index.html"; then
+            echo "raw page rendered the docs chrome — layout: \"raw\" should own its whole document" >&2
+            exit 1
+          fi
+
+          # .mdx page importing a barrel component: the component's own markup rendered.
+          test -f "$RUNNER_TEMP/fixture-dist/mdx-demo/index.html"
+          grep -q 'class="ok"' "$RUNNER_TEMP/fixture-dist/mdx-demo/index.html"

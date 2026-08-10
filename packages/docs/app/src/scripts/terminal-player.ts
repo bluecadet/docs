@@ -93,7 +93,17 @@ function setUpCast(mount: HTMLElement): void {
 
 	progress?.addEventListener("click", (event) => {
 		const rect = progress.getBoundingClientRect();
-		const ratio = rect.width > 0 ? (event.clientX - rect.left) / rect.width : 0;
+		// The fill itself is anchored with `inset-inline-start`/`inline-size` (Terminal.astro), so it
+		// mirrors for free under `dir="rtl"` — but a click's `clientX` is always a physical viewport
+		// coordinate, so the seek math has to pick its anchor edge based on direction explicitly:
+		// left-to-right progress reads from the track's left edge, right-to-left from its right edge.
+		const isRtl = getComputedStyle(progress).direction === "rtl";
+		const ratio =
+			rect.width > 0
+				? isRtl
+					? (rect.right - event.clientX) / rect.width
+					: (event.clientX - rect.left) / rect.width
+				: 0;
 		player
 			.seek(`${Math.round(Math.min(1, Math.max(0, ratio)) * 100)}%`)
 			.then(renderProgress)

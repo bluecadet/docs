@@ -26,13 +26,14 @@
   "exports": {
     ".": "./dist/cli.js",
     "./package.json": "./package.json",
-    "./components/*": "./app/src/components/*"
+    "./components": "./app/src/components/index.ts"
   },
   "files": [
     "dist",
     "app/astro.config.mjs",
     "app/src/content.config.ts",
     "app/src/content/docs/.gitkeep",
+    "app/src/astro-pages/.gitkeep",
     "app/src/pages",
     "app/src/layouts",
     "app/src/components",

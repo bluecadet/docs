@@ -91,7 +91,7 @@ const note = getDocsConfig().toc?.note;
 	   the aside inside it is what sticks and scrolls. */
 	.toc-rail {
 		border-inline-start: 1px solid var(--hairline-08);
-		min-width: 0;
+		min-inline-size: 0;
 	}
 
 	.toc-aside {
@@ -166,7 +166,7 @@ const note = getDocsConfig().toc?.note;
 		display: flex;
 		align-items: center;
 		gap: 10px;
-		min-height: 44px;
+		min-block-size: 44px;
 		padding: 0 14px;
 		font: 400 11.5px var(--font-mono);
 		color: var(--text-muted);
@@ -195,7 +195,7 @@ const note = getDocsConfig().toc?.note;
 	.toc-disclosure__link {
 		display: flex;
 		align-items: center;
-		min-height: 40px;
+		min-block-size: 40px;
 		color: var(--text-muted);
 	}
 

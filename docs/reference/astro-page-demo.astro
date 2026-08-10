@@ -1,0 +1,56 @@
+---
+// Dogfood fixture for the `.astro` docs-page contract (see the app's
+// packages/docs/app/src/lib/astro-pages.ts): a `layout: "docs"` page renders inside the same
+// chrome a markdown page gets — BaseLayout, breadcrumb, pagination — but the body is a real Astro
+// component with build-time JS, not markdown. This one renders the date/Astro version the site
+// was built with, a small table, and an inline component pulled from the package's own
+// `@bluecadet/docs/components` barrel, to prove that barrel resolves from a consumer's own
+// `.astro` file too.
+import { version as astroVersion } from "astro/package.json" with { type: "json" };
+import { Ok } from "@bluecadet/docs/components";
+
+export const layout = "docs";
+export const title = "Astro Page Demo";
+export const description =
+	"A dogfood fixture: this page is authored as a real .astro component, not markdown.";
+
+const builtAt = new Date().toISOString();
+const runtimes = [
+	{ name: "astro", version: astroVersion },
+	{ name: "node", version: process.version },
+];
+---
+
+<p>
+	This page is authored as <code>docs/reference/astro-page-demo.astro</code>, not markdown — it's
+	a real Astro component. The table below is computed at build time, and <Ok>this word</Ok> is an
+	inline component imported straight from the package's own component barrel
+	(<code>@bluecadet/docs/components</code>).
+</p>
+
+<table>
+	<thead>
+		<tr>
+			<th>runtime</th>
+			<th>version</th>
+		</tr>
+	</thead>
+	<tbody>
+		{
+			runtimes.map((runtime) => (
+				<tr>
+					<td>{runtime.name}</td>
+					<td>{runtime.version}</td>
+				</tr>
+			))
+		}
+	</tbody>
+</table>
+
+<p>Built at <code>{builtAt}</code>.</p>
+
+<p>
+	This page's contract: an <code>export const layout = "docs"</code> and
+	<code>export const title</code> — same chrome as a markdown page (breadcrumb, pagination), minus
+	a TOC column and an edit link, since there's no source file to extract headings from or link to.
+</p>

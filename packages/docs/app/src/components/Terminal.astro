@@ -1,7 +1,8 @@
 ---
-// Full-bleed terminal transcript band for the landing page's MDX body:
+// Terminal window: a title bar with dots + cwd, and a body that renders either a `<Line>`
+// transcript slot or an asciinema cast player with custom controls.
 //
-//   <Terminal cwd="~/my-repo" caption="a full build" duration="3.4s">
+//   <Terminal cwd="~/my-repo">
 //     <Line prompt>npx @bluecadet/docs build</Line>
 //     <Line label="reading">README.md + docs/ <Ok>✓</Ok></Line>
 //   </Terminal>
@@ -16,13 +17,15 @@
 // theme in `styles/asciinema-theme.css`). The two modes are mutually exclusive — `cast` set means
 // `<Line>` children are ignored. Kept deliberately small: no volume/fullscreen/speed controls, no
 // marker support. Consumers who need those should reach for the player directly.
+//
+// Context-neutral: this is the window only, sized to its container (`inline-size: 100%`, no max
+// width, no outer margins/padding). Landing's full-bleed band chrome — caption/duration row, band
+// padding, background, hairline, the 880px width cap — lives one layer up in
+// `landing/TerminalBand.astro`, which renders this component. Doc-page prose bodies can render
+// this directly.
 interface Props {
 	/** Working-directory label in the terminal's title bar. */
 	cwd?: string;
-	/** Small caption above the terminal. */
-	caption?: string;
-	/** Attention-accented figure at the end of the caption row, e.g. a wall-clock duration. */
-	duration?: string;
 	/** URL/path to an asciicast v2 `.cast` file. When set, renders a player instead of the
 	    `<Line>` transcript slot. See the CLI's asset sync (`sync.ts`) for where a consumer repo's
 	    `.cast` files under `docs/` end up published — `app/public/` itself is wiped on every
@@ -37,89 +40,60 @@ interface Props {
 	loop?: boolean;
 }
 
-const { cwd, caption, duration, cast, rows, cols, poster, loop } = Astro.props;
+const { cwd, cast, rows, cols, poster, loop } = Astro.props;
 ---
 
-<div class="landing-band terminal-band">
+<div class="terminal">
+	<div class="terminal-bar">
+		<span class="terminal-dots" aria-hidden="true">
+			<span class="terminal-dot terminal-dot-1"></span>
+			<span class="terminal-dot terminal-dot-2"></span>
+			<span class="terminal-dot terminal-dot-3"></span>
+		</span>
+		{cwd && <span class="terminal-cwd">{cwd}</span>}
+	</div>
 	{
-		(caption || duration) && (
-			<div class="terminal-caption">
-				{caption && <span>{caption}</span>}
-				{duration && <span class="terminal-duration">{duration}</span>}
-			</div>
-		)
-	}
-	<div class="terminal">
-		<div class="terminal-bar">
-			<span class="terminal-dots" aria-hidden="true">
-				<span class="terminal-dot terminal-dot-1"></span>
-				<span class="terminal-dot terminal-dot-2"></span>
-				<span class="terminal-dot terminal-dot-3"></span>
-			</span>
-			{cwd && <span class="terminal-cwd">{cwd}</span>}
-		</div>
-		{
-			cast ? (
-				<div class="terminal-player">
-					<div
-						class="terminal-cast"
-						data-terminal-cast={cast}
-						data-terminal-rows={rows}
-						data-terminal-cols={cols}
-						data-terminal-poster={poster}
-						data-terminal-loop={loop ? "true" : undefined}
-					/>
-					<div class="terminal-controls">
-						<button type="button" class="terminal-play" data-terminal-play aria-label="Play">
-							▶
-						</button>
-						<div class="terminal-progress" data-terminal-progress>
-							<span class="terminal-progress-track">
-								<span class="terminal-progress-fill" data-terminal-fill />
-							</span>
-						</div>
-						<span class="terminal-time" data-terminal-time>
-							0:00 / 0:00
+		cast ? (
+			<div class="terminal-player">
+				<div
+					class="terminal-cast"
+					data-terminal-cast={cast}
+					data-terminal-rows={rows}
+					data-terminal-cols={cols}
+					data-terminal-poster={poster}
+					data-terminal-loop={loop ? "true" : undefined}
+				/>
+				<div class="terminal-controls">
+					<button type="button" class="terminal-play" data-terminal-play aria-label="Play">
+						▶
+					</button>
+					<div class="terminal-progress" data-terminal-progress>
+						<span class="terminal-progress-track">
+							<span class="terminal-progress-fill" data-terminal-fill />
 						</span>
 					</div>
+					<span class="terminal-time" data-terminal-time>
+						0:00 / 0:00
+					</span>
 				</div>
-			) : (
-				<pre class="terminal-body"><slot /></pre>
-			)
-		}
-	</div>
+			</div>
+		) : (
+			<pre class="terminal-body"><slot /></pre>
+		)
+	}
 </div>
 
 {
 	cast && (
 		<script>
-			import "../../scripts/terminal-player";
+			import "../scripts/terminal-player";
 		</script>
 	)
 }
 
 <style>
-	.terminal-band {
-		padding: 64px var(--content-pad-x) 72px;
-		border-block-end: 1px solid var(--hairline-08);
-		background: var(--surface-panel-2);
-	}
-
-	.terminal-caption {
-		display: flex;
-		align-items: baseline;
-		gap: 16px;
-		margin-block-end: 24px;
-		font: 400 11.5px var(--font-mono);
-		color: var(--text-dim);
-	}
-
-	.terminal-duration {
-		color: var(--accent-2);
-	}
-
 	.terminal {
-		max-width: 880px;
+		inline-size: 100%;
 		border: 1px solid var(--hairline-10);
 		border-radius: var(--radius-md);
 		background: var(--surface-code);
@@ -248,15 +222,6 @@ const { cwd, caption, duration, cast, rows, cols, poster, loop } = Astro.props;
 	}
 
 	@media (max-width: 1023px) {
-		.terminal-band {
-			padding: 46px var(--content-pad-x) 54px;
-		}
-
-		.terminal-caption {
-			gap: 18px;
-			margin-block-end: 20px;
-		}
-
 		.terminal-body {
 			padding: 22px 24px;
 			font-size: 12.5px;
@@ -268,16 +233,6 @@ const { cwd, caption, duration, cast, rows, cols, poster, loop } = Astro.props;
 	}
 
 	@media (max-width: 767px) {
-		.terminal-band {
-			padding: 40px var(--content-pad-x) 46px;
-		}
-
-		.terminal-caption {
-			gap: 15px;
-			margin-block-end: 18px;
-			font-size: 11.5px;
-		}
-
 		.terminal-bar {
 			gap: 10px;
 			padding: 10px 14px;

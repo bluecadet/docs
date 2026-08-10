@@ -98,7 +98,7 @@ const lastGroupIsWide = groupCount > 1;
 	/* Capped, centered inner column — mirrors .header-shell-inner and .page-body so the inline
 	   hairlines line up into one continuous edge from the header down through the footer. */
 	.site-footer-inner {
-		max-width: var(--shell-width);
+		max-inline-size: var(--shell-width);
 		margin-inline: auto;
 		border-inline: 1px solid var(--hairline-08);
 	}
@@ -117,7 +117,7 @@ const lastGroupIsWide = groupCount > 1;
 		font: 400 12px var(--font-mono);
 		color: var(--text-faint);
 		text-transform: lowercase;
-		min-width: 0;
+		min-inline-size: 0;
 	}
 
 	.glyph {
@@ -156,7 +156,7 @@ const lastGroupIsWide = groupCount > 1;
 		flex-direction: column;
 		gap: 14px;
 		font: 400 12px/1.9 var(--font-mono);
-		min-width: 0;
+		min-inline-size: 0;
 	}
 
 	.site-footer__group-title {

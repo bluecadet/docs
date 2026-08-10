@@ -29,8 +29,8 @@
 .scroll-rail {
 	position: sticky;
 	inset-block-start: var(--header-height);
-	max-height: calc(100vh - var(--header-height));
-	max-height: calc(100dvh - var(--header-height));
+	max-block-size: calc(100vh - var(--header-height));
+	max-block-size: calc(100dvh - var(--header-height));
 	overflow-y: auto;
 	overscroll-behavior: contain;
 	scrollbar-gutter: stable;
@@ -100,7 +100,7 @@ video,
 canvas,
 svg {
 	display: block;
-	max-width: 100%;
+	max-inline-size: 100%;
 }
 
 input,
@@ -133,7 +133,7 @@ kbd {
 }
 
 body {
-	min-height: 100vh;
+	min-block-size: 100vh;
 	background: var(--bg);
 	color: var(--text-muted);
 	font-family: var(--font-sans);

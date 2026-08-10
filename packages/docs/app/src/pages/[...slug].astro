@@ -1,57 +1,115 @@
 ---
 import { type CollectionEntry, getCollection, render } from "astro:content";
+import type { AstroComponentFactory } from "astro/runtime/server/index.js";
+import type { MarkdownHeading } from "astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import Breadcrumb from "../components/Breadcrumb.astro";
 import Pagination from "../components/Pagination.astro";
 import Toc from "../components/Toc.astro";
+import { type AstroPage, docsAstroPages, rawAstroPages } from "../lib/astro-pages";
 import { getDocsConfig } from "../lib/config";
 
 export async function getStaticPaths() {
 	// The `index` entry is the landing route, owned by src/pages/index.astro — exclude it here so
 	// this catch-all doesn't also try to generate `/`.
 	const entries = await getCollection("docs", ({ id }) => id !== "index");
-	return entries.map((entry) => ({
-		params: { slug: entry.id },
-		props: { entry },
-	}));
+	const astroPages = [...docsAstroPages, ...rawAstroPages];
+
+	// The CLI's sync step guarantees every astro-pages/ route is collision-free with the markdown
+	// collection (see ../../../src/sync.ts's buildRouteMap) — this only guards a stale astro-pages/
+	// dir left over from a build/dev run that skipped sync, which sync itself can't produce.
+	for (const page of astroPages) {
+		if (entries.some((entry) => entry.id === page.id)) {
+			throw new Error(
+				`astro-pages/${page.id}.astro and a synced markdown page both resolve to the same route "/${page.id}/". This shouldn't happen after a fresh sync — re-run \`docs build\`/\`docs dev\` rather than reusing a stale build.`,
+			);
+		}
+	}
+
+	return [
+		...entries.map((entry) => ({
+			params: { slug: entry.id },
+			props: { kind: "md" as const, entry },
+		})),
+		...astroPages.map((page) => ({
+			params: { slug: page.id },
+			props: { kind: "astro" as const, page },
+		})),
+	];
 }
 
-interface Props {
-	entry: CollectionEntry<"docs">;
+type Props = { kind: "md"; entry: CollectionEntry<"docs"> } | { kind: "astro"; page: AstroPage };
+
+const props = Astro.props;
+
+// Raw astro pages own their entire <html> document — rendered bare below, entirely outside the
+// docs chrome (BaseLayout, breadcrumb, pagination) and skipping the rest of this setup. See
+// ../lib/astro-pages.ts for the layout contract.
+const RawPage: AstroComponentFactory | undefined =
+	props.kind === "astro" && props.page.layout === "raw" ? props.page.Component : undefined;
+
+let title = "";
+let description: string | undefined;
+let headings: MarkdownHeading[] = [];
+let currentId = "";
+let editHref: string | undefined;
+let PageContent: AstroComponentFactory | undefined;
+
+if (!RawPage) {
+	if (props.kind === "md") {
+		const rendered = await render(props.entry);
+		PageContent = rendered.Content;
+		headings = rendered.headings;
+		title = props.entry.data.title;
+		description = props.entry.data.description;
+		currentId = props.entry.id;
+
+		// Only resolved when both a template and this page's source are known — a page with no
+		// `sourcePath` (e.g. a hypothetical generated one) simply omits the edit link.
+		const editLinkTemplate = getDocsConfig().toc?.editLink;
+		editHref =
+			editLinkTemplate && props.entry.data.sourcePath
+				? editLinkTemplate.replace("{path}", props.entry.data.sourcePath)
+				: undefined;
+	} else {
+		// `layout: "docs"` astro page — same chrome as a markdown page, minus the two things it has
+		// no source data for: no on-disk headings to extract (no TOC column, see BaseLayout's
+		// `hasToc`), no `sourcePath` (no edit link).
+		PageContent = props.page.Component;
+		title = props.page.title as string; // astro-pages.ts requires this for layout "docs"
+		description = props.page.description;
+		currentId = props.page.id;
+	}
 }
-
-const { entry } = Astro.props;
-const { Content, headings } = await render(entry);
-
-// Only resolved when both a template and this page's source are known — a page with no
-// `sourcePath` (e.g. a hypothetical generated one) simply omits the edit link.
-const editLinkTemplate = getDocsConfig().toc?.editLink;
-const editHref =
-	editLinkTemplate && entry.data.sourcePath
-		? editLinkTemplate.replace("{path}", entry.data.sourcePath)
-		: undefined;
 ---
 
-<BaseLayout
-	title={entry.data.title}
-	description={entry.data.description}
-	headings={headings}
-	currentId={entry.id}
-	editHref={editHref}
->
-	<Breadcrumb id={entry.id} title={entry.data.title} />
-	{/* data-pagefind-body scopes the search index to this article's own prose — see the
-	    pagefindIndex() comment in astro.config.mjs for why this also determines which pages are
-	    indexed at all. data-pagefind-meta pins the result title to the page's own title, not
-	    whatever <title> ends up rendering (BaseLayout appends the site name to it). */}
-	<article class="prose" data-pagefind-body data-pagefind-meta={`title:${entry.data.title}`}>
-		<h1>{entry.data.title}</h1>
-		{entry.data.description && <p class="lead">{entry.data.description}</p>}
-		{/* Tablet/mobile "on this page" — sits after the lead and before the first H2, matching
-		    the design's breadcrumb -> H1 -> lead -> disclosure -> body order. Desktop/wide keep the
-		    aside variant, mounted separately by BaseLayout. */}
-		<Toc variant="disclosure" headings={headings} />
-		<Content />
-	</article>
-	<Pagination currentId={entry.id} />
-</BaseLayout>
+{
+	RawPage ? (
+		<RawPage />
+	) : (
+		<BaseLayout
+			title={title}
+			description={description}
+			headings={headings}
+			currentId={currentId}
+			editHref={editHref}
+		>
+			<Breadcrumb id={currentId} title={title} />
+			{/* data-pagefind-body scopes the search index to this article's own prose — see the
+			    pagefindIndex() comment in astro.config.mjs for why this also determines which pages
+			    are indexed at all. data-pagefind-meta pins the result title to the page's own title,
+			    not whatever <title> ends up rendering (BaseLayout appends the site name to it). */}
+			<article class="prose" data-pagefind-body data-pagefind-meta={`title:${title}`}>
+				<h1>{title}</h1>
+				{description && <p class="lead">{description}</p>}
+				{/* Tablet/mobile "on this page" — sits after the lead and before the first H2, matching
+				    the design's breadcrumb -> H1 -> lead -> disclosure -> body order. Desktop/wide keep
+				    the aside variant, mounted separately by BaseLayout. Always empty for astro pages
+				    (no heading extraction), so this renders nothing for them. */}
+				<Toc variant="disclosure" headings={headings} />
+				{PageContent && <PageContent />}
+			</article>
+			<Pagination currentId={currentId} />
+		</BaseLayout>
+	)
+}

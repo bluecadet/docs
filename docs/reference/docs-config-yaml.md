@@ -111,6 +111,11 @@ is a synced page's content id — the same id a page-not-found suggestion or an 
 link would reference (a `docs/reference/config/base.md` file's id is `reference/config/base`).
 Groups can nest.
 
+A `pageId` may also reference a `docs/**/*.astro` page with `export const layout = "docs"` (see
+[`.astro` pages](/reference/content-conventions/#astro-pages)) — it joins the sidebar exactly like
+a markdown page. A `layout: "raw"` astro page can't: it owns its entire document and has nowhere
+to sit in the nav, so referencing one in `sidebar` is a build error naming the page.
+
 - **The tree is fully explicit.** There's no merging with the auto-generated tree — once `sidebar`
   is set, it's the entire sidebar, in the exact order written. Nothing is sorted for you.
 - **Pages not listed in `sidebar` still build and route.** They just don't appear in the sidebar

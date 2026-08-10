@@ -137,6 +137,62 @@ they resolve correctly under any `base` because the browser resolves them agains
 page's URL. This applies to plain markdown links as well as any JSX component `href`/`src` props
 or frontmatter-driven links you author in the MDX yourself.
 
+## `.astro` pages
+
+Any `docs/**/*.astro` file is published verbatim as a real Astro component — an escape hatch for
+pages that need more than markdown/MDX can express. (Only `docs/`; the extra `content` config
+globs stay markdown-only.) Each page exports a small contract:
+
+```astro
+---
+export const layout = "docs"; // "docs" | "raw", defaults to "docs"
+export const title = "Component Demo"; // required when layout is "docs"
+export const description = "Optional lead/meta text."; // "docs" layout only
+---
+```
+
+- **`layout: "docs"`** (the default) renders inside the normal chrome — the same `BaseLayout`,
+  breadcrumb, pagination, and prose article a synced markdown page gets — and is first-class in
+  the sidebar, breadcrumb, pagination, and Pagefind search, exactly like a markdown page. `title`
+  is required; a page missing it fails the build, naming the offending route. `description` is
+  optional and feeds the same places a markdown page's frontmatter `description` does.
+- **`layout: "raw"`** owns its entire `<html>` document — the catch-all route renders it bare,
+  with no chrome at all — and is invisible to the sidebar, breadcrumb, pagination, and search. A
+  `docs.config.yaml` `sidebar` entry referencing a `raw` page is a config error (see
+  [docs.config.yaml](/reference/docs-config-yaml/#sidebar-semantics)).
+
+Known limitations:
+
+- No TOC extraction — `.astro` pages render no on-disk headings, so there's no "on this page"
+  column (matches a markdown page with no `##` headings).
+- No edit link — there's no single source file to point a `toc.editLink` template at.
+- No relative imports between consumer `.astro` files. Each page is synced standalone into the
+  app's own source tree; import shared UI only from `@bluecadet/docs/components` (see
+  [Import paths](/how-to/build-a-rich-landing-page/#import-paths) — the same barrel MDX pages use).
+- Assets referenced from an `.astro` page use the same base-prefixed public URL as any other
+  asset under `docs/` (see [Link and asset rewriting](#link-and-asset-rewriting)) — `.astro` files
+  themselves aren't rewritten, so reference assets by their published path, not a relative import.
+
+## Terminal transcripts and asciinema playback
+
+`Terminal` (from the component barrel) renders a terminal window that either holds a `<Line>`
+transcript or, given a `cast` prop, plays back an asciinema v2 recording with custom controls
+matched to the terminal chrome. `TerminalBand` wraps it with the landing page's full-bleed
+caption/duration band — see [Build a rich landing page](/how-to/build-a-rich-landing-page/#terminalband)
+for the transcript form and prop reference. To use recorded playback instead of a hand-authored
+transcript, put the `.cast` file anywhere under your repo's `docs/` tree and pass it by its
+published path:
+
+```mdx
+import { TerminalBand } from "@bluecadet/docs/components";
+
+<TerminalBand cwd="~/repos/acme" cast="/build.cast" caption="a full build" duration="3.4s" />
+```
+
+`.cast` files are copied like any other non-markdown asset under `docs/` (see
+[Link and asset rewriting](#link-and-asset-rewriting)) — not specially recognized by the sync
+step — so the same docs-relative/repo-root-relative publishing and base-prefixing rules apply.
+
 ## Known limitations
 
 - `docs dev` does not watch the consumer repo; content is synced once at startup.
@@ -146,3 +202,5 @@ or frontmatter-driven links you author in the MDX yourself.
   inline links are.
 - Assets outside `docs/` are copied once, at their repo-root-relative path — the
   publish-at-both-paths duplication only applies to files under `docs/`.
+- The theme targets horizontal writing modes only (LTR and RTL); vertical writing modes
+  (`writing-mode: vertical-*`) are unsupported.

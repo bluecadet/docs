@@ -14,19 +14,21 @@ heroNotes:
   - the repo you point it at needs no package.json, no dependencies and no astro config.
 ---
 
-import ClosingCta from "@bluecadet/docs/components/landing/ClosingCta.astro";
-import CtaCard from "@bluecadet/docs/components/landing/CtaCard.astro";
-import CtaCards from "@bluecadet/docs/components/landing/CtaCards.astro";
-import Feature from "@bluecadet/docs/components/landing/Feature.astro";
-import Features from "@bluecadet/docs/components/landing/Features.astro";
-import GlyphItem from "@bluecadet/docs/components/landing/GlyphItem.astro";
-import GlyphList from "@bluecadet/docs/components/landing/GlyphList.astro";
-import Line from "@bluecadet/docs/components/landing/Line.astro";
-import Ok from "@bluecadet/docs/components/landing/Ok.astro";
-import Stat from "@bluecadet/docs/components/landing/Stat.astro";
-import StatStrip from "@bluecadet/docs/components/landing/StatStrip.astro";
-import Terminal from "@bluecadet/docs/components/landing/Terminal.astro";
-import Warn from "@bluecadet/docs/components/landing/Warn.astro";
+import {
+  ClosingCta,
+  CtaCard,
+  CtaCards,
+  Feature,
+  Features,
+  GlyphItem,
+  GlyphList,
+  Line,
+  Ok,
+  Stat,
+  StatStrip,
+  TerminalBand,
+  Warn,
+} from "@bluecadet/docs/components";
 
 <StatStrip>
   <Stat value="1" label="command to build the whole site" />
@@ -35,7 +37,7 @@ import Warn from "@bluecadet/docs/components/landing/Warn.astro";
   <Stat value="0" label="dependencies added to your repo" />
 </StatStrip>
 
-<Terminal cwd="~/repos/docs" caption="a full build of this site" duration="449ms">
+<TerminalBand cwd="~/repos/docs" caption="a full build of this site" duration="449ms">
   <Line prompt>npx @bluecadet/docs build</Line>
   <Line label="reading">README.md + docs/</Line>
   <Line label="syncing">11 page(s), 0 asset(s) <Ok>✓</Ok></Line>
@@ -44,7 +46,7 @@ import Warn from "@bluecadet/docs/components/landing/Warn.astro";
   <Line label="writing">./dist</Line>
   <Line />
   <Line><Ok>done</Ok> · 12 page(s) built in 449ms</Line>
-</Terminal>
+</TerminalBand>
 
 <Features>
   <Feature title="Markdown you already wrote">

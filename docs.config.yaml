@@ -26,6 +26,7 @@ sidebar:
       - reference/docs-config-yaml
       - reference/content-conventions
       - reference/search
+      - reference/astro-page-demo
   - label: Explanation
     items:
       - explanation/architecture

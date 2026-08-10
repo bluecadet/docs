@@ -26,7 +26,7 @@
 		position: sticky;
 		inset-block-start: 0;
 		z-index: 20;
-		height: var(--header-height);
+		block-size: var(--header-height);
 		border-block-end: 1px solid var(--hairline-08);
 		background: var(--bg);
 	}
@@ -49,8 +49,8 @@
 	.header-shell-inner {
 		display: var(--rail-display);
 		grid-template-columns: var(--rail-width) 1fr;
-		height: 100%;
-		max-width: var(--shell-width);
+		block-size: 100%;
+		max-inline-size: var(--shell-width);
 		margin-inline: auto;
 		border-inline: 1px solid var(--hairline-08);
 	}

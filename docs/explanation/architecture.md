@@ -29,6 +29,17 @@ The tradeoff: every invocation re-syncs from scratch (the previous synced copy i
 Both are accepted as reasonable given the target use case (docs built once per CI run, or a short
 local preview), rather than a long-running authoring workflow.
 
+## The astro-pages escape hatch
+
+Markdown/MDX covers most pages, but some need arbitrary components or build-time logic MDX can't
+express cleanly. `docs/**/*.astro` files take the copy-with-transform idea one step further: the
+sync step copies them verbatim (no rewriting — they aren't markdown) into the bundled app's
+`src/astro-pages/`, at a path that mirrors their route. The app globs that directory eagerly at
+build time (`lib/astro-pages.ts`), validates each module's `layout`/`title`/`description` exports,
+and the catch-all route (`pages/[...slug].astro`) renders a `layout: "docs"` page inside the same
+chrome a markdown page gets, or a `layout: "raw"` page bare, with no chrome at all — see
+[content conventions](/reference/content-conventions/#astro-pages) for the full contract.
+
 ## Why titles are injected pre-validation
 
 The bundled app's `docs` content collection schema requires a `title` field. Source markdown in a

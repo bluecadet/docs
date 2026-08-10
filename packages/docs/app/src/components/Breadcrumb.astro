@@ -94,8 +94,8 @@ const parent = ancestors.at(-1);
 			display: flex;
 			align-items: center;
 			gap: 10px;
-			width: calc(100% + var(--page-pad-x) * 2);
-			min-height: 46px;
+			inline-size: calc(100% + var(--page-pad-x) * 2);
+			min-block-size: 46px;
 			margin: calc(var(--page-pad-top) * -1) calc(var(--page-pad-x) * -1) 26px;
 			padding: 0 var(--page-pad-x);
 			background: var(--white-02);
@@ -110,7 +110,7 @@ const parent = ancestors.at(-1);
 		.breadcrumb-pill__section,
 		.breadcrumb-pill__current {
 			overflow: hidden;
-			min-width: 0;
+			min-inline-size: 0;
 			white-space: nowrap;
 			text-overflow: ellipsis;
 		}

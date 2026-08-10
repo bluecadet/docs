@@ -123,11 +123,11 @@ if (isRoot) {
 	.nav-sheet {
 		position: fixed;
 		inset: 0;
-		width: 100vw;
-		height: 100vh;
-		height: 100dvh;
-		max-width: none;
-		max-height: none;
+		inline-size: 100vw;
+		block-size: 100vh;
+		block-size: 100dvh;
+		max-inline-size: none;
+		max-block-size: none;
 		margin: 0;
 		padding: 0;
 		border: none;
@@ -166,7 +166,7 @@ if (isRoot) {
 		display: flex;
 		align-items: center;
 		gap: 12px;
-		min-height: var(--header-height);
+		min-block-size: var(--header-height);
 		/* Matches .header-shell-inner's <=767px padding (HeaderShell.astro) exactly — the sheet is
 		   mobile-only, so there's no wider breakpoint to account for here. */
 		padding: 0 var(--content-pad-x);
@@ -191,7 +191,7 @@ if (isRoot) {
 		margin-inline-start: auto;
 		display: flex;
 		align-items: center;
-		min-height: 44px;
+		min-block-size: 44px;
 		padding: 0;
 		background: none;
 		border: none;
@@ -212,8 +212,8 @@ if (isRoot) {
 		display: flex;
 		align-items: center;
 		gap: 9px;
-		width: 100%;
-		min-height: 48px;
+		inline-size: 100%;
+		min-block-size: 48px;
 		padding: 0 26px;
 		/* Matches Breadcrumb.astro's .breadcrumb-pill background — the two are the same "search /
 		   wayfinding bar" affordance at different breakpoints and should read as the same surface. */
@@ -243,7 +243,7 @@ if (isRoot) {
 	   as one block on long nav trees). */
 	.nav-sheet__body {
 		flex: 1 1 auto;
-		min-height: 0;
+		min-block-size: 0;
 		overflow-y: auto;
 	}
 
@@ -274,7 +274,7 @@ if (isRoot) {
 	.nav-sheet__item {
 		display: flex;
 		align-items: center;
-		min-height: 48px;
+		min-block-size: 48px;
 		padding: 0 26px;
 		color: var(--text-muted);
 		font-size: 14.5px;
@@ -307,7 +307,7 @@ if (isRoot) {
 	}
 
 	.nav-sheet__list.is-nested .nav-sheet__item {
-		min-height: 44px;
+		min-block-size: 44px;
 		padding: 0 16px;
 		font-size: 13.5px;
 	}
@@ -339,7 +339,7 @@ if (isRoot) {
 	.nav-sheet__footer-link {
 		display: flex;
 		align-items: center;
-		min-height: 48px;
+		min-block-size: 48px;
 		color: var(--text-muted);
 	}
 

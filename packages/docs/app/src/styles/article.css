@@ -311,6 +311,14 @@
 	font: 400 13px/1.8 var(--font-mono);
 }
 
+/* `<Terminal>` (the unwrapped window — see components/Terminal.astro) dropped straight into a doc
+   page's prose body. It carries no block margins of its own — that's a landing-band concern owned
+   by `landing/TerminalBand.astro` — so it needs the same rhythm as `.code-block`/`.table-wrap`
+   here, or it would butt against surrounding paragraphs. */
+.prose .terminal {
+	margin-block: 24px;
+}
+
 /* Shiki's `css-variables` theme (astro.config.mjs `markdown.shikiConfig.theme`) reads token colors
    from `--astro-code-*` custom properties instead of baking in hex values — see
    createCssVariablesTheme() in @shikijs/core. Mapped onto the article palette: restrained and
@@ -402,7 +410,7 @@
 }
 
 .prose table {
-	width: 100%;
+	inline-size: 100%;
 	border-collapse: collapse;
 	font-size: 13.5px;
 }
@@ -459,7 +467,7 @@
 	.prose tbody,
 	.prose tr {
 		display: block;
-		width: 100%;
+		inline-size: 100%;
 	}
 
 	.prose thead {

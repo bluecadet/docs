@@ -29,7 +29,8 @@
 // descendant's href (depth-first, `isPage` stays false so it isn't double-counted as a page).
 // Root-level groups with no `link` keep the inert "section heading" treatment. Auto mode mirrors
 // the no-link case for nested directories with no index page.
-import { type CollectionEntry, getCollection } from "astro:content";
+import { getCollection } from "astro:content";
+import { docsAstroPages, rawAstroPages } from "./astro-pages.js";
 import {
 	type DocsAppConfig,
 	type FooterGroup,
@@ -110,7 +111,25 @@ export function getNavTree(): Promise<NavTree> {
 async function buildNavTree(): Promise<NavTree> {
 	const base = import.meta.env.BASE_URL;
 	// `index` is the landing route (src/pages/index.astro), not a sidebar entry.
-	const entries = await getCollection("docs", ({ id }) => id !== "index");
+	const mdEntries = await getCollection("docs", ({ id }) => id !== "index");
+	// `layout: "docs"` astro pages (see ./astro-pages.ts) join the tree exactly like a synced
+	// markdown entry, so docs.config.yaml sidebar entries and group `link:`s can reference them by
+	// id, and breadcrumb/pagination/search-modal/footer — which all derive from this tree — pick
+	// them up automatically. `layout: "raw"` pages are deliberately left out: they own their whole
+	// document and have nowhere sensible to sit in a doc-page nav.
+	const entries: NavEntry[] = [
+		...mdEntries.map((entry) => ({
+			id: entry.id,
+			title: entry.data.title,
+			description: entry.data.description,
+		})),
+		...docsAstroPages.map((page) => ({
+			id: page.id,
+			// Non-null: astro-pages.ts requires `title` for every `layout: "docs"` page.
+			title: page.title as string,
+			description: page.description,
+		})),
+	];
 	const { sidebar } = getDocsConfig();
 
 	const nodes = sidebar ? buildConfigNodes(sidebar, entries, base) : buildAutoNodes(entries, base);
@@ -121,10 +140,15 @@ async function buildNavTree(): Promise<NavTree> {
 	return { nodes, flat };
 }
 
-type DocsEntry = CollectionEntry<"docs">;
+/** The bits of either a markdown collection entry or a `layout: "docs"` astro page the tree needs. */
+interface NavEntry {
+	id: string;
+	title: string;
+	description?: string;
+}
 
 /** Default tree: alphabetical, mirrors the content ids' directory structure. */
-function buildAutoNodes(entries: DocsEntry[], base: string): NavNode[] {
+function buildAutoNodes(entries: NavEntry[], base: string): NavNode[] {
 	const nodes: NavNode[] = [];
 	const byId = new Map<string, NavNode>();
 
@@ -155,8 +179,8 @@ function buildAutoNodes(entries: DocsEntry[], base: string): NavNode[] {
 	for (const entry of entries) {
 		const node = nodeFor(entry.id);
 		node.isPage = true;
-		node.label = entry.data.title;
-		node.description = entry.data.description;
+		node.label = entry.title;
+		node.description = entry.description;
 		node.href = `${base}${entry.id}/`;
 	}
 
@@ -186,15 +210,33 @@ const CONFIG_PATH = "docs.config.yaml";
  * sorting. Group nodes are synthetic (see the module-level comment on why `trailFor`/`containsId`
  * can't rely on id prefixes here).
  */
-function buildConfigNodes(groups: SidebarGroup[], entries: DocsEntry[], base: string): NavNode[] {
+function buildConfigNodes(groups: SidebarGroup[], entries: NavEntry[], base: string): NavNode[] {
 	const byId = new Map(entries.map((entry) => [entry.id, entry]));
 	const usedIds = new Set<string>(entries.map((entry) => entry.id));
 	return groups.map((group) => buildGroupNode(group, byId, usedIds, base, 0));
 }
 
+/**
+ * Looks up a sidebar-referenced id, throwing a descriptive error if it isn't a real page.
+ * `layout: "raw"` astro pages get a clearer error than the generic "unknown page" one — they DO
+ * exist, they just can't join a nav tree (they own their entire document; see ./astro-pages.ts).
+ */
+function requireNavEntry(id: string, byId: Map<string, NavEntry>): NavEntry {
+	const entry = byId.get(id);
+	if (entry) return entry;
+	if (rawAstroPages.some((page) => page.id === id)) {
+		throw new Error(
+			`${CONFIG_PATH}: sidebar references "${id}", but that page has \`layout: "raw"\` — raw astro pages own their entire document and can't join the sidebar/nav. Use layout: "docs" instead, or remove this sidebar entry.`,
+		);
+	}
+	throw new Error(
+		`${CONFIG_PATH}: sidebar references unknown page "${id}" (no synced content with that id).`,
+	);
+}
+
 function buildGroupNode(
 	group: SidebarGroup,
-	byId: Map<string, DocsEntry>,
+	byId: Map<string, NavEntry>,
 	usedIds: Set<string>,
 	base: string,
 	depth: number,
@@ -202,18 +244,13 @@ function buildGroupNode(
 	const children = group.items.map((item) => buildItemNode(item, byId, usedIds, base, depth + 1));
 
 	if (group.link !== undefined) {
-		const entry = byId.get(group.link);
-		if (!entry) {
-			throw new Error(
-				`${CONFIG_PATH}: sidebar references unknown page "${group.link}" (no synced content with that id).`,
-			);
-		}
+		const entry = requireNavEntry(group.link, byId);
 		const cut = group.link.lastIndexOf("/");
 		return {
 			id: group.link,
 			segment: group.link.slice(cut + 1),
 			label: group.label,
-			description: entry.data.description,
+			description: entry.description,
 			href: `${base}${group.link}/`,
 			depth,
 			isPage: true,
@@ -239,25 +276,20 @@ function buildGroupNode(
 
 function buildItemNode(
 	item: SidebarItem,
-	byId: Map<string, DocsEntry>,
+	byId: Map<string, NavEntry>,
 	usedIds: Set<string>,
 	base: string,
 	depth: number,
 ): NavNode {
 	if (typeof item !== "string") return buildGroupNode(item, byId, usedIds, base, depth);
 
-	const entry = byId.get(item);
-	if (!entry) {
-		throw new Error(
-			`${CONFIG_PATH}: sidebar references unknown page "${item}" (no synced content with that id).`,
-		);
-	}
+	const entry = requireNavEntry(item, byId);
 	const cut = item.lastIndexOf("/");
 	return {
 		id: item,
 		segment: item.slice(cut + 1),
-		label: entry.data.title,
-		description: entry.data.description,
+		label: entry.title,
+		description: entry.description,
 		href: `${base}${item}/`,
 		depth,
 		isPage: true,

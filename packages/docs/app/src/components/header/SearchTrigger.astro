@@ -26,8 +26,8 @@ const { tabletWidth = "220px" } = Astro.props;
 		display: flex;
 		align-items: center;
 		gap: 8px;
-		width: 340px;
-		max-width: 100%;
+		inline-size: 340px;
+		max-inline-size: 100%;
 		padding: 9px 14px;
 		border: 1px solid var(--hairline-12);
 		border-radius: var(--radius-md);
@@ -53,15 +53,15 @@ const { tabletWidth = "220px" } = Astro.props;
 
 	@media (max-width: 1023px) {
 		.search-trigger {
-			width: var(--search-trigger-tablet-width, 220px);
+			inline-size: var(--search-trigger-tablet-width, 220px);
 		}
 	}
 
 	@media (max-width: 767px) {
 		.search-trigger {
-			width: auto;
-			min-width: 44px;
-			min-height: 44px;
+			inline-size: auto;
+			min-inline-size: 44px;
+			min-block-size: 44px;
 			padding: 0;
 			justify-content: center;
 			border: none;

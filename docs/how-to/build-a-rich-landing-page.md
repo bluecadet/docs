@@ -61,8 +61,7 @@ Everything after the hero is your MDX body. Import the blocks you want from the 
 leaves `.mdx` imports untouched, and it can always resolve itself:
 
 ```mdx
-import StatStrip from "@bluecadet/docs/components/landing/StatStrip.astro";
-import Stat from "@bluecadet/docs/components/landing/Stat.astro";
+import { StatStrip, Stat } from "@bluecadet/docs/components";
 ```
 
 Ordinary markdown between the blocks stays at the usual reading measure; the blocks themselves run
@@ -82,21 +81,21 @@ Four figures reads best — the strip is four-up on desktop and two-up below 102
 `label` may also be given as children (`<Stat value="0">…</Stat>`) when it's long enough to want
 its own line in the source.
 
-### Terminal
+### TerminalBand
 
 A transcript of a real run. Lines are `<Line>` elements rather than raw text because MDX parses the
 children of a JSX block as markdown, which would collapse the leading whitespace a transcript
 depends on:
 
 ```mdx
-<Terminal cwd="~/repos/acme" caption="a full build" duration="499ms">
+<TerminalBand cwd="~/repos/acme" caption="a full build" duration="499ms">
   <Line prompt>npx acme-build</Line>
   <Line label="reading">src/ + assets/</Line>
   <Line label="bundling">42 modules <Ok>✓</Ok></Line>
   <Line label="hashing">output → <Warn>7f2a91c</Warn></Line>
   <Line />
   <Line><Ok>done</Ok> · 499ms</Line>
-</Terminal>
+</TerminalBand>
 ```
 
 - `<Line prompt>` prefixes a dim `$ `.
@@ -106,6 +105,13 @@ depends on:
 - `<Ok>` is the state accent, `<Warn>` is the attention accent. Use them the way the rest of the
   site does: state for where you are and what succeeded, attention for what changed or needs
   attention.
+
+`TerminalBand` wraps the plain `Terminal` window (title bar + transcript/cast body, `cast`,
+`rows`, `cols`, `poster`, `loop` props) with the band's caption row, padding and width cap.
+`Terminal` on its own is also exported for use inside an ordinary doc page's prose body, without
+any of that band chrome. For asciinema playback instead of a hand-authored transcript, see
+[Terminal transcripts and asciinema playback](/reference/content-conventions/#terminal-transcripts-and-asciinema-playback)
+for the `cast` prop and where to put `.cast` files.
 
 ### Features
 
@@ -187,14 +193,18 @@ rest as secondary:
 
 ## Import paths
 
-| Component | Import from |
-| --- | --- |
-| `StatStrip`, `Stat` | `@bluecadet/docs/components/landing/StatStrip.astro`, `…/Stat.astro` |
-| `Terminal`, `Line`, `Ok`, `Warn` | `@bluecadet/docs/components/landing/Terminal.astro`, `…/Line.astro`, `…/Ok.astro`, `…/Warn.astro` |
-| `Features`, `Feature` | `@bluecadet/docs/components/landing/Features.astro`, `…/Feature.astro` |
-| `GlyphList`, `GlyphItem` | `@bluecadet/docs/components/landing/GlyphList.astro`, `…/GlyphItem.astro` |
-| `CtaCards`, `CtaCard` | `@bluecadet/docs/components/landing/CtaCards.astro`, `…/CtaCard.astro` |
-| `ClosingCta` | `@bluecadet/docs/components/landing/ClosingCta.astro` |
+Every component is imported from the same barrel:
+
+```mdx
+import {
+  StatStrip, Stat,
+  TerminalBand, Terminal, Line, Ok, Warn,
+  Features, Feature,
+  GlyphList, GlyphItem,
+  CtaCards, CtaCard,
+  ClosingCta,
+} from "@bluecadet/docs/components";
+```
 
 These are the only components the package exports. Layout, colour and type are fixed — there is no
 theming hook, deliberately, so every site built with this tool reads the same way.

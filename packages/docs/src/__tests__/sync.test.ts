@@ -121,6 +121,139 @@ describe("buildRouteMap", () => {
 	});
 });
 
+describe("discoverContent - .astro files", () => {
+	it("includes .astro files under docs/ in the file set", () => {
+		write("docs/how-to/demo.astro", "<h1>Demo</h1>\n");
+		const { files } = discoverContent(root, []);
+		expect(files).toContain(path.join(root, "docs/how-to/demo.astro"));
+	});
+
+	it("does not pick up .astro files matched by an extra content glob", () => {
+		write("Packages/foo/widget.astro", "<h1>Widget</h1>\n");
+		const { files } = discoverContent(root, ["Packages/*/*.astro"]);
+		expect(files).not.toContain(path.join(root, "Packages/foo/widget.astro"));
+	});
+});
+
+describe("buildRouteMap - .astro routing", () => {
+	it("strips .astro exactly like .md, including nesting and case normalization", () => {
+		const demo = write("docs/How-To/Demo.astro", "<h1>Demo</h1>\n");
+		write("README.md");
+		const { landing, displaced, docsDir, files } = discoverContent(root, []);
+		const routes = buildRouteMap(root, docsDir, landing, displaced, files);
+		expect(routes.get(demo)).toBe("/how-to/demo/");
+	});
+
+	it("collapses index.astro onto its parent directory route", () => {
+		const index = write("docs/how-to/index.astro", "<h1>How To</h1>\n");
+		write("README.md");
+		const { landing, displaced, docsDir, files } = discoverContent(root, []);
+		const routes = buildRouteMap(root, docsDir, landing, displaced, files);
+		expect(routes.get(index)).toBe("/how-to/");
+	});
+
+	it("throws when a .md file and a .astro file collide on the same route", () => {
+		write("README.md");
+		const md = write("docs/how-to.md");
+		const astro = write("docs/how-to/index.astro", "<h1>How To</h1>\n");
+		const { landing, displaced, docsDir, files } = discoverContent(root, []);
+		let thrown: Error | undefined;
+		try {
+			buildRouteMap(root, docsDir, landing, displaced, files);
+		} catch (err) {
+			thrown = err as Error;
+		}
+		expect(thrown?.message).toContain(md);
+		expect(thrown?.message).toContain(astro);
+	});
+
+	it("rejects an .astro file that resolves to the landing route (/)", () => {
+		write("README.md");
+		write("docs/index.astro", "<h1>Home</h1>\n");
+		const { landing, displaced, docsDir, files } = discoverContent(root, []);
+		expect(() => buildRouteMap(root, docsDir, landing, displaced, files)).toThrow(
+			/landing page/,
+		);
+	});
+});
+
+describe("syncContent - .astro pages", () => {
+	function makeCfg(overrides: Partial<ResolvedConfig> = {}): ResolvedConfig {
+		return { root, out: path.join(root, "dist"), title: "Test", branch: "main", content: [], ...overrides };
+	}
+
+	it("copies an .astro file verbatim to astro-pages/, written under its route path", () => {
+		write("README.md");
+		write("docs/how-to/demo.astro", "<h1>Demo</h1>\n<p>Raw markup, untouched.</p>\n");
+
+		const appRoot = fs.mkdtempSync(path.join(os.tmpdir(), "docs-sync-app-test-"));
+		try {
+			const result = syncContent(makeCfg(), appRoot);
+			const outPath = path.join(appRoot, "src", "astro-pages", "how-to", "demo.astro");
+			expect(fs.existsSync(outPath)).toBe(true);
+			const written = fs.readFileSync(outPath, "utf8");
+			expect(written).toBe("<h1>Demo</h1>\n<p>Raw markup, untouched.</p>\n");
+			expect(written).not.toContain("sourcePath");
+			expect(result.pageCount).toBe(2); // README.md + demo.astro
+		} finally {
+			fs.rmSync(appRoot, { recursive: true, force: true });
+		}
+	});
+
+	it("wipes astro-pages/ on every sync, preserving nothing from a previous run", () => {
+		write("README.md");
+		write("docs/how-to/demo.astro", "<h1>Demo</h1>\n");
+
+		const appRoot = fs.mkdtempSync(path.join(os.tmpdir(), "docs-sync-app-test-"));
+		try {
+			syncContent(makeCfg(), appRoot);
+			const staleDir = path.join(appRoot, "src", "astro-pages", "stale");
+			fs.mkdirSync(staleDir, { recursive: true });
+			fs.writeFileSync(path.join(staleDir, "old.astro"), "<p>old</p>\n");
+
+			fs.rmSync(path.join(root, "docs", "how-to", "demo.astro"));
+			syncContent(makeCfg(), appRoot);
+
+			expect(fs.existsSync(staleDir)).toBe(false);
+			expect(fs.existsSync(path.join(appRoot, "src", "astro-pages", "how-to"))).toBe(false);
+		} finally {
+			fs.rmSync(appRoot, { recursive: true, force: true });
+		}
+	});
+
+	it("excludes .astro files from blindCopyDocsAssets (no raw source shipped to public/)", () => {
+		write("README.md");
+		write("docs/how-to/demo.astro", "<h1>Demo</h1>\n");
+
+		const appRoot = fs.mkdtempSync(path.join(os.tmpdir(), "docs-sync-app-test-"));
+		try {
+			syncContent(makeCfg(), appRoot);
+			expect(fs.existsSync(path.join(appRoot, "public", "how-to", "demo.astro"))).toBe(false);
+			expect(fs.existsSync(path.join(appRoot, "public", "demo.astro"))).toBe(false);
+		} finally {
+			fs.rmSync(appRoot, { recursive: true, force: true });
+		}
+	});
+
+	it("rewrites a markdown link to an .astro page to its site route", () => {
+		write("README.md");
+		write("docs/how-to/demo.astro", "<h1>Demo</h1>\n");
+		write("docs/how-to/guide.md", "# Guide\n\nSee [the demo](./demo.astro).\n");
+
+		const appRoot = fs.mkdtempSync(path.join(os.tmpdir(), "docs-sync-app-test-"));
+		try {
+			syncContent(makeCfg(), appRoot);
+			const synced = fs.readFileSync(
+				path.join(appRoot, "src", "content", "docs", "how-to", "guide.md"),
+				"utf8",
+			);
+			expect(synced).toContain("(/how-to/demo/)");
+		} finally {
+			fs.rmSync(appRoot, { recursive: true, force: true });
+		}
+	});
+});
+
 describe("syncContent - sourcePath frontmatter", () => {
 	it("injects the repo-root-relative source path into every synced page's frontmatter", () => {
 		write("README.md");
