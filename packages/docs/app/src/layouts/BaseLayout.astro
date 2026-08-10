@@ -4,8 +4,10 @@
 //
 // Structure: a `min-height: 100dvh` grid of `auto 1fr auto` rows, so the body row always grows to
 // fill a short page (no dead space under the footer) and the sidebar's hairline runs to the bottom.
-// `--rail-width` and `--header-height` are declared here, once, and consumed by Header/Footer/
-// SidebarNav/Toc and by the landing's own header/footer variants.
+// `--rail-width` is declared here, once, and consumed by Header/Footer/SidebarNav/Toc and by the
+// landing's own header/footer variants. `--header-height` and `--content-pad-x` live at :root
+// (global.css) instead, since NavSheet.astro and SearchModal.astro need them too but mount outside
+// `.page`.
 //
 // Pages that need a different header/footer (landing, 404) pass them through the named slots;
 // doc pages get the defaults.
@@ -98,28 +100,27 @@ const hasToc = main === "article" && headings.some((heading) => heading.depth ==
 
 <style>
 	.page {
-		/* Left rail width and header height, shared by header/sidebar/TOC/footer so their columns
-		   and sticky offsets stay aligned on every route. */
+		/* Left rail width, shared by header/sidebar/footer so their columns stay aligned on every
+		   route. (--header-height lives at :root — see global.css.) */
 		--rail-width: 300px;
-		--header-height: 68px;
 		--toc-width: 272px;
 		/* Shared cap: header, body and footer each center an inner row to this width with matching
-		   border-left/border-right hairlines, so the two rules read as one continuous edge running
-		   from the top of the header to the bottom of the footer. */
+		   border-inline hairlines, so the two rules read as one continuous edge running from the top
+		   of the header to the bottom of the footer. */
 		--shell-width: 1440px;
-		/* Shared horizontal/top gutters — every band that abuts the shell's outer edge (sidebar,
-		   article, TOC, header search cell, landing bands) pads from these two so their edges and
-		   top-aligned labels line up without each component re-declaring the same numbers. */
-		--content-pad-x: 56px;
+		/* Shared top gutter — every band that abuts the shell's outer edge pads from this so its
+		   top-aligned labels line up without each component re-declaring the number. (The matching
+		   horizontal gutter, --content-pad-x, lives at :root — see global.css — for the same reason
+		   as --header-height above.) */
 		--content-pad-top: 44px;
 		/* Header/footer read these instead of a hard-coded `grid`/border so both variants can drop
 		   the rail column and its divider in `.page--no-sidebar` below without duplicating the swap
 		   in HeaderShell/Wordmark/Footer directly. */
 		--rail-display: grid;
 		--rail-divider: 1px solid var(--hairline-08);
-		--brand-pad-left: 36px;
-		--brand-pad-right: 36px;
-		--nav-pad-left: var(--content-pad-x);
+		--brand-pad-start: 36px;
+		--brand-pad-end: 36px;
+		--nav-pad-start: var(--content-pad-x);
 		display: grid;
 		grid-template-rows: auto 1fr auto;
 		/* dvh keeps mobile browsers' collapsing toolbars from over-sizing the shell; the vh line
@@ -136,12 +137,12 @@ const hasToc = main === "article" && headings.some((heading) => heading.depth ==
 	.page--no-sidebar {
 		--rail-display: flex;
 		--rail-divider: none;
-		--brand-pad-left: var(--content-pad-x);
-		--brand-pad-right: 40px;
-		--nav-pad-left: 0px;
+		--brand-pad-start: var(--content-pad-x);
+		--brand-pad-end: 40px;
+		--nav-pad-start: 0px;
 		/* Desktop-only (consumers gate this behind their own `min-width: 1024px` query): with no
 		   rail column, the search/nav cell needs `flex: 1` to fill the row instead of the tablet
-		   breakpoint's `margin-left: auto` trick, which only pushes a content-sized box right. */
+		   breakpoint's `margin-inline-start: auto` trick, which only pushes a content-sized box right. */
 		--nav-flex: 1;
 	}
 
@@ -193,8 +194,6 @@ const hasToc = main === "article" && headings.some((heading) => heading.depth ==
 	@media (max-width: 1023px) {
 		.page {
 			--rail-width: 212px;
-			--header-height: 60px;
-			--content-pad-x: 36px;
 			--content-pad-top: 28px;
 		}
 
@@ -207,8 +206,6 @@ const hasToc = main === "article" && headings.some((heading) => heading.depth ==
 	   the breadcrumb pill (Breadcrumb.astro) take over wayfinding. */
 	@media (max-width: 767px) {
 		.page {
-			--header-height: 56px;
-			--content-pad-x: 18px;
 			--content-pad-top: 26px;
 		}
 

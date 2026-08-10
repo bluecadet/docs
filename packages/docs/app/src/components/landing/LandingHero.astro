@@ -3,6 +3,8 @@
 // eyebrow chips, install-command chip and marginalia notes come from optional landing frontmatter
 // (see src/content.config.ts). Each of those three renders nothing when its field is absent, so a
 // repo with a plain README still gets the plain headline-and-lead hero.
+import { splitAccent } from "../../lib/text";
+
 interface Eyebrow {
 	label: string;
 	tone: "state" | "attention" | "neutral";
@@ -26,9 +28,7 @@ const { title, lead, eyebrows, installCommand, notes, quickstartHref } = Astro.p
 // Only split into the design's two-clause hero treatment (plain line + italic accent line) when
 // the title has a natural clause break; a bare title (the common case for real doc collections)
 // renders as a single plain line rather than faking one.
-const splitAt = title.indexOf(", ");
-const firstClause = splitAt === -1 ? title : title.slice(0, splitAt + 1);
-const secondClause = splitAt === -1 ? null : title.slice(splitAt + 2);
+const { before: firstClause, accent: secondClause } = splitAccent(title, ", ");
 
 const chips = eyebrows?.slice(0, 3) ?? [];
 const marginalia = notes?.filter((note) => note.trim().length > 0).slice(0, 2) ?? [];
@@ -132,7 +132,7 @@ const marginalia = notes?.filter((note) => note.trim().length > 0).slice(0, 2) ?
 		flex-wrap: wrap;
 		align-items: center;
 		gap: 12px;
-		margin-bottom: 34px;
+		margin-block-end: 34px;
 	}
 
 	.eyebrow {
@@ -189,23 +189,24 @@ const marginalia = notes?.filter((note) => note.trim().length > 0).slice(0, 2) ?
 		display: flex;
 		flex-direction: column;
 		gap: 28px;
-		margin-top: 26px;
+		margin-block-start: 26px;
 	}
 
 	.hero-note {
 		margin: 0;
-		padding: 2px 0 2px 14px;
+		padding-block: 2px 2px;
+		padding-inline: 14px 0;
 		font: 400 12px/1.75 var(--font-mono);
 		text-wrap: pretty;
 	}
 
 	.hero-note-attention {
-		border-left: 2px solid var(--accent-2);
+		border-inline-start: 2px solid var(--accent-2);
 		color: var(--accent-2-annotation);
 	}
 
 	.hero-note-neutral {
-		border-left: 2px solid var(--hairline-14);
+		border-inline-start: 2px solid var(--hairline-14);
 		color: var(--text-dim);
 	}
 
@@ -248,7 +249,8 @@ const marginalia = notes?.filter((note) => note.trim().length > 0).slice(0, 2) ?
 		color: var(--accent);
 		cursor: pointer;
 		font: 400 13px var(--font-mono);
-		padding: 0 0 0 8px;
+		padding-block: 0 0;
+		padding-inline: 8px 0;
 	}
 
 	.install-copy--copied {
@@ -307,7 +309,7 @@ const marginalia = notes?.filter((note) => note.trim().length > 0).slice(0, 2) ?
 
 		.hero-eyebrows {
 			gap: 7px;
-			margin-bottom: 24px;
+			margin-block-end: 24px;
 		}
 
 		.eyebrow {
@@ -323,16 +325,16 @@ const marginalia = notes?.filter((note) => note.trim().length > 0).slice(0, 2) ?
 		}
 
 		.hero-lead {
-			margin-top: 22px;
+			margin-block-start: 22px;
 		}
 
 		.hero-notes {
 			gap: 16px;
-			margin-top: 22px;
+			margin-block-start: 22px;
 		}
 
 		.hero-note {
-			padding-left: 12px;
+			padding-inline-start: 12px;
 			font-size: 11.5px;
 			line-height: 1.7;
 		}
@@ -352,7 +354,7 @@ const marginalia = notes?.filter((note) => note.trim().length > 0).slice(0, 2) ?
 		}
 
 		.install-copy {
-			margin-left: auto;
+			margin-inline-start: auto;
 		}
 
 		.hero-quickstart {

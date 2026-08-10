@@ -49,7 +49,7 @@ const routesPayload = {
 				<div class="notfound-cta">
 					<a class="btn btn-primary" href={base}>back to docs →</a>
 					<button type="button" class="btn btn-ghost" data-search-trigger>
-						search everything <span class="kbd">/</span>
+						search everything <kbd class="kbd">/</kbd>
 					</button>
 				</div>
 			</div>
@@ -86,7 +86,7 @@ const routesPayload = {
 		color: var(--accent-2);
 		letter-spacing: 0.14em;
 		text-transform: uppercase;
-		margin-bottom: 22px;
+		margin-block-end: 22px;
 	}
 
 	.notfound-h1 {
@@ -114,7 +114,7 @@ const routesPayload = {
 		display: grid;
 		grid-template-columns: minmax(0, 620px) 300px;
 		gap: 56px;
-		margin-top: 38px;
+		margin-block-start: 38px;
 		align-items: start;
 	}
 
@@ -134,7 +134,7 @@ const routesPayload = {
 		display: flex;
 		align-items: center;
 		padding: 8px 14px;
-		border-bottom: 1px solid var(--hairline-08);
+		border-block-end: 1px solid var(--hairline-08);
 		font: 400 11px var(--font-mono);
 		color: var(--text-dim);
 	}
@@ -187,7 +187,7 @@ const routesPayload = {
 	}
 
 	:global(.dym-row + .dym-row) {
-		border-top: 1px solid var(--hairline-06);
+		border-block-start: 1px solid var(--hairline-06);
 	}
 
 	:global(.dym-row .dym-bullet) {
@@ -198,7 +198,7 @@ const routesPayload = {
 	:global(.dym-row .dym-title) {
 		display: block;
 		color: var(--text-body);
-		margin-bottom: 3px;
+		margin-block-end: 3px;
 	}
 
 	:global(.dym-row .dym-path) {
@@ -212,11 +212,8 @@ const routesPayload = {
 		color: var(--text-dim);
 	}
 
-	:global(.dym-row--active) {
-		background: var(--accent-tint-08);
-		box-shadow: inset 2px 0 var(--accent);
-	}
-
+	/* .active-row (global.css) supplies the background/box-shadow — see not-found-client.ts, which
+	   adds it alongside .dym-row--active on the current row. */
 	:global(.dym-row--active .dym-bullet) {
 		color: var(--accent);
 	}
@@ -229,7 +226,7 @@ const routesPayload = {
 	.notfound-cta {
 		display: flex;
 		gap: 14px;
-		margin-top: 30px;
+		margin-block-start: 30px;
 	}
 
 	.btn {
@@ -254,17 +251,15 @@ const routesPayload = {
 	}
 
 	.kbd {
-		border: 1px solid var(--hairline-14);
-		border-radius: var(--radius-sm);
-		padding: 0 5px;
-		margin-left: 6px;
+		margin-inline-start: 6px;
 		font-size: 11px;
 	}
 
 	/* -- Margin note -- */
 	.margin-note {
-		border-left: 2px solid var(--accent-2);
-		padding: 2px 0 2px 14px;
+		border-inline-start: 2px solid var(--accent-2);
+		padding-block: 2px 2px;
+		padding-inline: 14px 0;
 		font: 400 12px/1.8 var(--font-mono);
 		color: var(--accent-2-annotation);
 	}

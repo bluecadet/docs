@@ -11,7 +11,7 @@
 // same mechanism also moves the brand mark between the rail column (docs, where the sidebar
 // already lives under it) and the bottom bar (landing/404, which has no rail to put it in): see
 // the `:global(.page--no-sidebar)` rules below.
-import { getDocsConfig, isExternalLink } from "../lib/config";
+import { externalLinkAttrs, getDocsConfig, isExternalLink } from "../lib/config";
 import type { FooterGroup } from "../lib/config";
 import { footerGroups } from "../lib/nav";
 
@@ -65,12 +65,7 @@ const lastGroupIsWide = groupCount > 1;
 									]}
 								>
 									{group.links.map((link) => (
-										<a
-											class="site-footer__link"
-											href={link.href}
-											rel={isExternalLink(link.href) ? "noopener noreferrer" : undefined}
-											target={isExternalLink(link.href) ? "_blank" : undefined}
-										>
+										<a class="site-footer__link" href={link.href} {...externalLinkAttrs(link.href)}>
 											<span class="site-footer__link-label">
 												{link.label}
 												{isExternalLink(link.href) && " ↗"}
@@ -96,11 +91,11 @@ const lastGroupIsWide = groupCount > 1;
 
 <style>
 	.site-footer {
-		border-top: 1px solid var(--hairline-08);
+		border-block-start: 1px solid var(--hairline-08);
 		background: var(--surface-footer);
 	}
 
-	/* Capped, centered inner column — mirrors .header-shell-inner and .page-body so the left/right
+	/* Capped, centered inner column — mirrors .header-shell-inner and .page-body so the inline
 	   hairlines line up into one continuous edge from the header down through the footer. */
 	.site-footer-inner {
 		max-width: var(--shell-width);
@@ -136,8 +131,9 @@ const lastGroupIsWide = groupCount > 1;
 		   line with the group titles beside it. Pin it to the top of its own box instead so both
 		   cells' first line start at the same y. */
 		align-items: flex-start;
-		border-right: var(--rail-divider);
-		padding: 40px var(--brand-pad-right) 32px var(--brand-pad-left);
+		border-inline-end: var(--rail-divider);
+		padding-block: 40px 32px;
+		padding-inline: var(--brand-pad-start) var(--brand-pad-end);
 	}
 
 	/* Only ever shown on sidebar-less pages at desktop widths — see the `min-width: 1024px` rule
@@ -178,14 +174,14 @@ const lastGroupIsWide = groupCount > 1;
 	}
 
 	/* Note (e.g. a "from the same shop" URL) sits immediately after the label with a small gap, at
-	   every viewport — no `justify-content: space-between`/`margin-left: auto` pushing it off to
+	   every viewport — no `justify-content: space-between`/`margin-inline-start: auto` pushing it off to
 	   the far edge of the row. */
 	.site-footer__link {
 		display: flex;
 		align-items: baseline;
 		gap: 8px;
 		color: var(--text-muted);
-		transition: color 0.15s ease;
+		transition: color var(--transition-fast);
 	}
 
 	.site-footer__link:hover {
@@ -203,14 +199,15 @@ const lastGroupIsWide = groupCount > 1;
 		align-items: center;
 		gap: 24px;
 		flex-wrap: wrap;
-		padding: 20px var(--content-pad-x) 24px var(--brand-pad-left);
-		border-top: 1px solid var(--hairline-08);
+		padding-block: 20px 24px;
+		padding-inline: var(--brand-pad-start) var(--content-pad-x);
+		border-block-start: 1px solid var(--hairline-08);
 		font: 400 12px var(--font-mono);
 		color: var(--text-faint);
 	}
 
 	.site-footer__meta {
-		margin-left: auto;
+		margin-inline-start: auto;
 	}
 
 	@media (min-width: 1024px) {
@@ -265,8 +262,8 @@ const lastGroupIsWide = groupCount > 1;
 		   the horizontal insets stay on the repo's `--content-pad-x` convention (18px at mobile)
 		   instead of the reference's hard-coded 22px. */
 		.site-footer__brand--rail {
-			border-right: none;
-			border-bottom: 1px solid var(--hairline-08);
+			border-inline-end: none;
+			border-block-end: 1px solid var(--hairline-08);
 			padding: 26px var(--content-pad-x) 22px;
 		}
 
@@ -278,7 +275,7 @@ const lastGroupIsWide = groupCount > 1;
 
 		.site-footer__group {
 			padding: 26px var(--content-pad-x);
-			border-bottom: 1px solid var(--hairline-06);
+			border-block-end: 1px solid var(--hairline-06);
 			gap: 16px;
 			font-size: 13px;
 			line-height: 1.7;
@@ -306,7 +303,7 @@ const lastGroupIsWide = groupCount > 1;
 
 	@media (max-width: 767px) {
 		.site-footer__meta {
-			margin-left: 0;
+			margin-inline-start: 0;
 			flex-basis: 100%;
 		}
 	}

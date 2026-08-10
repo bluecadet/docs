@@ -82,7 +82,7 @@ export function initNotFound(): void {
 		scored.slice(0, MAX_SUGGESTIONS).forEach((entry, i) => {
 			const row = document.createElement("a");
 			row.href = entry.route.href;
-			row.className = i === 0 ? "dym-row dym-row--active" : "dym-row";
+			row.className = i === 0 ? "dym-row dym-row--active active-row" : "dym-row";
 			row.innerHTML = `
 				<span class="dym-bullet">▸</span>
 				<span class="dym-text">

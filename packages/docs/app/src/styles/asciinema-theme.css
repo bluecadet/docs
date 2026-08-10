@@ -1,0 +1,28 @@
+/*
+ * Custom asciinema-player theme ("docs"), applied via `theme: "docs"` in
+ * `scripts/terminal-player.ts` (the player adds `.asciinema-player-theme-${theme}` to its root
+ * element). Global, not component-scoped: the player injects its markup client-side, after Astro's
+ * compile-time style scoping has already run, so a scoped <style> block in Terminal.astro could
+ * never reach it.
+ *
+ * --term-color-background is left transparent so the terminal's own --surface-code panel (see
+ * Terminal.astro) shows through instead of the player owning a second background layer.
+ *
+ * ANSI colors 8-15 are left unset and auto-derive from 0-7 (see the player's own bundled CSS).
+ * Green and yellow reuse the two site accents (sage = state, amber = attention) so a recorded
+ * build's "ok"/"warn" coloring lines up with the rest of the site. Red/blue/magenta/cyan have no
+ * source token to derive from — they're literal hexes, desaturated to sit inside the same
+ * restrained palette, the same pattern tokens.css uses for --terminal-dot-3.
+ */
+.asciinema-player-theme-docs {
+	--term-color-background: transparent;
+	--term-color-foreground: var(--text-code);
+	--term-color-0: var(--terminal-dot-3); /* black */
+	--term-color-1: #b3746f; /* red */
+	--term-color-2: var(--accent); /* green — sage, state */
+	--term-color-3: var(--accent-2); /* yellow — amber, attention */
+	--term-color-4: #7d93ad; /* blue */
+	--term-color-5: #a98bb0; /* magenta */
+	--term-color-6: #6fa8ac; /* cyan */
+	--term-color-7: var(--ink); /* white */
+}

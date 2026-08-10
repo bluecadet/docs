@@ -43,27 +43,22 @@
 	   Tint backgrounds at 4/6/8/9/12/14% alpha over the page background, used for
 	   active/success/required/changed states. Named by alpha step, not by intended use, so
 	   component authors can pick the step the spec calls for at each call site. */
-	--accent-tint-04: color-mix(in srgb, var(--accent) 4%, transparent);
 	--accent-tint-05: color-mix(in srgb, var(--accent) 5%, transparent);
 	--accent-tint-08: color-mix(in srgb, var(--accent) 8%, transparent);
 	--accent-tint-09: color-mix(in srgb, var(--accent) 9%, transparent);
 	--accent-tint-14: color-mix(in srgb, var(--accent) 14%, transparent);
 
 	--accent-2-tint-04: color-mix(in srgb, var(--accent-2) 4%, transparent);
-	--accent-2-tint-05: color-mix(in srgb, var(--accent-2) 5%, transparent);
 	--accent-2-tint-06: color-mix(in srgb, var(--accent-2) 6%, transparent);
-	--accent-2-tint-08: color-mix(in srgb, var(--accent-2) 8%, transparent);
 	--accent-2-tint-12: color-mix(in srgb, var(--accent-2) 12%, transparent);
 	--accent-2-tint-14: color-mix(in srgb, var(--accent-2) 14%, transparent);
 
 	/* Accent border alphas (outlined chips/badges/callouts). */
 	--accent-border-30: color-mix(in srgb, var(--accent) 30%, transparent);
 	--accent-2-border-22: color-mix(in srgb, var(--accent-2) 22%, transparent);
-	--accent-2-border-30: color-mix(in srgb, var(--accent-2) 30%, transparent);
 	--accent-2-border-40: color-mix(in srgb, var(--accent-2) 40%, transparent);
 
-	/* --accent-2-adjacent text/annotation colors, mixed toward the ink/body text tone rather
-	   than toward transparent. */
+	/* Text/annotation colors mixed toward the ink/body text tone rather than toward transparent. */
 	--accent-2-annotation: color-mix(in srgb, var(--accent-2) 26%, var(--text-dim)); /* ~#8b7d6b, approximates #8a7f6d (max channel delta 2) — small annotation/margin-note text on accent-2 left-border blocks */
 	--accent-2-callout-body: #d8cfc2; /* text color inside accent-2 "HEADS UP" callouts — no color-mix of the sources/text tiers reproduces this within a few RGB points, kept literal */
 
@@ -92,6 +87,9 @@
 	--radius-sm: 3px; /* chips, badges */
 	--radius-md: 4px; /* buttons, code block containers, callouts, table container */
 	--radius-lg: 6px; /* search modal */
+
+	/* ---- Motion ------------------------------------------------------------ */
+	--transition-fast: 0.15s ease; /* hover/focus color and background transitions site-wide */
 
 	/* ---- Fonts -------------------------------------------------------------
 	   Serif for headings/display numerals, mono for everything a machine said (nav, code,

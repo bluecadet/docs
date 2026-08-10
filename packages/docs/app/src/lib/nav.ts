@@ -353,3 +353,23 @@ export function containsId(node: NavNode, id: string | undefined): boolean {
 	if (node.id === id) return true;
 	return node.children.some((child) => containsId(child, id));
 }
+
+/**
+ * Shared by SidebarNav.astro and NavSheet.astro, which render the same recursive tree at
+ * different breakpoints: children of a root-level directory keep the flat "group" treatment (dim
+ * `guides/` label, items flush in the same column), while every deeper list becomes the indented,
+ * hairline-bordered sub-page column.
+ */
+export function childrenAreNested(node: NavNode, nested: boolean): boolean {
+	return nested || node.isPage || node.depth > 0;
+}
+
+/**
+ * Shared by SidebarNav.astro and NavSheet.astro: root-level sidebar groups (see `SidebarGroup` in
+ * ./config.ts) keep the dim mono "section heading" look even once they gain an `href` via `link`
+ * — only a group nested below the root switches to the plain sidebar-item treatment other links
+ * at its depth use.
+ */
+export function isSectionHeading(node: NavNode): boolean {
+	return node.depth === 0 && Boolean(node.isGroup);
+}

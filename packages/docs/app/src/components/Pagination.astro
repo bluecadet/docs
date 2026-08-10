@@ -38,15 +38,15 @@ const next = index >= 0 && index < flat.length - 1 ? flat[index + 1] : null;
 		display: flex;
 		justify-content: space-between;
 		gap: 20px;
-		margin-top: 72px;
-		padding-top: 24px;
-		border-top: 1px solid var(--hairline-08);
+		margin-block-start: 72px;
+		padding-block-start: 24px;
+		border-block-start: 1px solid var(--hairline-08);
 		font: 400 13px var(--font-mono);
 	}
 
 	.pagination__link {
 		color: var(--text-muted);
-		transition: color 0.15s ease;
+		transition: color var(--transition-fast);
 	}
 
 	.pagination__link:hover {
@@ -54,7 +54,7 @@ const next = index >= 0 && index < flat.length - 1 ? flat[index + 1] : null;
 	}
 
 	.pagination__link--next {
-		margin-left: auto;
+		margin-inline-start: auto;
 	}
 
 	/* Mobile: prev/next become full-width bordered buttons stacked in a column instead of a
@@ -75,7 +75,7 @@ const next = index >= 0 && index < flat.length - 1 ? flat[index + 1] : null;
 		}
 
 		.pagination__link--next {
-			margin-left: 0;
+			margin-inline-start: 0;
 			justify-content: flex-end;
 		}
 	}

@@ -4,8 +4,8 @@
 // page-specific headers can't drift on those properties again. Header-specific content (brand,
 // search, nav) is passed through the default slot.
 //
-// Sticky at every breakpoint: the sidebar and TOC rails stick to `top: var(--header-height)` (see
-// SidebarNav/Toc), so this has to stay put for them to tuck under it.
+// Sticky at every breakpoint: the sidebar and TOC rails stick to `inset-block-start:
+// var(--header-height)` (see SidebarNav/Toc), so this has to stay put for them to tuck under it.
 //
 // Translucent + blurred so a code block or table scrolling underneath reads through softly rather
 // than vanishing behind a hard edge. `@supports` falls back to the previous opaque `var(--bg)` on
@@ -24,10 +24,10 @@
 	   outer element so they always span the viewport, even below the 1480px cap. */
 	.header-shell {
 		position: sticky;
-		top: 0;
+		inset-block-start: 0;
 		z-index: 20;
 		height: var(--header-height);
-		border-bottom: 1px solid var(--hairline-08);
+		border-block-end: 1px solid var(--hairline-08);
 		background: var(--bg);
 	}
 
@@ -39,7 +39,7 @@
 		}
 	}
 
-	/* Capped, centered inner row — max-width plus the left/right hairlines are shared with
+	/* Capped, centered inner row — max-width plus the inline hairlines are shared with
 	   .page-body and the footer's inner row so the two vertical rules read as one continuous
 	   edge from the header down through the footer.
 	   `--rail-display` is `grid` on doc pages (the rail-width column below stays put) and `flex` on

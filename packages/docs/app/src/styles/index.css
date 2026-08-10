@@ -1,4 +1,7 @@
-@import "./fonts.css";
-@import "./tokens.css";
-@import "./global.css";
-@import "./article.css";
+@layer fonts, tokens, base, article, terminal;
+
+@import "./fonts.css" layer(fonts);
+@import "./tokens.css" layer(tokens);
+@import "./global.css" layer(base);
+@import "./article.css" layer(article);
+@import "./asciinema-theme.css" layer(terminal);

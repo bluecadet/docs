@@ -2,6 +2,8 @@
 // External-link affordance ("<label> ↗") for the header nav, used by NavLinks.astro for the
 // default repoUrl link and for any `header.links` entry that points off-site — so they all get
 // the same color and hover treatment.
+import { externalLinkAttrs } from "../../lib/config";
+
 interface Props {
 	href: string;
 	/** Link text before the "↗". Defaults to "github" for the repoUrl fallback use. */
@@ -11,12 +13,12 @@ interface Props {
 const { href, label = "github" } = Astro.props;
 ---
 
-<a class="repo-link" href={href} rel="noopener noreferrer" target="_blank"> {label} ↗ </a>
+<a class="repo-link" href={href} {...externalLinkAttrs(href)}> {label} ↗ </a>
 
 <style>
 	.repo-link {
 		color: var(--accent-2);
-		transition: color 0.15s ease;
+		transition: color var(--transition-fast);
 	}
 
 	.repo-link:hover {

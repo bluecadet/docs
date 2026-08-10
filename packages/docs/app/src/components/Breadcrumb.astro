@@ -57,7 +57,7 @@ const parent = ancestors.at(-1);
 		gap: 8px;
 		font: 400 12px var(--font-mono);
 		color: var(--text-dim);
-		margin-bottom: 30px;
+		margin-block-end: 30px;
 	}
 
 	.breadcrumb__segment {
@@ -65,7 +65,7 @@ const parent = ancestors.at(-1);
 	}
 
 	a.breadcrumb__segment {
-		transition: color 0.15s ease;
+		transition: color var(--transition-fast);
 	}
 
 	a.breadcrumb__segment:hover {
@@ -100,11 +100,11 @@ const parent = ancestors.at(-1);
 			padding: 0 var(--page-pad-x);
 			background: var(--white-02);
 			border: none;
-			border-bottom: 1px solid var(--hairline-08);
+			border-block-end: 1px solid var(--hairline-08);
 			font: 400 12px var(--font-mono);
 			color: var(--text-muted);
 			cursor: pointer;
-			text-align: left;
+			text-align: start;
 		}
 
 		.breadcrumb-pill__section,
@@ -130,7 +130,7 @@ const parent = ancestors.at(-1);
 		.breadcrumb-pill__trigger {
 			flex-shrink: 0;
 			white-space: nowrap;
-			margin-left: auto;
+			margin-inline-start: auto;
 			font-size: 10px;
 			color: var(--text-dim);
 		}

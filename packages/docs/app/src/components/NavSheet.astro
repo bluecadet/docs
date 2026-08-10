@@ -3,8 +3,14 @@
 // LandingHeader.astro and the mobile breadcrumb pill's "all pages" trigger (see Breadcrumb.astro).
 // One instance per page, mounted once from BaseLayout.astro. Renders the same recursive tree as
 // SidebarNav.astro (see ../lib/nav.ts) so the two can never drift apart, at touch-sized targets.
-import { footerGroups, getNavTree, type NavNode } from "../lib/nav";
-import { getDocsConfig, isExternalLink } from "../lib/config";
+import {
+	childrenAreNested,
+	footerGroups,
+	getNavTree,
+	isSectionHeading,
+	type NavNode,
+} from "../lib/nav";
+import { externalLinkAttrs, getDocsConfig, isExternalLink } from "../lib/config";
 import type { FooterLink } from "../lib/config";
 import Wordmark from "./header/Wordmark.astro";
 
@@ -31,19 +37,6 @@ let footerLinks: FooterLink[] = [];
 if (isRoot) {
 	footerLinks = (await footerGroups(config)).flatMap((group) => group.links);
 }
-
-// Same rule as SidebarNav: root-level directories keep the flat group treatment; everything
-// deeper becomes an indented sub-page column.
-function childrenAreNested(node: NavNode): boolean {
-	return nested || node.isPage || node.depth > 0;
-}
-
-// Same rule as SidebarNav: a root-level sidebar group keeps the dim "section heading" look even
-// once it's clickable via `sidebar[].link` — a group nested below the root always looks like a
-// plain item.
-function isSectionHeading(node: NavNode): boolean {
-	return node.depth === 0 && Boolean(node.isGroup);
-}
 ---
 
 {
@@ -67,7 +60,7 @@ function isSectionHeading(node: NavNode): boolean {
 				<span class="nav-sheet__search-kbd">/</span>
 			</button>
 
-			<div class="nav-sheet__body">
+			<div class="nav-sheet__body dialog-body">
 				<nav class="nav-sheet__nav" aria-label="Docs navigation">
 					<Astro.self nodes={items} currentId={currentId} />
 				</nav>
@@ -78,8 +71,7 @@ function isSectionHeading(node: NavNode): boolean {
 							<a
 								class="nav-sheet__footer-link"
 								href={link.href}
-								rel={isExternalLink(link.href) ? "noopener noreferrer" : undefined}
-								target={isExternalLink(link.href) ? "_blank" : undefined}
+								{...externalLinkAttrs(link.href)}
 							>
 								{link.label}
 								{isExternalLink(link.href) && " ↗"}
@@ -99,6 +91,7 @@ function isSectionHeading(node: NavNode): boolean {
 							class:list={{
 								"nav-sheet__item--section": isSectionHeading(node),
 								"is-active": node.id === currentId,
+								"active-row": node.id === currentId,
 							}}
 							href={node.href}
 							aria-current={node.id === currentId ? "page" : undefined}
@@ -112,7 +105,7 @@ function isSectionHeading(node: NavNode): boolean {
 						<Astro.self
 							nodes={node.children}
 							currentId={currentId}
-							nested={childrenAreNested(node)}
+							nested={childrenAreNested(node, nested)}
 						/>
 					)}
 				</>
@@ -128,13 +121,6 @@ function isSectionHeading(node: NavNode): boolean {
 
 <style>
 	.nav-sheet {
-		/* NavSheet mounts once from BaseLayout.astro as a sibling of `.page`, not a descendant of
-		   it — so it can't inherit `--content-pad-x` / `--header-height`, which are only declared
-		   in `.page`'s own style block. The sheet is mobile-only (see the 768px query below), so
-		   these just restate `.page`'s <=767px values (BaseLayout.astro) rather than pull in the
-		   full breakpoint ladder. */
-		--content-pad-x: 18px;
-		--header-height: 56px;
 		position: fixed;
 		inset: 0;
 		width: 100vw;
@@ -184,7 +170,7 @@ function isSectionHeading(node: NavNode): boolean {
 		/* Matches .header-shell-inner's <=767px padding (HeaderShell.astro) exactly — the sheet is
 		   mobile-only, so there's no wider breakpoint to account for here. */
 		padding: 0 var(--content-pad-x);
-		border-bottom: 1px solid var(--hairline-08);
+		border-block-end: 1px solid var(--hairline-08);
 		/* Same background as .header-shell (Header.astro) — this bar visually replaces the site
 		   header while the sheet is open, so it must read as identically colored, not a different
 		   surface, when the sheet toggles open/closed. */
@@ -194,7 +180,7 @@ function isSectionHeading(node: NavNode): boolean {
 
 	/* Close button's visible glyph right-flushes to the header's content edge, exactly like
 	   NavToggle's hamburger bars (`.nav-toggle` is `align-items: flex-end`, zero padding, inside
-	   `.site-header__right`'s `margin-left: auto`) — the sheet's close and the header's hamburger
+	   `.site-header__right`'s `margin-inline-start: auto`) — the sheet's close and the header's hamburger
 	   must occupy the same pixel so opening/closing the sheet doesn't shift that glyph sideways.
 	   The 44x44 tap target is preserved without widening the visible box: min-height covers the
 	   vertical half, and `::after` below extends the horizontal hit area with an absolutely
@@ -202,7 +188,7 @@ function isSectionHeading(node: NavNode): boolean {
 	   hamburger's position). */
 	.nav-sheet__close {
 		position: relative;
-		margin-left: auto;
+		margin-inline-start: auto;
 		display: flex;
 		align-items: center;
 		min-height: 44px;
@@ -218,7 +204,8 @@ function isSectionHeading(node: NavNode): boolean {
 	.nav-sheet__close::after {
 		content: "";
 		position: absolute;
-		inset: 0 -12px 0 -32px;
+		inset-block: 0;
+		inset-inline: -32px -12px;
 	}
 
 	.nav-sheet__search {
@@ -232,11 +219,11 @@ function isSectionHeading(node: NavNode): boolean {
 		   wayfinding bar" affordance at different breakpoints and should read as the same surface. */
 		background: var(--white-02);
 		border: none;
-		border-bottom: 1px solid var(--hairline-06);
+		border-block-end: 1px solid var(--hairline-06);
 		color: var(--text-muted);
 		font: 400 12.5px var(--font-mono);
 		cursor: pointer;
-		text-align: left;
+		text-align: start;
 		flex-shrink: 0;
 	}
 
@@ -245,7 +232,7 @@ function isSectionHeading(node: NavNode): boolean {
 	}
 
 	.nav-sheet__search-kbd {
-		margin-left: auto;
+		margin-inline-start: auto;
 		color: var(--text-faint);
 		font-size: 11px;
 	}
@@ -269,7 +256,7 @@ function isSectionHeading(node: NavNode): boolean {
 	   search bar's own bottom border. */
 	.nav-sheet__nav > .nav-sheet__list > .nav-sheet__item:not(:first-child),
 	.nav-sheet__nav > .nav-sheet__list > .nav-sheet__label:not(:first-child) {
-		border-top: 1px solid var(--hairline-06);
+		border-block-start: 1px solid var(--hairline-06);
 	}
 
 	.nav-sheet__list {
@@ -293,11 +280,10 @@ function isSectionHeading(node: NavNode): boolean {
 		font-size: 14.5px;
 	}
 
-	/* Exactly one row — the current page — carries the "you are here" mark. */
+	/* Exactly one row — the current page — carries the "you are here" mark
+	   (see .active-row in global.css for the shared background/box-shadow). */
 	.nav-sheet__item.is-active {
 		color: var(--ink);
-		background: var(--accent-tint-08);
-		box-shadow: inset 2px 0 var(--accent);
 	}
 
 	/* A root-level group heading (see isSectionHeading()) keeps the dim "section" look even once
@@ -312,13 +298,12 @@ function isSectionHeading(node: NavNode): boolean {
 
 	.nav-sheet__item.nav-sheet__item--section.is-active {
 		color: var(--ink);
-		background: var(--accent-tint-08);
-		box-shadow: inset 2px 0 var(--accent);
 	}
 
 	.nav-sheet__list.is-nested {
-		margin: 2px 0 4px 40px;
-		border-left: 1px solid var(--hairline-10);
+		margin-block: 2px 4px;
+		margin-inline: 40px 0;
+		border-inline-start: 1px solid var(--hairline-10);
 	}
 
 	.nav-sheet__list.is-nested .nav-sheet__item {
@@ -330,7 +315,7 @@ function isSectionHeading(node: NavNode): boolean {
 	/* The active sub-page keeps the canonical "you are here" treatment; the -1px pull lets its
 	   2px state-accented bar sit on top of the column hairline rather than beside it. */
 	.nav-sheet__list.is-nested .nav-sheet__item.is-active {
-		margin-left: -1px;
+		margin-inline-start: -1px;
 	}
 
 	.nav-sheet__list.is-nested .nav-sheet__label {
@@ -344,7 +329,7 @@ function isSectionHeading(node: NavNode): boolean {
 		   themselves, so wrapped rows stack at the same cadence as the nav list's rows and the space
 		   above the first row equals the space below the last. */
 		gap: 0 24px;
-		border-top: 1px solid var(--hairline-08);
+		border-block-start: 1px solid var(--hairline-08);
 		background: var(--surface-panel-1);
 		padding: 8px 26px;
 		font: 400 12px var(--font-mono);
@@ -364,8 +349,7 @@ function isSectionHeading(node: NavNode): boolean {
 		}
 
 		.nav-sheet__label {
-			padding-left: 18px;
-			padding-right: 18px;
+			padding-inline: 18px;
 		}
 
 		.nav-sheet__item {
@@ -373,13 +357,12 @@ function isSectionHeading(node: NavNode): boolean {
 		}
 
 		.nav-sheet__list.is-nested {
-			margin-left: 32px;
+			margin-inline-start: 32px;
 		}
 
 		.nav-sheet__list.is-nested .nav-sheet__item,
 		.nav-sheet__list.is-nested .nav-sheet__label {
-			padding-left: 14px;
-			padding-right: 14px;
+			padding-inline: 14px;
 		}
 
 		.nav-sheet__footer {

@@ -36,7 +36,7 @@ const note = getDocsConfig().toc?.note;
 	sections.length > 0 &&
 		(variant === "aside" ? (
 			<div class="toc-rail">
-				<aside class="toc-aside" aria-label="Table of contents">
+				<aside class="toc-aside scroll-rail" aria-label="Table of contents">
 					<div class="toc-aside__label">on this page</div>
 					<nav class="toc-aside__links">
 						{sections.map((section, index) => (
@@ -90,50 +90,32 @@ const note = getDocsConfig().toc?.note;
 	/* The rail is the grid cell — it owns the hairline so the border runs the full page height;
 	   the aside inside it is what sticks and scrolls. */
 	.toc-rail {
-		border-left: 1px solid var(--hairline-08);
+		border-inline-start: 1px solid var(--hairline-08);
 		min-width: 0;
 	}
 
 	.toc-aside {
-		position: sticky;
-		top: var(--header-height);
-		max-height: calc(100vh - var(--header-height));
-		max-height: calc(100dvh - var(--header-height));
-		overflow-y: auto;
-		overscroll-behavior: contain;
-		scrollbar-gutter: stable;
-		scrollbar-width: thin;
-		scrollbar-color: var(--hairline-14) transparent;
 		padding: var(--content-pad-top) 36px 64px;
 		font-size: 12.5px;
-	}
-
-	.toc-aside::-webkit-scrollbar {
-		width: 6px;
-	}
-
-	.toc-aside::-webkit-scrollbar-thumb {
-		background: var(--hairline-12);
-		border-radius: var(--radius-sm);
 	}
 
 	.toc-aside__label {
 		font: 400 12px var(--font-mono);
 		color: var(--text-dim);
-		margin-bottom: 14px;
+		margin-block-end: 14px;
 	}
 
 	.toc-aside__links {
 		display: flex;
 		flex-direction: column;
 		gap: 10px;
-		border-left: 1px solid var(--hairline-10);
+		border-inline-start: 1px solid var(--hairline-10);
 	}
 
 	.toc-aside__link {
-		padding-left: 14px;
+		padding-inline-start: 14px;
 		color: var(--text-muted);
-		transition: color 0.15s ease;
+		transition: color var(--transition-fast);
 	}
 
 	.toc-aside__link:hover {
@@ -142,17 +124,17 @@ const note = getDocsConfig().toc?.note;
 
 	.toc-aside__link.is-active {
 		color: var(--accent);
-		margin-left: -1px;
-		border-left: 1px solid var(--accent);
+		margin-inline-start: -1px;
+		border-inline-start: 1px solid var(--accent);
 	}
 
 	/* Bottom meta block — aside variant only (see the comment near the top of this file for why
 	   the disclosure variant never gets one). Gap-matches the 32px the design puts between the
 	   link list and this block. */
 	.toc-aside__meta {
-		margin-top: 32px;
-		padding-top: 24px;
-		border-top: 1px solid var(--hairline-08);
+		margin-block-start: 32px;
+		padding-block-start: 24px;
+		border-block-start: 1px solid var(--hairline-08);
 		font: 400 11.5px/2 var(--font-mono);
 		color: var(--text-dim);
 	}
@@ -163,7 +145,7 @@ const note = getDocsConfig().toc?.note;
 
 	.toc-aside__edit-link {
 		color: var(--text-muted);
-		transition: color 0.15s ease;
+		transition: color var(--transition-fast);
 	}
 
 	.toc-aside__edit-link:hover {
@@ -197,7 +179,7 @@ const note = getDocsConfig().toc?.note;
 	}
 
 	.toc-disclosure__caret {
-		margin-left: auto;
+		margin-inline-start: auto;
 		color: var(--text-dim);
 		font-size: 10px;
 	}

@@ -29,7 +29,8 @@ const base = import.meta.env.BASE_URL;
 		display: flex;
 		align-items: center;
 		gap: 24px;
-		padding: 0 var(--content-pad-x) 0 var(--nav-pad-left);
+		padding-block: 0;
+		padding-inline: var(--nav-pad-start) var(--content-pad-x);
 		min-width: 0;
 	}
 
@@ -45,7 +46,7 @@ const base = import.meta.env.BASE_URL;
 	/* Tablet: HeaderShell collapses to a flex row; push this side to the far right. */
 	@media (max-width: 1023px) {
 		.landing-header-nav {
-			margin-left: auto;
+			margin-inline-start: auto;
 			padding: 0;
 			gap: 20px;
 		}

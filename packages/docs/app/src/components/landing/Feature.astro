@@ -24,7 +24,7 @@ const { title } = Astro.props;
 	.feature::before {
 		content: counter(landing-feature, decimal-leading-zero);
 		display: block;
-		margin-bottom: 24px;
+		margin-block-end: 24px;
 		font: 300 48px/1 var(--font-serif);
 		color: var(--accent);
 	}
@@ -35,7 +35,7 @@ const { title } = Astro.props;
 	}
 
 	.feature-title {
-		margin-bottom: 14px;
+		margin-block-end: 14px;
 		font: 500 20px/1.4 var(--font-serif);
 		color: var(--ink);
 	}
@@ -47,32 +47,24 @@ const { title } = Astro.props;
 		text-wrap: pretty;
 	}
 
-	/* `color` here isn't decorative — without it, `.prose p` (article.css, tied on specificity
-	   with any bare `p` selector) would set every feature body paragraph to the article's body
-	   color instead of this band's dimmer `--text-muted`. */
-	.feature-body :global(p) {
-		margin: 0;
-		color: inherit;
-	}
-
 	/* 3-up. Outer-column cells get the shared page gutter (--content-pad-x) on their outside edge
 	   instead of the 44px between-cell padding, so the grid's outer edges line up with every other
 	   band's gutter. */
 	@media (min-width: 1024px) {
 		.feature:not(:nth-child(3n)):not(:last-child) {
-			border-right: 1px solid var(--hairline-08);
+			border-inline-end: 1px solid var(--hairline-08);
 		}
 
 		.feature:nth-child(n + 4) {
-			border-top: 1px solid var(--hairline-08);
+			border-block-start: 1px solid var(--hairline-08);
 		}
 
 		.feature:nth-child(3n + 1) {
-			padding-left: var(--content-pad-x);
+			padding-inline-start: var(--content-pad-x);
 		}
 
 		.feature:nth-child(3n) {
-			padding-right: var(--content-pad-x);
+			padding-inline-end: var(--content-pad-x);
 		}
 	}
 
@@ -83,29 +75,29 @@ const { title } = Astro.props;
 		}
 
 		.feature:nth-child(odd):not(:last-child) {
-			border-right: 1px solid var(--hairline-08);
+			border-inline-end: 1px solid var(--hairline-08);
 		}
 
 		.feature:nth-child(n + 3) {
-			border-top: 1px solid var(--hairline-08);
+			border-block-start: 1px solid var(--hairline-08);
 		}
 
 		.feature:nth-child(odd) {
-			padding-left: var(--content-pad-x);
+			padding-inline-start: var(--content-pad-x);
 		}
 
 		.feature:nth-child(even) {
-			padding-right: var(--content-pad-x);
+			padding-inline-end: var(--content-pad-x);
 		}
 
 		.feature::before {
-			margin-bottom: 18px;
+			margin-block-end: 18px;
 			font-size: 42px;
 		}
 
 		.feature-title {
 			font-size: 19px;
-			margin-bottom: 10px;
+			margin-block-end: 10px;
 		}
 	}
 
@@ -116,11 +108,11 @@ const { title } = Astro.props;
 		}
 
 		.feature:nth-child(odd):not(:last-child) {
-			border-right: none;
+			border-inline-end: none;
 		}
 
 		.feature:nth-child(n + 2) {
-			border-top: 1px solid var(--hairline-08);
+			border-block-start: 1px solid var(--hairline-08);
 		}
 
 		.feature::before {

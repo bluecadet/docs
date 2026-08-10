@@ -28,16 +28,14 @@ const { lead, glyph = "✕", color = "var(--text-faint)" } = Astro.props;
 		grid-template-columns: 28px minmax(0, 1fr);
 		gap: 20px;
 		padding: 20px 0;
-		/* --hairline-07 isn't in the token set; this is the design's row rule, one step below the
-		   band hairlines so a list of rows never reads as a table. */
-		border-bottom: 1px solid color-mix(in srgb, white 7%, transparent);
+		border-block-end: 1px solid var(--hairline-08);
 		font-size: 15px;
 		color: var(--text-muted);
 		text-wrap: pretty;
 	}
 
 	.glyph-item:last-child {
-		border-bottom: none;
+		border-block-end: none;
 	}
 
 	.glyph-item-icon {
@@ -49,13 +47,10 @@ const { lead, glyph = "✕", color = "var(--text-faint)" } = Astro.props;
 		color: var(--ink);
 	}
 
-	/* `color` here isn't decorative — without it, `.prose p` (article.css, tied on specificity
-	   with any bare `p` selector) would set this row's body text to the article's body color
-	   instead of inheriting `.glyph-item`'s dimmer `--text-muted`. */
+	/* MDX wraps the slotted row text in its own `<p>` — inline so it reads as one run of text
+	   after `.glyph-item-lead` rather than dropping to its own block. */
 	.glyph-item-text :global(p) {
 		display: inline;
-		margin: 0;
-		color: inherit;
 	}
 
 	@media (max-width: 1023px) {
@@ -76,7 +71,7 @@ const { lead, glyph = "✕", color = "var(--text-faint)" } = Astro.props;
 		}
 
 		.glyph-item-icon {
-			padding-top: 2px;
+			padding-block-start: 2px;
 			font-size: 11.5px;
 		}
 	}

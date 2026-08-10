@@ -18,7 +18,7 @@ const { tabletWidth = "220px" } = Astro.props;
 >
 	<span class="search-trigger__icon">⌕</span>
 	<span class="search-trigger__label">search docs</span>
-	<span class="search-trigger__kbd">/</span>
+	<kbd class="search-trigger__kbd">/</kbd>
 </button>
 
 <style>
@@ -47,10 +47,7 @@ const { tabletWidth = "220px" } = Astro.props;
 	}
 
 	.search-trigger__kbd {
-		margin-left: auto;
-		border: 1px solid var(--hairline-14);
-		border-radius: var(--radius-sm);
-		padding: 0 5px;
+		margin-inline-start: auto;
 		font-size: 11px;
 	}
 

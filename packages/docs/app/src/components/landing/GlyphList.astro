@@ -9,6 +9,8 @@
 //
 // `accent` is an optional substring of `title` that renders in italic attention accent — the
 // design's attention treatment on the one clause that carries the point.
+import { splitAccent } from "../../lib/text";
+
 interface Props {
 	title: string;
 	/** Substring of `title` to italicise in the attention accent. Ignored when it isn't found in `title`. */
@@ -19,15 +21,13 @@ interface Props {
 
 const { title, accent, intro } = Astro.props;
 
-const at = accent ? title.indexOf(accent) : -1;
-const before = at === -1 ? title : title.slice(0, at);
-const after = at === -1 ? "" : title.slice(at + (accent?.length ?? 0));
+const { before, accent: highlight, after } = splitAccent(title, accent, true);
 ---
 
 <div class="landing-band glyph-list">
 	<div class="glyph-list-head">
 		<h2 class="glyph-list-title">
-			{before}{at !== -1 && <span class="glyph-list-accent">{accent}</span>}{after}
+			{before}{highlight && <span class="glyph-list-accent">{highlight}</span>}{after}
 		</h2>
 		{intro && <p class="glyph-list-intro">{intro}</p>}
 	</div>
@@ -42,20 +42,14 @@ const after = at === -1 ? "" : title.slice(at + (accent?.length ?? 0));
 		grid-template-columns: 360px minmax(0, 1fr);
 		gap: 88px;
 		padding: 80px var(--content-pad-x) 88px;
-		border-bottom: 1px solid var(--hairline-08);
+		border-block-end: 1px solid var(--hairline-08);
 		background: var(--surface-panel-2);
 	}
 
-	/* This band's own heading never wants article.css's `.prose h2` hairline treatment — but this
-	   div lives inside `.prose` (the landing MDX body), so `padding-bottom`/`border-bottom` must
-	   be reset explicitly rather than left unset, or `.prose h2` supplies them uncontested (a
-	   class selector beats an unset property regardless of specificity). */
 	.glyph-list-title {
 		margin: 0 0 18px;
-		padding-bottom: 0;
 		font: 400 32px/1.2 var(--font-serif);
 		color: var(--ink);
-		border-bottom: none;
 	}
 
 	.glyph-list-accent {
@@ -85,7 +79,7 @@ const after = at === -1 ? "" : title.slice(at + (accent?.length ?? 0));
 		}
 
 		.glyph-list-title {
-			margin-bottom: 12px;
+			margin-block-end: 12px;
 			font-size: 30px;
 		}
 

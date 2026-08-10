@@ -115,3 +115,14 @@ export function isExternalLink(href: string): boolean {
 		return true;
 	}
 }
+
+/**
+ * `rel`/`target` for an `<a href={href}>`, spread directly onto the element: the "leaves the
+ * site" pairing (`noopener noreferrer` + a new tab) for an external link, both `undefined` — so
+ * neither attribute renders — for an internal one. Shared by every template that renders
+ * `isExternalLink`-gated links (footer, nav sheet, header nav) so the pairing can't drift.
+ */
+export function externalLinkAttrs(href: string): { rel?: string; target?: string } {
+	if (!isExternalLink(href)) return {};
+	return { rel: "noopener noreferrer", target: "_blank" };
+}

@@ -1,5 +1,60 @@
 /* Modern minimal reset + global base. Nothing here is component styling. */
 
+:root {
+	/* Header height and content gutter, shared by every route's header/sidebar/TOC/footer (see
+	   `.page` in BaseLayout.astro) — declared at :root, not scoped to `.page`, because NavSheet.astro
+	   and SearchModal.astro mount as siblings of `.page` and need the same values without a
+	   hand-synced local copy. */
+	--header-height: 68px;
+	--content-pad-x: 56px;
+}
+
+@media (max-width: 1023px) {
+	:root {
+		--header-height: 60px;
+		--content-pad-x: 36px;
+	}
+}
+
+@media (max-width: 767px) {
+	:root {
+		--header-height: 56px;
+		--content-pad-x: 18px;
+	}
+}
+
+/* Sticky, independently-scrolling rail — shared by SidebarNav.astro's `.sidebar-nav` and
+   Toc.astro's `.toc-aside`, the site's two left/right sticky columns. Consumers add their own
+   padding/font-size on top of this. */
+.scroll-rail {
+	position: sticky;
+	inset-block-start: var(--header-height);
+	max-height: calc(100vh - var(--header-height));
+	max-height: calc(100dvh - var(--header-height));
+	overflow-y: auto;
+	overscroll-behavior: contain;
+	scrollbar-gutter: stable;
+	scrollbar-width: thin;
+	scrollbar-color: var(--hairline-14) transparent;
+}
+
+.scroll-rail::-webkit-scrollbar {
+	width: 6px;
+}
+
+.scroll-rail::-webkit-scrollbar-thumb {
+	background: var(--hairline-12);
+	border-radius: var(--radius-sm);
+}
+
+/* "You are here" / "currently selected" row treatment — the site's one active-item mark, shared
+   by SidebarNav, NavSheet and the 404 page's "did you mean" list. Consumers still own their own
+   `color` override, since that varies by row type. */
+.active-row {
+	background: var(--accent-tint-08);
+	box-shadow: inset 2px 0 var(--accent);
+}
+
 *,
 *::before,
 *::after {
@@ -32,9 +87,10 @@ html:has(dialog:modal) {
 }
 
 /* Keeps a scroll gesture that reaches the end of a dialog's internal results list from chaining
-   into the (locked, but still logically scrollable) page behind it. */
-.nav-sheet__body,
-.search-modal__body {
+   into the (locked, but still logically scrollable) page behind it. Any dialog's scrolling
+   region opts in by carrying this class (see NavSheet.astro's .nav-sheet__body and
+   SearchModal.astro's .search-modal__body) instead of this rule naming each one. */
+.dialog-body {
 	overscroll-behavior: contain;
 }
 
@@ -63,6 +119,17 @@ h4,
 h5,
 h6 {
 	overflow-wrap: break-word;
+}
+
+/* Keyboard-hint chip base — shared by every `<kbd>` on the site (article inline shortcuts, the
+   header search trigger, the search modal's hint row, the 404 page's search shortcut). Consumers
+   layer their own font-size/color/spacing deltas on top. */
+kbd {
+	display: inline-block;
+	border: 1px solid var(--hairline-14);
+	border-radius: var(--radius-sm);
+	padding: 0 5px;
+	font: inherit;
 }
 
 body {

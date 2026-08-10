@@ -68,10 +68,10 @@ const pageDescription = data?.description;
 	   under-padded. Every landing band already keys its own edge padding off --content-pad-x, so
 	   overriding it once is the whole fix. Set on `:global(.page)` — BaseLayout's shell root,
 	   outside this component — rather than `.landing-body`, so the header and footer wordmark cells
-	   (which key their own gutter off --content-pad-x too — see BaseLayout's --brand-pad-left) pick
+	   (which key their own gutter off --content-pad-x too — see BaseLayout's --brand-pad-start) pick
 	   up the same 88px, not just the body content. This only ships in index.astro's own stylesheet,
 	   so doc pages, which still have the rail, are untouched. Below 1024px this rule stops applying
-	   and --content-pad-x falls back to BaseLayout's own tablet/mobile values, which already suit a
+	   and --content-pad-x falls back to its :root default (global.css), which already suits a
 	   single column at those widths. */
 	@media (min-width: 1024px) {
 		:global(.page) {
@@ -84,13 +84,17 @@ const pageDescription = data?.description;
 	   CtaCards, GlyphList, ClosingCta), which run edge to edge and carry their own padding. A
 	   named-column grid gives both without the bands having to break out with negative margins. */
 	.landing-content {
+		/* Drives both this padding and the first/last band's cancelling negative margins below, so
+		   the two can never drift out of sync — see the margin rules' comment. */
+		--landing-rhythm: 66px;
+
 		display: grid;
 		grid-template-columns:
 			[full-start] var(--content-pad-x)
 			[content-start] minmax(0, 1004px)
 			[content-end] 1fr
 			[full-end];
-		padding: 66px 0;
+		padding: var(--landing-rhythm) 0;
 		font-size: 15.5px;
 		line-height: 1.75;
 	}
@@ -106,50 +110,38 @@ const pageDescription = data?.description;
 
 	/* Bands supply their own vertical rhythm and hairlines. A band that opens or closes the body
 	   cancels the article's padding on that edge so it butts straight against the hero above, or
-	   the page's own bottom edge below, the way the design's bands do. */
+	   the page's own bottom edge below, the way the design's bands do. Deriving these from
+	   --landing-rhythm rather than repeating the padding value keeps the two enforced by
+	   construction instead of hand-kept equal. */
 	.landing-content > :global(.landing-band:first-child) {
-		margin-top: -66px;
+		margin-block-start: calc(-1 * var(--landing-rhythm));
 	}
 
 	.landing-content > :global(.landing-band:last-child) {
-		margin-bottom: -66px;
+		margin-block-end: calc(-1 * var(--landing-rhythm));
 	}
 
 	@media (max-width: 1023px) {
 		.landing-content {
+			--landing-rhythm: 54px;
+
 			grid-template-columns:
 				[full-start] var(--content-pad-x)
 				[content-start] minmax(0, 1fr)
 				[content-end] var(--content-pad-x)
 				[full-end];
-			padding: 54px 0;
-		}
-
-		.landing-content > :global(.landing-band:first-child) {
-			margin-top: -54px;
-		}
-
-		.landing-content > :global(.landing-band:last-child) {
-			margin-bottom: -54px;
 		}
 	}
 
 	@media (max-width: 767px) {
 		.landing-content {
+			--landing-rhythm: 42px;
+
 			grid-template-columns:
 				[full-start] var(--content-pad-x)
 				[content-start] minmax(0, 1fr)
 				[content-end] var(--content-pad-x)
 				[full-end];
-			padding: 42px 0;
-		}
-
-		.landing-content > :global(.landing-band:first-child) {
-			margin-top: -42px;
-		}
-
-		.landing-content > :global(.landing-band:last-child) {
-			margin-bottom: -42px;
 		}
 	}
 </style>

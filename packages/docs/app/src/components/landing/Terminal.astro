@@ -9,6 +9,13 @@
 // Lines are <Line> elements rather than raw indented text because MDX parses the children of a
 // JSX block as markdown, which would collapse the leading whitespace that a transcript depends
 // on. <Line label> restores the aligned label column with a mono `ch` measure instead.
+//
+// Passing `cast` swaps the transcript slot for a real asciinema recording (asciicast v2) played
+// back through `asciinema-player`, with a custom control bar styled to match the terminal chrome
+// instead of the player's stock one (see `terminal-player.ts` and the `.asciinema-player-theme-docs`
+// theme in `styles/asciinema-theme.css`). The two modes are mutually exclusive — `cast` set means
+// `<Line>` children are ignored. Kept deliberately small: no volume/fullscreen/speed controls, no
+// marker support. Consumers who need those should reach for the player directly.
 interface Props {
 	/** Working-directory label in the terminal's title bar. */
 	cwd?: string;
@@ -16,9 +23,21 @@ interface Props {
 	caption?: string;
 	/** Attention-accented figure at the end of the caption row, e.g. a wall-clock duration. */
 	duration?: string;
+	/** URL/path to an asciicast v2 `.cast` file. When set, renders a player instead of the
+	    `<Line>` transcript slot. See the CLI's asset sync (`sync.ts`) for where a consumer repo's
+	    `.cast` files under `docs/` end up published — `app/public/` itself is wiped on every
+	    sync, so files must live in the consumer repo's docs tree, not this package. */
+	cast?: string;
+	/** Terminal grid size passed to the player; falls back to the cast file's own header. */
+	rows?: number;
+	cols?: number;
+	/** Poster frame shown before playback starts, e.g. `npt:0:03` — passed straight through. */
+	poster?: string;
+	/** Loops playback when it ends. */
+	loop?: boolean;
 }
 
-const { cwd, caption, duration } = Astro.props;
+const { cwd, caption, duration, cast, rows, cols, poster, loop } = Astro.props;
 ---
 
 <div class="landing-band terminal-band">
@@ -39,14 +58,50 @@ const { cwd, caption, duration } = Astro.props;
 			</span>
 			{cwd && <span class="terminal-cwd">{cwd}</span>}
 		</div>
-		<pre class="terminal-body"><slot /></pre>
+		{
+			cast ? (
+				<div class="terminal-player">
+					<div
+						class="terminal-cast"
+						data-terminal-cast={cast}
+						data-terminal-rows={rows}
+						data-terminal-cols={cols}
+						data-terminal-poster={poster}
+						data-terminal-loop={loop ? "true" : undefined}
+					/>
+					<div class="terminal-controls">
+						<button type="button" class="terminal-play" data-terminal-play aria-label="Play">
+							▶
+						</button>
+						<div class="terminal-progress" data-terminal-progress>
+							<span class="terminal-progress-track">
+								<span class="terminal-progress-fill" data-terminal-fill />
+							</span>
+						</div>
+						<span class="terminal-time" data-terminal-time>
+							0:00 / 0:00
+						</span>
+					</div>
+				</div>
+			) : (
+				<pre class="terminal-body"><slot /></pre>
+			)
+		}
 	</div>
 </div>
+
+{
+	cast && (
+		<script>
+			import "../../scripts/terminal-player";
+		</script>
+	)
+}
 
 <style>
 	.terminal-band {
 		padding: 64px var(--content-pad-x) 72px;
-		border-bottom: 1px solid var(--hairline-08);
+		border-block-end: 1px solid var(--hairline-08);
 		background: var(--surface-panel-2);
 	}
 
@@ -54,7 +109,7 @@ const { cwd, caption, duration } = Astro.props;
 		display: flex;
 		align-items: baseline;
 		gap: 16px;
-		margin-bottom: 24px;
+		margin-block-end: 24px;
 		font: 400 11.5px var(--font-mono);
 		color: var(--text-dim);
 	}
@@ -76,7 +131,7 @@ const { cwd, caption, duration } = Astro.props;
 		align-items: center;
 		gap: 10px;
 		padding: 11px 16px;
-		border-bottom: 1px solid var(--hairline-08);
+		border-block-end: 1px solid var(--hairline-08);
 		font: 400 11px var(--font-mono);
 		color: var(--text-dim);
 	}
@@ -116,6 +171,82 @@ const { cwd, caption, duration } = Astro.props;
 		overflow-x: auto;
 	}
 
+	/* asciinema mode — the player mounts into `.terminal-cast` (see terminal-player.ts) and paints
+	   its own terminal grid; `.terminal-controls` is a second row below it standing in for the
+	   player's stock control bar (disabled via `controls: false`), matching the transcript's
+	   horizontal rhythm. */
+	.terminal-cast {
+		line-height: 0;
+	}
+
+	.terminal-controls {
+		display: flex;
+		align-items: center;
+		gap: 14px;
+		padding-block: 10px;
+		padding-inline: 24px;
+		border-block-start: 1px solid var(--hairline-08);
+	}
+
+	.terminal-play {
+		flex: 0 0 auto;
+		border: none;
+		background: none;
+		padding: 0;
+		font: 400 11px var(--font-mono);
+		color: var(--text-dim);
+		cursor: pointer;
+		transition: color var(--transition-fast);
+	}
+
+	.terminal-play:hover,
+	.terminal-play:focus-visible {
+		color: var(--text-code);
+	}
+
+	.terminal-play:disabled {
+		color: var(--text-dim);
+		cursor: not-allowed;
+		opacity: 0.5;
+	}
+
+	.terminal-progress {
+		flex: 1 1 auto;
+		padding-block: 6px;
+		cursor: pointer;
+	}
+
+	.terminal-progress-track {
+		display: block;
+		position: relative;
+		block-size: 2px;
+		background: var(--hairline-10);
+		border-radius: var(--radius-sm);
+	}
+
+	.terminal-progress-fill {
+		display: block;
+		position: absolute;
+		inset-block: 0;
+		inset-inline-start: 0;
+		inline-size: 0%;
+		background: var(--accent);
+		border-radius: var(--radius-sm);
+	}
+
+	.terminal-time {
+		flex: 0 0 auto;
+		font: 400 11px var(--font-mono);
+		color: var(--text-dim);
+		font-variant-numeric: tabular-nums;
+	}
+
+	/* Smallest honest failure state for a cast that fails to load (see terminal-player.ts) — amber
+	   is the site's attention accent, reused here rather than introducing a dedicated error token. */
+	.terminal-time-error {
+		color: var(--accent-2);
+	}
+
 	@media (max-width: 1023px) {
 		.terminal-band {
 			padding: 46px var(--content-pad-x) 54px;
@@ -123,12 +254,16 @@ const { cwd, caption, duration } = Astro.props;
 
 		.terminal-caption {
 			gap: 18px;
-			margin-bottom: 20px;
+			margin-block-end: 20px;
 		}
 
 		.terminal-body {
 			padding: 22px 24px;
 			font-size: 12.5px;
+		}
+
+		.terminal-controls {
+			padding-inline: 24px;
 		}
 	}
 
@@ -139,7 +274,7 @@ const { cwd, caption, duration } = Astro.props;
 
 		.terminal-caption {
 			gap: 15px;
-			margin-bottom: 18px;
+			margin-block-end: 18px;
 			font-size: 11.5px;
 		}
 
@@ -157,6 +292,16 @@ const { cwd, caption, duration } = Astro.props;
 		.terminal-body {
 			padding: 19px 20px;
 			font-size: 11px;
+		}
+
+		.terminal-controls {
+			gap: 10px;
+			padding-block: 9px;
+			padding-inline: 20px;
+		}
+
+		.terminal-time {
+			font-size: 10.5px;
 		}
 	}
 </style>

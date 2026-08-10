@@ -9,7 +9,7 @@
 // Two layers here: `.sidebar-rail` is the grid cell (owns the full-height hairline, so the border
 // runs to the bottom of the page even when the nav is short), `.sidebar-nav` is the sticky,
 // independently-scrolling nav itself.
-import { getNavTree, type NavNode } from "../lib/nav";
+import { childrenAreNested, getNavTree, isSectionHeading, type NavNode } from "../lib/nav";
 import { getDocsConfig } from "../lib/config";
 
 interface Props {
@@ -35,20 +35,6 @@ const metaLines = [
 		.map((line) => line.trim())
 		.filter(Boolean),
 ];
-
-// Children of a root-level directory keep the design's flat "group" treatment (dim `guides/`
-// label, items flush in the same column). Every deeper list becomes the indented, hairline-bordered
-// sub-page column.
-function childrenAreNested(node: NavNode): boolean {
-	return nested || node.isPage || node.depth > 0;
-}
-
-// Root-level sidebar groups (see `SidebarGroup` in ../lib/config.ts) keep the dim mono "section
-// heading" look even once they gain an `href` via `link` — only a group nested below the root
-// switches to the plain sidebar-item treatment other links at its depth use.
-function isSectionHeading(node: NavNode): boolean {
-	return node.depth === 0 && Boolean(node.isGroup);
-}
 ---
 
 {
@@ -58,7 +44,7 @@ function isSectionHeading(node: NavNode): boolean {
 		// the now-unoccupied grid column via `.page-body:not(:has(.sidebar-rail))`.
 		(items.length > 0 || metaLines.length > 0) && (
 			<div class="sidebar-rail">
-				<nav class="sidebar-nav" aria-label="Docs navigation">
+				<nav class="sidebar-nav scroll-rail" aria-label="Docs navigation">
 					{items.length > 0 && <Astro.self nodes={items} currentId={currentId} />}
 					{metaLines.length > 0 && (
 						<div class="sidebar-meta">
@@ -83,6 +69,7 @@ function isSectionHeading(node: NavNode): boolean {
 							class:list={{
 								"sidebar-item--section": isSectionHeading(node),
 								"is-active": node.id === currentId,
+								"active-row": node.id === currentId,
 							}}
 							href={node.href}
 							aria-current={node.id === currentId ? "page" : undefined}
@@ -96,7 +83,7 @@ function isSectionHeading(node: NavNode): boolean {
 						<Astro.self
 							nodes={node.children}
 							currentId={currentId}
-							nested={childrenAreNested(node)}
+							nested={childrenAreNested(node, nested)}
 						/>
 					)}
 				</>
@@ -107,32 +94,14 @@ function isSectionHeading(node: NavNode): boolean {
 
 <style>
 	.sidebar-rail {
-		border-right: 1px solid var(--hairline-08);
+		border-inline-end: 1px solid var(--hairline-08);
 		min-width: 0;
 	}
 
 	.sidebar-nav {
-		position: sticky;
-		top: var(--header-height);
-		max-height: calc(100vh - var(--header-height));
-		max-height: calc(100dvh - var(--header-height));
-		overflow-y: auto;
-		overscroll-behavior: contain;
-		scrollbar-gutter: stable;
-		scrollbar-width: thin;
-		scrollbar-color: var(--hairline-14) transparent;
 		padding: var(--content-pad-top) 0 48px;
 		font-size: 13.5px;
 		line-height: 1.6;
-	}
-
-	.sidebar-nav::-webkit-scrollbar {
-		width: 6px;
-	}
-
-	.sidebar-nav::-webkit-scrollbar-thumb {
-		background: var(--hairline-12);
-		border-radius: var(--radius-sm);
 	}
 
 	.sidebar-list {
@@ -144,8 +113,8 @@ function isSectionHeading(node: NavNode): boolean {
 	   last nav group. Dimmest text tier: this is the least-emphasis content in the whole rail. */
 	.sidebar-meta {
 		margin: 34px 34px 0;
-		padding-top: 24px;
-		border-top: 1px solid var(--hairline-08);
+		padding-block-start: 24px;
+		border-block-start: 1px solid var(--hairline-08);
 		font: 400 11.5px/2 var(--font-mono);
 		color: var(--text-faint);
 	}
@@ -158,24 +127,23 @@ function isSectionHeading(node: NavNode): boolean {
 
 	.sidebar-nav > .sidebar-list > .sidebar-label:first-child,
 	.sidebar-nav > .sidebar-list > .sidebar-item.sidebar-item--section:first-child {
-		padding-top: 0;
+		padding-block-start: 0;
 	}
 
 	.sidebar-item {
 		padding: 6px 34px;
 		color: var(--text-muted);
-		transition: color 0.15s ease;
+		transition: color var(--transition-fast);
 	}
 
 	.sidebar-item:hover {
 		color: var(--accent);
 	}
 
-	/* Exactly one node in the whole tree — the current page — carries the "you are here" mark. */
+	/* Exactly one node in the whole tree — the current page — carries the "you are here" mark
+	   (see .active-row in global.css for the shared background/box-shadow). */
 	.sidebar-item.is-active {
 		color: var(--ink);
-		background: var(--accent-tint-08);
-		box-shadow: inset 2px 0 var(--accent);
 	}
 
 	.sidebar-item.is-active:hover {
@@ -198,14 +166,13 @@ function isSectionHeading(node: NavNode): boolean {
 
 	.sidebar-item.sidebar-item--section.is-active {
 		color: var(--ink);
-		background: var(--accent-tint-08);
-		box-shadow: inset 2px 0 var(--accent);
 	}
 
 	/* Sub-page column: hairline rail, indented, smaller type. */
 	.sidebar-list.is-nested {
-		margin: 4px 0 6px 46px;
-		border-left: 1px solid var(--hairline-10);
+		margin-block: 4px 6px;
+		margin-inline: 46px 0;
+		border-inline-start: 1px solid var(--hairline-10);
 	}
 
 	.sidebar-list.is-nested .sidebar-item {
@@ -216,7 +183,7 @@ function isSectionHeading(node: NavNode): boolean {
 	/* The active sub-page keeps the canonical "you are here" treatment; the -1px pull lets its
 	   2px state-accented bar sit on top of the column hairline rather than beside it. */
 	.sidebar-list.is-nested .sidebar-item.is-active {
-		margin-left: -1px;
+		margin-inline-start: -1px;
 	}
 
 	.sidebar-list.is-nested .sidebar-label {
