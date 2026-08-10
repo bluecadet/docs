@@ -73,7 +73,7 @@ toc:
 | `landing` | `string` | — | Path (relative to the config file) of the `.md`/`.mdx` file published at `/`. See [Landing page](#landing-page). |
 | `repoUrl` | `string` | `git remote get-url origin`, normalized to `https://host/org/repo` | Used to rewrite links pointing outside the published set to GitHub blob URLs, and for the header's default GitHub link. |
 | `base` | `string` | `/` | Base path for the deployed site. |
-| `site` | `string` | — | Absolute site origin. |
+| `site` | `string` | — | Absolute site origin. Also drives canonical URLs, Open Graph meta tags, and sitemap generation — set once every page gets a `<link rel="canonical">`, `og:*` tags, and a `sitemap-index.xml`; left unset, all three are skipped. |
 | `header.links` | `{ label, href }[]` | — | Extra links rendered in the header after its fixed "docs" link, replacing the default GitHub link entirely when set — see [Notes](#notes). |
 | `footer.groups` | `{ title, links: { label, href, note? }[] }[]` | — | Titled groups of links rendered in the footer, replacing the default "docs"/"github" pair entirely when set — see [Notes](#notes). |
 | `footer.meta` | `string` | — | Right-aligned meta string in the footer (e.g. `MIT licensed · no telemetry`), rendered on every page. |

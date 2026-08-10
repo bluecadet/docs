@@ -45,6 +45,8 @@ interface Props {
 	sidebar?: boolean;
 	/** Resolved `toc.editLink` URL for this page, passed through to the aside TOC's meta block. */
 	editHref?: string;
+	/** `og:type` — "website" for the landing page, "article" (the default) for everything else. */
+	ogType?: "website" | "article";
 }
 
 const {
@@ -57,11 +59,21 @@ const {
 	robots,
 	sidebar = true,
 	editHref,
+	ogType = "article",
 } = Astro.props;
 
 const siteTitle = getDocsConfig().title;
 const pageTitle = appendSiteTitle && title ? `${title} — ${siteTitle}` : title || siteTitle;
 const base = import.meta.env.BASE_URL;
+
+// Canonical/OG tags need an absolute origin (`site`) to build a full URL from, and are skipped for
+// noindex pages (404, the no-landing redirect) — there is nothing worth a search engine or social
+// scraper following those. `Astro.url.pathname` already includes `base` in a static build (verified
+// empirically), so resolving it against `Astro.site` — rather than string-concatenating the two —
+// is what avoids a double slash when `site` itself carries a trailing slash.
+const isNoindex = robots?.includes("noindex") ?? false;
+const canonicalUrl =
+	Astro.site && !isNoindex ? new URL(Astro.url.pathname, Astro.site).href : undefined;
 
 // Only reserve the TOC column when there is actually something to put in it.
 const hasToc = main === "article" && headings.some((heading) => heading.depth === 2);
@@ -75,6 +87,17 @@ const hasToc = main === "article" && headings.some((heading) => heading.depth ==
 		{description && <meta name="description" content={description} />}
 		{robots && <meta name="robots" content={robots} />}
 		<link rel="icon" href={`${base}favicon.svg`} type="image/svg+xml" />
+		{canonicalUrl && (
+			<>
+				<link rel="canonical" href={canonicalUrl} />
+				<meta property="og:title" content={pageTitle} />
+				{description && <meta property="og:description" content={description} />}
+				<meta property="og:url" content={canonicalUrl} />
+				<meta property="og:site_name" content={siteTitle} />
+				<meta property="og:type" content={ogType} />
+				<meta name="twitter:card" content="summary" />
+			</>
+		)}
 	</head>
 	<body>
 		<div class="page" class:list={{ "page--no-sidebar": !sidebar }}>

@@ -10,6 +10,27 @@ const ASTRO_EXT = /\.astro$/i;
 /** Extensions that become pages rather than published assets. */
 const ROUTABLE_EXT = /\.(md|mdx|astro)$/i;
 
+/**
+ * Directory names always excluded from `files`/`assets` globbing, regardless of an entry's
+ * `base`. A consumer's `docs.config.yaml` commonly sits next to its own `package.json` (and thus
+ * `node_modules/`), and a broad glob like `"**\/*.md"` has no other way to know it shouldn't sweep
+ * up a dependency's vendored docs or a prior build's output. This is a deliberate, documented
+ * default — not discovery by convention — and it applies even when a user's own glob is broad
+ * enough to otherwise reach these paths.
+ */
+export const DEFAULT_GLOB_IGNORE = ["node_modules", ".git", "dist", ".astro", ".cache"];
+
+/** True when any path segment of `relPath` is in `DEFAULT_GLOB_IGNORE` or is itself a dot-directory. */
+function isIgnoredPath(relPath: string): boolean {
+	return relPath.split("/").some(isIgnoredSegment);
+}
+
+/** `..`/`.` are path syntax, not dot-directories — leave them for the caller's own `..` check. */
+function isIgnoredSegment(segment: string): boolean {
+	if (segment === "." || segment === "..") return false;
+	return DEFAULT_GLOB_IGNORE.includes(segment) || segment.startsWith(".");
+}
+
 export interface SyncResult {
 	pageCount: number;
 	assetCount: number;
@@ -162,6 +183,10 @@ export function discoverContent(
 	const claimedBy = new Map<string, string>();
 	/** Absolute file -> the entry that published it, so a double-claim can name both entries. */
 	const claimedFrom = new Map<string, string>();
+	/** Published asset path -> the source file publishing there, so a destination collision can name both. */
+	const assetClaimedBy = new Map<string, string>();
+	/** Absolute asset file -> the entry that published it, so a second entry's claim can be noticed. */
+	const assetClaimedFrom = new Map<string, string>();
 
 	if (landing) {
 		pages.push(landing);
@@ -215,9 +240,31 @@ export function discoverContent(
 			// Pages are published as pages, never as raw downloadable source, so a broad assets glob
 			// like "**/*" stays safe to write.
 			if (ROUTABLE_EXT.test(absPath)) continue;
-			if (assets.has(absPath)) continue;
+			// First entry to match a given physical file wins; later entries are silently skipped for
+			// that file rather than erroring, but the author still gets a notice naming both entries,
+			// since their route prefix was expected to apply but didn't.
+			const owner = assetClaimedFrom.get(absPath);
+			if (owner) {
+				notices.push(
+					`${toPosix(path.relative(configDir, absPath))} is already published as an asset by ${owner}; ${label} also matches it, so ${label}'s route prefix was not applied to it.`,
+				);
+				continue;
+			}
 			const rel = toPosix(path.relative(baseDir, absPath));
-			assets.set(absPath, entry.route === "" ? rel : `${entry.route}/${rel}`);
+			const dest = entry.route === "" ? rel : `${entry.route}/${rel}`;
+			// Unlike a page's route, an asset's published path isn't derived from a `files` glob match,
+			// so two different source files (from different bases/entries) can compute the same `dest`
+			// without either matching the other's `absPath` above — a destination collision needs its
+			// own check, mirroring the route-collision one above.
+			const claimant = assetClaimedBy.get(dest);
+			if (claimant) {
+				throw new Error(
+					`Two source files publish to the same path "${dest}":\n  - ${claimant}\n  - ${absPath}`,
+				);
+			}
+			assetClaimedBy.set(dest, absPath);
+			assetClaimedFrom.set(absPath, label);
+			assets.set(absPath, dest);
 		}
 	}
 
@@ -243,12 +290,17 @@ function globFiles(
 ): string[] {
 	const found = new Set<string>();
 	for (const pattern of patterns) {
-		for (const rel of fs.globSync(pattern, { cwd: baseDir })) {
+		// `exclude` prunes matching directories before descending into them (so a huge ignored tree
+		// like node_modules is never walked), but its argument's shape (basename vs. path relative to
+		// `cwd`) varies by call site, so `isIgnoredPath` checks every "/"-joined segment either way.
+		const matches = fs.globSync(pattern, { cwd: baseDir, exclude: (name) => isIgnoredPath(name) });
+		for (const rel of matches) {
 			if (rel.split(path.sep).includes("..")) {
 				throw new Error(
 					`${label}.${field} pattern "${pattern}" matches "${rel}", which is outside ${baseDir}. Point \`base\` at that directory instead of climbing out of it with "..".`,
 				);
 			}
+			if (isIgnoredPath(rel)) continue;
 			const abs = path.join(baseDir, rel);
 			if (!fs.existsSync(abs) || !fs.statSync(abs).isFile()) continue;
 			found.add(abs);

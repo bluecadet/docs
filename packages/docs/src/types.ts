@@ -149,5 +149,7 @@ export type RouteMap = Map<string, string>;
  * `/repo/docs/img/x.png` -> `img/x.png`. Built from the `assets` globs before any page is written,
  * so link rewriting resolves a reference by lookup rather than by re-deriving a path — there is
  * exactly one published location per asset, and an asset no glob covers simply isn't in the map.
+ * Two different source files computing the same published path is a build error (see
+ * `discoverContent` in sync.ts), so the reverse direction is unambiguous too.
  */
 export type AssetMap = Map<string, string>;

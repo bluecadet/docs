@@ -8,19 +8,54 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 /** The bundled Astro app, shipped alongside `dist/` in the published package. */
 export const APP_ROOT = path.join(here, "..", "app");
 
+/**
+ * Runs `fn` with the process's cwd set to the bundled app, restoring it afterwards.
+ *
+ * Astro does not resolve every path it writes from `root`. `getOutDirWithinCwd()` (astro's
+ * `core/build/common.js`) picks the directory for the SSR/prerender chunks it emits, imports and
+ * then deletes, and it falls back to `<process.cwd()>/.astro/` whenever `outDir` is not inside cwd
+ * — which is the normal case here, since `--out` is the consumer's choice and the app lives in
+ * node_modules. Left alone, that puts Astro's machinery in the consumer's repo, which
+ *
+ *  1. dirties a tree that is ours to read and never to write (only `--out` is ours), and
+ *  2. cannot resolve Astro's own dependencies: the emitted chunks `import` packages such as
+ *     `piccolore` (astro's vendored picocolors), which exist only in the node_modules *above the
+ *     app*. Node's resolution walk from `<consumer>/.astro/chunks/` never reaches it, so the
+ *     prerender step dies with "Cannot find package 'piccolore'" before a single page is written.
+ *
+ * Pointing cwd at the app makes that fallback land in `app/.astro/`, whose resolution walk reaches
+ * the dependencies in both install layouts — `<consumer>/node_modules/@bluecadet/docs/app` for a
+ * published install, and the docs monorepo for a `file:`/workspace link (a symlinked package
+ * resolves to its realpath, so `APP_ROOT` is inside the monorepo that hoisted them).
+ */
+async function withAppCwd<T>(fn: () => Promise<T>): Promise<T> {
+	const previous = process.cwd();
+	process.chdir(APP_ROOT);
+	try {
+		return await fn();
+	} finally {
+		process.chdir(previous);
+	}
+}
+
 /** Syncs the consumer repo's markdown into the bundled app, then runs a static Astro build. */
 export async function runBuild(cfg: ResolvedConfig): Promise<void> {
 	const result = syncContent(cfg, APP_ROOT);
 	logSyncResult(result);
 	applyEnv(cfg);
 
-	// cacheDir must live outside outDir: Astro clears outDir *after* the content sync writes its
-	// data-store.json there, which would silently produce an empty build.
-	await astroBuild({
-		root: APP_ROOT,
-		outDir: cfg.out,
-		cacheDir: path.join(APP_ROOT, ".cache"),
-		logLevel: "info",
+	// Resolved before the cwd switch below, so a relative `out` still means what the caller meant.
+	const outDir = path.resolve(cfg.out);
+
+	await withAppCwd(async () => {
+		// cacheDir must live outside outDir: Astro clears outDir *after* the content sync writes its
+		// data-store.json there, which would silently produce an empty build.
+		await astroBuild({
+			root: APP_ROOT,
+			outDir,
+			cacheDir: path.join(APP_ROOT, ".cache"),
+			logLevel: "info",
+		});
 	});
 }
 
@@ -54,6 +89,7 @@ export function applyEnv(cfg: ResolvedConfig): void {
 	const payload: Record<string, unknown> = {
 		title: cfg.title,
 		hasLanding: cfg.landing !== undefined,
+		configFileName: path.basename(cfg.configPath),
 	};
 	if (cfg.repoUrl) payload.repoUrl = cfg.repoUrl;
 	if (cfg.base) payload.base = cfg.base;

@@ -307,8 +307,28 @@
 
 .prose .code-block pre {
 	margin: 0;
-	padding: 14px 18px;
+	padding-block: 14px;
 	font: 400 13px/1.8 var(--font-mono);
+}
+
+/* Shiki wraps each source line in its own `.line` span inside `<pre><code>`. The inline padding
+   lives here (not on `pre`, where it used to be) so a highlighted line's background can reach both
+   edges of the block — including under horizontal scroll overflow, where `pre`-level padding would
+   only ever cover the visible viewport, not the full scrollable width. `min-inline-size: 100%`
+   resolves against `pre`'s content box (its nearest block-container ancestor, since `<code>` stays
+   inline) and stretches every line to fill it; lines longer than that grow past it exactly as they
+   did when the padding lived on `pre`. */
+.prose .code-block pre .line {
+	display: inline-block;
+	min-inline-size: 100%;
+	padding-inline: 18px;
+}
+
+/* Highlighted lines from the `{2,5-7}` meta-string syntax (@shikijs/transformers'
+   transformerMetaHighlight, wired up in astro.config.mjs) — a neutral tint, not an accent color,
+   since this marks emphasis, not state. */
+.prose .code-block pre .line.highlighted {
+	background: var(--white-07);
 }
 
 /* `<Terminal>` (the unwrapped window — see components/Terminal.astro) dropped straight into a doc

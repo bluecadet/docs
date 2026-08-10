@@ -66,6 +66,12 @@ export interface SidebarGroup {
 export interface DocsAppConfig {
 	title: string;
 	/**
+	 * The config file's own basename, e.g. `docs.config.yaml`, or `other-name.yaml` when the CLI
+	 * ran with `--config other-name.yaml`. Used in user-facing error messages (see nav.ts) so they
+	 * name the file the consumer actually built with.
+	 */
+	configFileName: string;
+	/**
 	 * True when `docs.config.yaml` declared a `landing:` page, i.e. route `/` is a real page. When
 	 * false there is no landing content and `/` renders a redirect to the first page in the sidebar
 	 * instead (see src/pages/index.astro).
@@ -85,14 +91,19 @@ export interface DocsAppConfig {
 	toc?: TocConfig;
 }
 
+const DEFAULTS: Pick<DocsAppConfig, "title" | "configFileName"> = {
+	title: "docs",
+	configFileName: "docs.config.yaml",
+};
+
 function parseDocsConfig(): DocsAppConfig {
 	const raw = process.env.DOCS_CONFIG;
-	if (!raw) return { title: "docs" };
+	if (!raw) return { ...DEFAULTS };
 	try {
 		const parsed = JSON.parse(raw) as Partial<DocsAppConfig>;
-		return { title: "docs", ...parsed };
+		return { ...DEFAULTS, ...parsed };
 	} catch {
-		return { title: "docs" };
+		return { ...DEFAULTS };
 	}
 }
 

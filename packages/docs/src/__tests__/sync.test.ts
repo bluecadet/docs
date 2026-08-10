@@ -218,6 +218,37 @@ describe("discoverContent - landing page", () => {
 	});
 });
 
+describe("discoverContent - default glob ignores", () => {
+	it("never matches files inside node_modules, even under a recursive glob", () => {
+		write("docs/a.md");
+		write("node_modules/pkg/readme.md");
+		const { pages } = discoverContent(root, [entry({ files: ["**/*.md"] })], undefined);
+		expect(pages.some((p) => p.includes("node_modules"))).toBe(false);
+	});
+
+	it("never matches assets inside node_modules, even under a recursive glob", () => {
+		write("docs/index.md");
+		write("node_modules/pkg/logo.png", "png");
+		const { assets } = discoverContent(
+			root,
+			[entry({ base: "docs", assets: ["**/*.png"] }), entry({ files: [], assets: ["**/*.png"] })],
+			undefined,
+		);
+		expect([...assets.keys()].some((p) => p.includes("node_modules"))).toBe(false);
+	});
+
+	it("never matches files inside other default-ignored directories (.git, dist, .astro, .cache, dot-dirs)", () => {
+		const kept = write("docs/a.md");
+		write(".git/refs/whatever.md");
+		write("dist/out.md");
+		write(".astro/types.md");
+		write(".cache/foo.md");
+		write(".hidden/secret.md");
+		const { pages } = discoverContent(root, [entry({ files: ["**/*.md"] })], undefined);
+		expect(pages).toEqual([kept]);
+	});
+});
+
 describe("discoverContent - assets", () => {
 	it("publishes only files matched by an assets glob", () => {
 		write("docs/index.md");
@@ -260,6 +291,46 @@ describe("discoverContent - assets", () => {
 			undefined,
 		);
 		expect([...assets.keys()]).toEqual([png]);
+	});
+
+	it("errors naming both sources when two assets publish to the same destination", () => {
+		write("docs/index.md");
+		const docsLogo = write("docs/img/logo.png", "docs png");
+		const otherLogo = write("other/img/logo.png", "other png");
+		let thrown: Error | undefined;
+		try {
+			discoverContent(
+				root,
+				[
+					entry({ base: "docs", assets: ["img/*.png"] }),
+					entry({ base: "other", files: [], assets: ["img/*.png"] }),
+				],
+				undefined,
+			);
+		} catch (err) {
+			thrown = err as Error;
+		}
+		expect(thrown?.message).toContain(docsLogo);
+		expect(thrown?.message).toContain(otherLogo);
+		expect(thrown?.message).toContain("img/logo.png");
+	});
+
+	it("notices (does not error) when a second entry's assets glob matches an already-claimed file", () => {
+		write("docs/index.md");
+		const png = write("docs/img/logo.png", "png");
+		const { assets, notices } = discoverContent(
+			root,
+			[
+				entry({ base: "docs", assets: ["img/*.png"] }),
+				entry({ base: "docs", files: [], assets: ["img/*.png"], route: "extra" }),
+			],
+			undefined,
+		);
+		expect(assets.get(png)).toBe("img/logo.png");
+		expect(notices).toHaveLength(1);
+		expect(notices[0]).toContain("img/logo.png");
+		expect(notices[0]).toContain("content[0]");
+		expect(notices[0]).toContain("content[1]");
 	});
 });
 

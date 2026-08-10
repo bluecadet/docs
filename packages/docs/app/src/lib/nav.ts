@@ -203,8 +203,6 @@ function fillDirectoryHrefs(nodes: NavNode[]): void {
 	}
 }
 
-const CONFIG_PATH = "docs.config.yaml";
-
 /**
  * Config-driven tree: built directly from `sidebar`, in the order the author wrote it — no
  * sorting. Group nodes are synthetic (see the module-level comment on why `trailFor`/`containsId`
@@ -224,13 +222,17 @@ function buildConfigNodes(groups: SidebarGroup[], entries: NavEntry[], base: str
 function requireNavEntry(id: string, byId: Map<string, NavEntry>): NavEntry {
 	const entry = byId.get(id);
 	if (entry) return entry;
+	// Named after the file the consumer actually built with (see `configFileName` on
+	// `DocsAppConfig`) rather than a hardcoded "docs.config.yaml", which would misname the file
+	// under `--config other-name.yaml`.
+	const configFileName = getDocsConfig().configFileName;
 	if (rawAstroPages.some((page) => page.id === id)) {
 		throw new Error(
-			`${CONFIG_PATH}: sidebar references "${id}", but that page has \`layout: "raw"\` — raw astro pages own their entire document and can't join the sidebar/nav. Use layout: "docs" instead, or remove this sidebar entry.`,
+			`${configFileName}: sidebar references "${id}", but that page has \`layout: "raw"\` — raw astro pages own their entire document and can't join the sidebar/nav. Use layout: "docs" instead, or remove this sidebar entry.`,
 		);
 	}
 	throw new Error(
-		`${CONFIG_PATH}: sidebar references unknown page "${id}" (no synced content with that id).`,
+		`${configFileName}: sidebar references unknown page "${id}" (no synced content with that id).`,
 	);
 }
 

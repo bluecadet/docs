@@ -28,8 +28,11 @@
 #
 # Assumptions (see also packages/docs/README.md for CLI behavior):
 #   - GitHub Pages is already enabled on the caller repo with source set to "GitHub Actions".
-#   - The caller repo has a README.md at its root or a docs/index.md (the CLI's landing-page
-#     requirement); otherwise the build step fails.
+#   - The caller repo has a `docs.config.yaml` at its root (the CLI's default `--config` path,
+#     which this workflow does not override). There is no discovery by convention: `content` in
+#     that file names every page and asset to publish, and `landing` is optional — a repo with no
+#     `landing:` gets a `/` meta-refresh redirect to the first sidebar page instead of a failed
+#     build.
 #   - `site`/`base` default via actions/configure-pages, which also transparently handles custom
 #     domains (a CNAME file) by leaving `base` empty and `site` pointed at the custom domain.
 #   - npm 11's `allowScripts` install-script gate would otherwise warn (not hard-fail) on

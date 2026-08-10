@@ -50,6 +50,14 @@ jobs:
   # notices a "files" gap. This job packs the real tarball, installs it into a scratch npm project
   # with no relation to this repo, and runs the CLI's build against a throwaway fixture repo — the
   # same path a real consumer hits with `npx @bluecadet/docs build`.
+  #
+  # Both builds below run with the *fixture repo* as cwd, not the install dir, and assert the
+  # fixture repo is byte-for-byte unchanged afterwards. That combination is deliberate: the cwd is
+  # the only thing that made this job pass while every real consumer failed. Astro derives the
+  # directory for its own SSR/prerender chunks from cwd, so with the install dir as cwd those chunks
+  # landed next to a node_modules that could resolve astro's own dependencies and nobody noticed.
+  # A real consumer's repo resolves nothing of the sort, and the build died there instead. The
+  # fixture repo has no node_modules at all, which is the strictest form of that shape.
   package-install-smoke:
     name: Package install smoke test
     runs-on: ubuntu-latest
@@ -161,14 +169,34 @@ jobs:
 
       - name: Build the fixture repo from the installed tarball
         run: |
-          cd "$RUNNER_TEMP/install"
-          npx docs build --config "$RUNNER_TEMP/fixture/docs.config.yaml" --out "$RUNNER_TEMP/fixture-dist"
+          find "$RUNNER_TEMP/fixture" | sort > "$RUNNER_TEMP/fixture-tree-before.txt"
+          cd "$RUNNER_TEMP/fixture"
+          "$RUNNER_TEMP/install/node_modules/.bin/docs" build \
+            --config docs.config.yaml --out "$RUNNER_TEMP/fixture-dist" \
+            --site https://example.com
+
+      # `--out` is the only thing a build may write. Anything else appearing in the consumer's repo
+      # is a bug, whether it breaks the build or just leaves untracked cruft behind.
+      - name: Verify the fixture repo was not written to
+        run: |
+          find "$RUNNER_TEMP/fixture" | sort > "$RUNNER_TEMP/fixture-tree-after.txt"
+          if ! diff -u "$RUNNER_TEMP/fixture-tree-before.txt" "$RUNNER_TEMP/fixture-tree-after.txt"; then
+            echo "the build wrote into the consumer repo — only --out may be written" >&2
+            exit 1
+          fi
 
       - name: Verify build output
         run: |
           test -f "$RUNNER_TEMP/fixture-dist/index.html"
           test -f "$RUNNER_TEMP/fixture-dist/getting-started/index.html"
           test -f "$RUNNER_TEMP/fixture-dist/pagefind/pagefind.js"
+
+          # `--site` above drives canonical URLs and sitemap generation (see BaseLayout.astro /
+          # astro.config.mjs) — both are opt-in on that one existing config option, so this is also
+          # the only place in CI a build actually exercises them.
+          test -f "$RUNNER_TEMP/fixture-dist/sitemap-index.xml"
+          grep -q '<link rel="canonical" href="https://example.com/getting-started/">' \
+            "$RUNNER_TEMP/fixture-dist/getting-started/index.html"
 
           # `landing:` owns "/", and its relative image resolves to the single path the packages
           # entry's `assets` glob published it at — under that entry's `route` prefix.
@@ -214,17 +242,24 @@ jobs:
       # meta-refresh to the first page in the sidebar, so the site has no dead entry point.
       - name: Build the same fixture with no landing page
         run: |
-          cd "$RUNNER_TEMP/install"
           # Same docs entry as above, with `landing:` removed — that key is the only difference.
-          cat > "$RUNNER_TEMP/fixture/docs.config.yaml" <<'EOF'
+          # The config also moves into a subdirectory, since that is where consumers keep it, and
+          # every relative path in it and every route resolves against *its* directory, not cwd.
+          mkdir -p "$RUNNER_TEMP/fixture/docs"
+          rm "$RUNNER_TEMP/fixture/docs.config.yaml" "$RUNNER_TEMP/fixture/docs/index.md"
+          cat > "$RUNNER_TEMP/fixture/docs/docs.config.yaml" <<'EOF'
           title: Fixture Repo
           content:
-            - base: docs
-              files: "**/*.{md,mdx,astro}"
+            - files: "**/*.{md,mdx,astro}"
               assets: "img/**/*"
           EOF
-          rm "$RUNNER_TEMP/fixture/docs/index.md"
-          npx docs build --config "$RUNNER_TEMP/fixture/docs.config.yaml" --out "$RUNNER_TEMP/no-landing-dist"
+          find "$RUNNER_TEMP/fixture" | sort > "$RUNNER_TEMP/fixture-tree-before.txt"
+          cd "$RUNNER_TEMP/fixture"
+          "$RUNNER_TEMP/install/node_modules/.bin/docs" build \
+            --config docs/docs.config.yaml --out "$RUNNER_TEMP/no-landing-dist"
+          find "$RUNNER_TEMP/fixture" | sort > "$RUNNER_TEMP/fixture-tree-after.txt"
+          diff -u "$RUNNER_TEMP/fixture-tree-before.txt" "$RUNNER_TEMP/fixture-tree-after.txt" \
+            || { echo "the build wrote into the consumer repo" >&2; exit 1; }
 
       - name: Verify the no-landing redirect
         run: |

@@ -104,6 +104,21 @@ Fenced code blocks with a language tag (` ```sh `, ` ```ts `, etc.) get a header
 language and a copy button — no configuration needed, this applies automatically to every fenced
 block.
 
+Add a brace-delimited line list right after the language tag to highlight specific lines — single
+numbers and ranges both work, comma-separated. ` ```ts {2,5-7} ` highlights lines 2 and 5 through
+7:
+
+```ts {2,5-7}
+function greet(name: string) {
+  console.log(`Hello, ${name}!`);
+}
+
+const config = {
+  retries: 3,
+  timeout: 5000,
+};
+```
+
 ### Tables
 
 Standard markdown tables render in a bordered, horizontally-scrollable container. No extra syntax

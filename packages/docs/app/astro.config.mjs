@@ -1,7 +1,9 @@
 import { fileURLToPath } from "node:url";
 import mdx from "@astrojs/mdx";
+import sitemap from "@astrojs/sitemap";
 import { rehypeHeadingIds } from "@astrojs/markdown-remark";
 import { createIndex } from "pagefind";
+import { transformerMetaHighlight } from "@shikijs/transformers";
 import { defineConfig } from "astro/config";
 import { remarkAlerts } from "./src/lib/remark-alerts";
 import { rehypeCodeBlocks } from "./src/lib/rehype-code-blocks";
@@ -12,6 +14,21 @@ import { rehypeTables } from "./src/lib/rehype-tables";
 // layouts read DOCS_TITLE/DOCS_REPO_URL directly from process.env server-side.
 const base = process.env.DOCS_BASE;
 const site = process.env.DOCS_SITE;
+
+// Same `DOCS_CONFIG` payload app/src/lib/config.ts parses at runtime — read again here, config-
+// build-side, only for the one field this file needs: whether "/" is a real landing page or the
+// noindex redirect stub (see src/pages/index.astro / LandingRedirect.astro). Duplicated rather than
+// imported because this file loads before the app's own module graph is available to it.
+let hasLanding = true;
+try {
+	hasLanding = Boolean(JSON.parse(process.env.DOCS_CONFIG ?? "{}").hasLanding);
+} catch {
+	// Malformed DOCS_CONFIG is the CLI's problem to have caught already — fall back to including "/".
+}
+
+// The root URL sitemap() would otherwise list for "/" — used below to drop it when there's no real
+// landing page, since that route is just a noindex meta-refresh to the first sidebar page.
+const rootUrl = site ? new URL(base || "/", site).href : undefined;
 
 /**
  * Builds a Pagefind search index over the static build output once Astro finishes writing it,
@@ -91,7 +108,16 @@ function codeCopyScript() {
 export default defineConfig({
 	...(site ? { site } : {}),
 	...(base ? { base } : {}),
-	integrations: [mdx(), pagefindIndex(), codeCopyScript()],
+	integrations: [
+		mdx(),
+		pagefindIndex(),
+		codeCopyScript(),
+		// Requires `site` (it warns and no-ops without one — see its own astro:build:done hook), so
+		// only registered when the CLI's `site` config option is set. It already excludes /404 (and
+		// /500) on its own; the extra `filter` below additionally drops "/" when there's no real
+		// landing page, since that route is a noindex redirect stub, not content worth indexing.
+		...(site ? [sitemap({ filter: hasLanding ? undefined : (page) => page !== rootUrl })] : []),
+	],
 	markdown: {
 		remarkPlugins: [remarkAlerts],
 		// `rehypeHeadingIds` is Astro's own built-in slugger — it's listed here *again*, ahead of
@@ -102,6 +128,9 @@ export default defineConfig({
 		rehypePlugins: [rehypeCodeBlocks, rehypeTables, rehypeHeadingIds, rehypeHeadingAnchors],
 		shikiConfig: {
 			theme: "css-variables",
+			// Enables the standard ```lang {2,5-7} meta syntax: adds a "highlighted" class to the
+			// matching `.line` spans (see article.css for the tint that reads it).
+			transformers: [transformerMetaHighlight()],
 		},
 	},
 });
