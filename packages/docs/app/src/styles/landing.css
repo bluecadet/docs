@@ -1,0 +1,214 @@
+/*
+ * Shared landing page styling: band boundary hairlines + band item grid utilities.
+ *
+ * Ownership: this stylesheet is the single owner of block-direction (top/bottom) borders on
+ * `.landing-band` elements, and of the divider/gutter math on `.landing-grid` item grids.
+ * Individual band components must not declare their own `border-block-*` rules, and any band
+ * that lays out a row of items should compose `.landing-grid` + `.landing-grid-3`/
+ * `.landing-grid-2` instead of hand-rolling nth-child divider/gutter rules.
+ */
+
+/* ---- Band dividers -----------------------------------------------------
+   Every band gets a 1px hairline top and bottom. Adjacent bands share one edge — the earlier
+   band's bottom border is the divider, so the later band cancels its own top one — and the
+   first/last band butts flush against the header above / page bottom below. */
+.landing-content > .landing-band {
+	border-block: 1px solid var(--hairline-08);
+}
+
+.landing-content > .landing-band + .landing-band {
+	border-block-start: none;
+}
+
+.landing-content > .landing-band:first-child {
+	border-block-start: none;
+}
+
+.landing-content > .landing-band:last-child {
+	border-block-end: none;
+}
+
+/* ---- Band backgrounds ---------------------------------------------------
+   Panel backgrounds zebra across participating bands automatically, so a band's color follows
+   its position in the body rather than being hand-picked per component. A band whose content
+   supplies its own surfaces (e.g. a hero flush under the header, or a card grid where the cards
+   themselves carry the panel colors) opts out with `landing-band--flush` and stays on the page
+   background instead. The `of` clause scopes the nth-child count to just the participating bands,
+   so it stays correct however many prose siblings or flush bands fall between them. */
+.landing-content > :nth-child(odd of .landing-band:not(.landing-band--flush)) {
+	background: var(--surface-panel-1);
+}
+
+.landing-content > :nth-child(even of .landing-band:not(.landing-band--flush)) {
+	background: var(--surface-panel-2);
+}
+
+/* ---- Band item grids -----------------------------------------------------
+   `.landing-grid` is the bare grid container; pair it with `.landing-grid-3` or
+   `.landing-grid-2` for the column count plus the responsive divider/gutter formulas below.
+   Dividers land on every item that isn't last in its row (vertical) or in the first row
+   (horizontal); gutter padding lands on every item that's first or last in its row, so the
+   grid's outer edges line up with the page's shared --content-pad-x gutter.
+
+   Selectors below are written as `.landing-grid.landing-grid-3`/`.landing-grid.landing-grid-2`
+   (both classes, not just the modifier) so this always outranks a band item's own scoped
+   padding/border rules regardless of which stylesheet Astro bundles each into and their
+   relative order on the page — a plain single-class selector would tie on specificity with a
+   component's own `.item[data-astro-cid-…]` rule and the winner would depend on load order. */
+.landing-grid {
+	display: grid;
+}
+
+/* 3-up desktop, 2-up tablet, 1-up mobile. */
+.landing-grid.landing-grid-3 {
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+@media (min-width: 1024px) {
+	.landing-grid.landing-grid-3 > :not(:nth-child(3n)):not(:last-child) {
+		border-inline-end: 1px solid var(--hairline-08);
+	}
+
+	.landing-grid.landing-grid-3 > :nth-child(n + 4) {
+		border-block-start: 1px solid var(--hairline-08);
+	}
+
+	.landing-grid.landing-grid-3 > :nth-child(3n + 1) {
+		padding-inline-start: var(--content-pad-x);
+	}
+
+	.landing-grid.landing-grid-3 > :nth-child(3n) {
+		padding-inline-end: var(--content-pad-x);
+	}
+}
+
+@media (max-width: 1023px) {
+	.landing-grid.landing-grid-3 {
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	.landing-grid.landing-grid-3 > :nth-child(odd):not(:last-child) {
+		border-inline-end: none;
+	}
+
+	.landing-grid.landing-grid-3 > :nth-child(n + 2) {
+		border-block-start: 1px solid var(--hairline-08);
+	}
+
+	/* 1-up: every item is both first and last in its row, so it gets the gutter on both sides. */
+	.landing-grid.landing-grid-3 > :nth-child(n + 1) {
+		padding-inline-start: var(--content-pad-x);
+		padding-inline-end: var(--content-pad-x);
+	}
+}
+
+/* 2-up desktop and tablet, 1-up mobile. */
+.landing-grid.landing-grid-2 {
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.landing-grid.landing-grid-2 > :nth-child(odd):not(:last-child) {
+	border-inline-end: 1px solid var(--hairline-08);
+}
+
+.landing-grid.landing-grid-2 > :nth-child(n + 3) {
+	border-block-start: 1px solid var(--hairline-08);
+}
+
+.landing-grid.landing-grid-2 > :nth-child(odd) {
+	padding-inline-start: var(--content-pad-x);
+}
+
+.landing-grid.landing-grid-2 > :nth-child(even) {
+	padding-inline-end: var(--content-pad-x);
+}
+
+@media (max-width: 767px) {
+	.landing-grid.landing-grid-2 {
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	.landing-grid.landing-grid-2 > :nth-child(odd):not(:last-child) {
+		border-inline-end: none;
+	}
+
+	.landing-grid.landing-grid-2 > :nth-child(n + 2) {
+		border-block-start: 1px solid var(--hairline-08);
+	}
+
+	.landing-grid.landing-grid-2 > :nth-child(n + 1) {
+		padding-inline-start: var(--content-pad-x);
+		padding-inline-end: var(--content-pad-x);
+	}
+}
+
+/* ---- Enter motion ---------------------------------------------------------
+   Fire-once "settle into place" animation, triggered by the IntersectionObserver in
+   index.astro's bundled <script> (see there for the trigger; this is the visual side only).
+   Everything here is gated two ways: `[data-landing-reveal]`, an attribute an is:inline script
+   sets on <html> before paint only when JS ran and motion is allowed (its absence — no JS, no
+   IntersectionObserver, or `prefers-reduced-motion: reduce` — means content renders fully visible
+   with zero motion, never hidden), and this file's own `prefers-reduced-motion: no-preference`
+   query, belt-and-braces alongside global.css's sitewide reduced-motion kill switch.
+
+   This file owns the generic motion primitive only: the `--reveal-*` tokens, the
+   `@keyframes landing-reveal` itself, the bare prose-paragraph rule, and the two `.landing-grid`
+   item-grid stagger rules (Features and CtaCards ride these for free, since both are built from
+   `.landing-grid`, which this stylesheet already owns end to end). Per-item delay comes from
+   `--reveal-index`, a 0-based custom property the bundled script in index.astro assigns to every
+   direct child of a `data-reveal-stagger` container (capped at 8, so a long list doesn't crawl)
+   before observing it — see that script for the assignment side. Every other band's per-region
+   or per-item stagger (Hero, StatStrip, GlyphList, ClosingCta, TerminalBand) is colocated in that
+   component's own `is:global` <style> block instead — most of those targets are slotted children
+   or other components' root elements that a component's own scoped styles can't reach. Those
+   blocks still key off the tokens/keyframe defined here, so this file's `[data-landing-reveal]`
+   attribute and `landing-reveal` keyframe name are effectively public API for them.
+
+   Motion story: the band frame itself — hairline borders, zebra panel background — never moves.
+   Only a band's CONTENT settles into that already-static frame once the band's own `.is-revealed`
+   class lands. Bare prose paragraphs (direct children of .landing-content that aren't bands) have
+   no such wrapper, so they animate themselves. One keyframe primitive everywhere; cohesion comes
+   from identical distance/duration/ease and a consistent per-item stagger rhythm, not variety. */
+@media (prefers-reduced-motion: no-preference) {
+	[data-landing-reveal] {
+		--reveal-distance: 14px;
+		--reveal-duration: 0.6s;
+		--reveal-ease: cubic-bezier(.15,.13,.22,1); /* decisive ease-out, no bounce */
+		--reveal-stagger: 90ms;
+	}
+
+	/* `translate`, not `transform`, so this never clobbers a component's own transform (none
+	   currently animate one, but this keeps the primitive safe to reuse). */
+	@keyframes landing-reveal {
+		from {
+			opacity: 0;
+			translate: 0 var(--reveal-distance);
+		}
+	}
+
+	/* Prose paragraphs: the observed element is the paragraph itself, so it hides/animates itself
+	   rather than a wrapper's content. */
+	[data-landing-reveal] .landing-content > :not(.landing-band):not(.is-revealed) {
+		opacity: 0;
+	}
+
+	[data-landing-reveal] .landing-content > :not(.landing-band).is-revealed {
+		animation: landing-reveal var(--reveal-duration) var(--reveal-ease) both;
+	}
+
+	/* Item groups that stagger by `--reveal-index`, one --reveal-stagger step apart: Features'
+	   items (the band itself carries .landing-grid — Features is the grid) and CTA cards (a flush
+	   band wrapping a nested .landing-grid — CtaCards' shape). Both mark their grid container
+	   `data-reveal-stagger`, so index.astro's bundled script has already stamped each child's
+	   `--reveal-index` before it's observed. */
+	[data-landing-reveal] .landing-band.landing-grid:not(.is-revealed) > *,
+	[data-landing-reveal] .landing-band:not(.is-revealed) > .landing-grid > * {
+		opacity: 0;
+	}
+
+	[data-landing-reveal] .landing-band.landing-grid.is-revealed > *,
+	[data-landing-reveal] .landing-band.is-revealed > .landing-grid > * {
+		animation: landing-reveal var(--reveal-duration) var(--reveal-ease) both;
+		animation-delay: calc(var(--reveal-stagger) * var(--reveal-index, 0));
+	}
+}

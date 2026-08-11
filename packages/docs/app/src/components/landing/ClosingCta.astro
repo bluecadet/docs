@@ -74,7 +74,6 @@ if (!hasActions) {
 <style>
 	.closing-cta {
 		padding: 88px var(--content-pad-x) 96px;
-		background: var(--surface-panel-1);
 		display: flex;
 		align-items: baseline;
 		gap: 56px;
@@ -143,6 +142,29 @@ if (!hasActions) {
 			align-items: center;
 			justify-content: center;
 			min-block-size: 48px;
+		}
+	}
+</style>
+
+<style is:global>
+	/* Enter-motion for ClosingCta: fire-once reveal triggered by the IntersectionObserver in
+	   index.astro; the trigger script, the `--reveal-*` tokens, and `@keyframes landing-reveal`
+	   all live in landing.css. The `[data-landing-reveal]` gate on every rule below means these
+	   are inert everywhere but the landing route, so ClosingCta stays safe to use on doc pages
+	   too. `is:global` for consistency with the rest of the landing components' motion blocks,
+	   all of which key off the same gate attribute and keyframe defined in landing.css. */
+	@media (prefers-reduced-motion: no-preference) {
+		/* headline, then the action buttons one step later. */
+		[data-landing-reveal] .closing-cta:not(.is-revealed) > * {
+			opacity: 0;
+		}
+
+		[data-landing-reveal] .closing-cta.is-revealed > * {
+			animation: landing-reveal var(--reveal-duration) var(--reveal-ease) both;
+		}
+
+		[data-landing-reveal] .closing-cta.is-revealed > .closing-cta-actions {
+			animation-delay: var(--reveal-stagger);
 		}
 	}
 </style>

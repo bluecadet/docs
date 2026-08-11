@@ -10,7 +10,7 @@
 // instead of sitting inside the article measure.
 ---
 
-<div class="landing-band stat-strip">
+<div class="landing-band stat-strip" data-reveal-stagger>
 	<slot />
 </div>
 
@@ -20,9 +20,6 @@
 		grid-template-columns: repeat(4, minmax(0, 1fr));
 		gap: 48px;
 		padding: 44px var(--content-pad-x);
-		border-block-start: 1px solid var(--hairline-08);
-		border-block-end: 1px solid var(--hairline-08);
-		background: var(--surface-panel-1);
 	}
 
 	/* Tablet and mobile both go two-up; four stat cells in one row stops reading as a row well
@@ -39,6 +36,28 @@
 		.stat-strip {
 			gap: 27px 36px;
 			padding: 30px var(--content-pad-x);
+		}
+	}
+</style>
+
+<style is:global>
+	/* Enter-motion for StatStrip: fire-once reveal triggered by the IntersectionObserver in
+	   index.astro; the trigger script, the `--reveal-*` tokens, and `@keyframes landing-reveal`
+	   all live in landing.css. The `[data-landing-reveal]` gate on every rule below means these
+	   are inert everywhere but the landing route, so StatStrip stays safe to use on doc pages
+	   too. `is:global` (rather than the scoped <style> above) because `.stat` is Stat.astro's own
+	   root element, which this component's scope attribute can't reach. */
+	@media (prefers-reduced-motion: no-preference) {
+		/* .stat cells stagger by `--reveal-index`, one --reveal-stagger step apart — see index.astro's
+		   bundled script (the `data-reveal-stagger` attribute on .stat-strip's root above) for where
+		   that index gets assigned. */
+		[data-landing-reveal] .stat-strip:not(.is-revealed) > .stat {
+			opacity: 0;
+		}
+
+		[data-landing-reveal] .stat-strip.is-revealed > .stat {
+			animation: landing-reveal var(--reveal-duration) var(--reveal-ease) both;
+			animation-delay: calc(var(--reveal-stagger) * var(--reveal-index, 0));
 		}
 	}
 </style>

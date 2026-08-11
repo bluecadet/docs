@@ -28,14 +28,13 @@ const { lead, glyph = "✕", color = "var(--text-faint)" } = Astro.props;
 		grid-template-columns: 28px minmax(0, 1fr);
 		gap: 20px;
 		padding: 20px 0;
-		border-block-end: 1px solid var(--hairline-08);
 		font-size: 15px;
 		color: var(--text-muted);
 		text-wrap: pretty;
 	}
 
-	.glyph-item:last-child {
-		border-block-end: none;
+	.glyph-item + .glyph-item {
+		border-block-start: 1px solid var(--hairline-08);
 	}
 
 	.glyph-item-icon {

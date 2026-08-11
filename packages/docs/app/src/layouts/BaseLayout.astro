@@ -90,7 +90,7 @@ const hasToc = main === "article" && headings.some((heading) => heading.depth ==
 		{canonicalUrl && (
 			<>
 				<link rel="canonical" href={canonicalUrl} />
-				<meta property="og:title" content={pageTitle} />
+				<meta property="og:title" content={title} />
 				{description && <meta property="og:description" content={description} />}
 				<meta property="og:url" content={canonicalUrl} />
 				<meta property="og:site_name" content={siteTitle} />

@@ -121,6 +121,16 @@ h6 {
 	overflow-wrap: break-word;
 }
 
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+	text-wrap: balance;
+}
+
 /* Keyboard-hint chip base — shared by every `<kbd>` on the site (article inline shortcuts, the
    header search trigger, the search modal's hint row, the 404 page's search shortcut). Consumers
    layer their own font-size/color/spacing deltas on top. */

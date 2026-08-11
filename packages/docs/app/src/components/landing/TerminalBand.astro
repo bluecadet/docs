@@ -53,8 +53,6 @@ const { caption, duration, ...terminalProps } = Astro.props;
 <style>
 	.terminal-band {
 		padding: 64px var(--content-pad-x) 72px;
-		border-block-end: 1px solid var(--hairline-08);
-		background: var(--surface-panel-2);
 	}
 
 	.terminal-caption {
@@ -94,6 +92,29 @@ const { caption, duration, ...terminalProps } = Astro.props;
 			gap: 15px;
 			margin-block-end: 18px;
 			font-size: 11.5px;
+		}
+	}
+</style>
+
+<style is:global>
+	/* Enter-motion for TerminalBand: fire-once reveal triggered by the IntersectionObserver in
+	   index.astro; the trigger script, the `--reveal-*` tokens, and `@keyframes landing-reveal`
+	   all live in landing.css. The `[data-landing-reveal]` gate on every rule below means these
+	   are inert everywhere but the landing route, so TerminalBand stays safe to use on doc pages
+	   too. `is:global` for consistency with the rest of the landing components' motion blocks,
+	   all of which key off the same gate attribute and keyframe defined in landing.css. */
+	@media (prefers-reduced-motion: no-preference) {
+		/* caption row, then the terminal window one step later. */
+		[data-landing-reveal] .terminal-band:not(.is-revealed) > * {
+			opacity: 0;
+		}
+
+		[data-landing-reveal] .terminal-band.is-revealed > * {
+			animation: landing-reveal var(--reveal-duration) var(--reveal-ease) both;
+		}
+
+		[data-landing-reveal] .terminal-band.is-revealed > .terminal-band-window {
+			animation-delay: var(--reveal-stagger);
 		}
 	}
 </style>

@@ -1,0 +1,59 @@
+---
+// One chip inside <HeroEyebrows>:
+//
+//   <HeroEyebrows>
+//     <HeroEyebrow tone="state">Label</HeroEyebrow>
+//   </HeroEyebrows>
+//
+// Neither HeroEyebrows nor Hero.astro can see this component's props — they just lay out
+// `.hero-eyebrows`/`.hero-eyebrow` elements via :global() CSS. Up to 3 render, in source order; a
+// 4th+ is hidden with :nth-of-type (rather than dropped from the DOM) since nothing upstream can
+// count typed slot children to enforce the cap itself.
+interface Props {
+	/** state = STATE accent, attention = ATTENTION accent, neutral (default) = plain outline. */
+	tone?: "state" | "attention" | "neutral";
+}
+
+const { tone = "neutral" } = Astro.props;
+---
+
+<span class:list={["hero-eyebrow", `hero-eyebrow-${tone}`]}>
+	<slot />
+</span>
+
+<style>
+	.hero-eyebrow {
+		padding: 4px 9px;
+		border-radius: var(--radius-sm);
+		font: 400 11.5px var(--font-mono);
+		letter-spacing: 0.14em;
+		text-transform: uppercase;
+	}
+
+	.hero-eyebrow-state {
+		color: var(--bg);
+		background: var(--accent);
+	}
+
+	.hero-eyebrow-attention {
+		color: var(--accent-2);
+		border: 1px solid var(--accent-2-border-40);
+	}
+
+	.hero-eyebrow-neutral {
+		color: var(--text-dim);
+		border: 1px solid var(--hairline-12);
+	}
+
+	.hero-eyebrow:nth-of-type(n + 4) {
+		display: none;
+	}
+
+	@media (max-width: 767px) {
+		.hero-eyebrow {
+			padding: 3px 7px;
+			font-size: 10.5px;
+			letter-spacing: 0.12em;
+		}
+	}
+</style>

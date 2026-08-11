@@ -14,8 +14,8 @@ const hasCards = Astro.slots.has("default");
 
 {
 	hasCards && (
-		<div class="landing-band cta-band">
-			<div class="cta-cards">
+		<div class="landing-band landing-band--flush cta-band">
+			<div class="cta-cards landing-grid landing-grid-2" data-reveal-stagger>
 				<slot />
 			</div>
 		</div>
@@ -23,22 +23,7 @@ const hasCards = Astro.slots.has("default");
 }
 
 <style>
-
 	.cta-cards {
-		display: grid;
-		grid-template-columns: 1fr 1fr;
-		gap: 1px;
-		padding-block-end: 1px;
-		background: var(--hairline-10);
-		overflow: hidden;
 		counter-reset: cta-card;
-	}
-
-	/* Tablet keeps the 2-up grid (it's already the default above); only mobile collapses to a
-	   single column. */
-	@media (max-width: 767px) {
-		.cta-cards {
-			grid-template-columns: 1fr;
-		}
 	}
 </style>

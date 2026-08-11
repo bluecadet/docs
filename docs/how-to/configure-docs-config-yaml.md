@@ -76,14 +76,20 @@ sidebar:
   - label: Reference
     items:
       - reference/cli
+      - label: Config (renamed)
+        link: reference/config/overview
       - label: Config
         items:
           - reference/config/base
           - reference/config/advanced
 ```
 
-Each string in `items` is a page's content id (its route without the leading/trailing slashes — a
-`content` entry with `base: docs` publishes `docs/reference/cli.md` at content id `reference/cli`).
+Each item in `items` is either a bare content-id string, or an object with `label`/`link`/`items`.
+A bare string is a page's content id (its route without the leading/trailing slashes — a `content`
+entry with `base: docs` publishes `docs/reference/cli.md` at content id `reference/cli`) and its
+label is always that page's title. An object needs a `link`, `items`, or both: `items` makes it a
+nested group (whose own heading label falls back to `link`'s page title if `label` is omitted);
+without `items` it's a leaf like the bare string, but `label` overrides the linked page's title.
 Once `sidebar` is set it's the entire sidebar, in the order written — nothing is auto-sorted or
 merged in. Pages you leave out still build and are still reachable by direct link; they just don't
 show up in the sidebar or in prev/next pagination. A page id that doesn't match any synced content

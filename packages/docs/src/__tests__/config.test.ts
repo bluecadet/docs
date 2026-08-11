@@ -469,15 +469,21 @@ describe("validateConfig", () => {
 			);
 		});
 
-		it("throws when a sidebar group is not an object", () => {
-			expect(() => validate({ sidebar: ["nope"] }, CONFIG_PATH)).toThrowError(
-				/"sidebar\[0\]" must be an object \(got string\)/,
+		it("throws when a sidebar item is neither a string nor an object", () => {
+			expect(() => validate({ sidebar: [5] }, CONFIG_PATH)).toThrowError(
+				/"sidebar\[0\]" must be a string or an object \(got number\)/,
 			);
 		});
 
-		it("throws when a sidebar group label is missing", () => {
+		it('throws when a sidebar item has "items" but no "label" or "link"', () => {
 			expect(() => validate({ sidebar: [{ items: [] }] }, CONFIG_PATH)).toThrowError(
-				/"sidebar\[0\]\.label" must be a string \(got undefined\)/,
+				/"sidebar\[0\]" has "items" but no "label" or "link" to use as its own heading/,
+			);
+		});
+
+		it("throws when a sidebar item has neither link nor items", () => {
+			expect(() => validate({ sidebar: [{ label: "x" }] }, CONFIG_PATH)).toThrowError(
+				/"sidebar\[0\]" must have a "link", "items", or both \(got neither\)/,
 			);
 		});
 
@@ -501,7 +507,7 @@ describe("validateConfig", () => {
 					CONFIG_PATH,
 				),
 			).toThrowError(
-				/"sidebar\[0\]\.items\[0\]\.items\[0\]\.label" must be a string \(got undefined\)/,
+				/"sidebar\[0\]\.items\[0\]\.items\[0\]" has "items" but no "label" or "link" to use as its own heading/,
 			);
 		});
 
@@ -558,6 +564,42 @@ describe("validateConfig", () => {
 			expect(() =>
 				validate({ sidebar: [{ label: "x", items: [], link: 5 }] }, CONFIG_PATH),
 			).toThrowError(/"sidebar\[0\]\.link" must be a string \(got number\)/);
+		});
+
+		it("accepts a bare content-id string at the top level", () => {
+			const { config, warnings } = validate(
+				{ sidebar: ["getting-started/installation"] },
+				CONFIG_PATH,
+			);
+			expect(config.sidebar).toEqual(["getting-started/installation"]);
+			expect(warnings).toEqual([]);
+		});
+
+		it("accepts a link-only leaf item (no label, no items)", () => {
+			const { config, warnings } = validate(
+				{ sidebar: [{ link: "getting-started/installation" }] },
+				CONFIG_PATH,
+			);
+			expect(config.sidebar).toEqual([{ link: "getting-started/installation" }]);
+			expect(warnings).toEqual([]);
+		});
+
+		it("accepts a labeled leaf item (label + link, no items)", () => {
+			const { config, warnings } = validate(
+				{ sidebar: [{ label: "Install", link: "getting-started/installation" }] },
+				CONFIG_PATH,
+			);
+			expect(config.sidebar).toEqual([{ label: "Install", link: "getting-started/installation" }]);
+			expect(warnings).toEqual([]);
+		});
+
+		it("warns on an unknown key inside a leaf item", () => {
+			const { warnings } = validate(
+				{ sidebar: [{ link: "getting-started/installation", typo: 1 }] },
+				CONFIG_PATH,
+			);
+			expect(warnings).toHaveLength(1);
+			expect(warnings[0]).toContain('"sidebar[0].typo"');
 		});
 	});
 

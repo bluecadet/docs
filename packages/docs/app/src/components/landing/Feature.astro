@@ -14,8 +14,9 @@ const { title } = Astro.props;
 </div>
 
 <style>
-	/* Dividers are expressed as "which cells are not on the outer edge" rather than as a fixed
-	   3-cell assumption, so a fourth or fifth pillar still rules correctly. */
+	/* Dividers and outer-edge gutter alignment are owned by the .landing-grid-3 utility
+	   (src/styles/landing.css) on the .features container — this component only owns its own
+	   content padding. */
 	.feature {
 		padding: 56px 44px 64px;
 		counter-increment: landing-feature;
@@ -47,47 +48,10 @@ const { title } = Astro.props;
 		text-wrap: pretty;
 	}
 
-	/* 3-up. Outer-column cells get the shared page gutter (--content-pad-x) on their outside edge
-	   instead of the 44px between-cell padding, so the grid's outer edges line up with every other
-	   band's gutter. */
-	@media (min-width: 1024px) {
-		.feature:not(:nth-child(3n)):not(:last-child) {
-			border-inline-end: 1px solid var(--hairline-08);
-		}
-
-		.feature:nth-child(n + 4) {
-			border-block-start: 1px solid var(--hairline-08);
-		}
-
-		.feature:nth-child(3n + 1) {
-			padding-inline-start: var(--content-pad-x);
-		}
-
-		.feature:nth-child(3n) {
-			padding-inline-end: var(--content-pad-x);
-		}
-	}
-
 	/* 2-up */
 	@media (max-width: 1023px) {
 		.feature {
 			padding: 46px 42px 52px;
-		}
-
-		.feature:nth-child(odd):not(:last-child) {
-			border-inline-end: 1px solid var(--hairline-08);
-		}
-
-		.feature:nth-child(n + 3) {
-			border-block-start: 1px solid var(--hairline-08);
-		}
-
-		.feature:nth-child(odd) {
-			padding-inline-start: var(--content-pad-x);
-		}
-
-		.feature:nth-child(even) {
-			padding-inline-end: var(--content-pad-x);
 		}
 
 		.feature::before {
@@ -101,18 +65,11 @@ const { title } = Astro.props;
 		}
 	}
 
-	/* 1-up */
+	/* 1-up. Inline padding is owned by the .landing-grid-3 utility at this breakpoint (it applies
+	   the full gutter on both sides of a single column), so this only keeps the block padding. */
 	@media (max-width: 767px) {
 		.feature {
-			padding: 42px var(--content-pad-x) 46px;
-		}
-
-		.feature:nth-child(odd):not(:last-child) {
-			border-inline-end: none;
-		}
-
-		.feature:nth-child(n + 2) {
-			border-block-start: 1px solid var(--hairline-08);
+			padding: 42px 0 46px;
 		}
 
 		.feature::before {

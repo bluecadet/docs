@@ -41,15 +41,27 @@ export interface TocConfig {
 	editLink?: string;
 }
 
-/** A sidebar entry: either a synced page's content id, or a nested group. */
-export type SidebarItem = string | SidebarGroup;
+/**
+ * A sidebar entry: either a bare content id (sugar for `{ link: id }`), or an object. An object
+ * needs `link`, `items`, or both — `items` makes it a group node (which may still also carry its
+ * own `link`, exactly like today's groups); without `items` it's a leaf, identical to the bare
+ * string case except its label can be overridden. See `SidebarItemObject.label` for label
+ * resolution.
+ */
+export type SidebarItem = string | SidebarItemObject;
 
-/** A labeled sidebar group containing pages and/or nested groups, in author-controlled order. */
-export interface SidebarGroup {
-	label: string;
-	items: SidebarItem[];
-	/** Optional content id the group's own heading links to, exactly like a leaf `SidebarItem` string. */
+/** The object form of a `SidebarItem` — see `SidebarItem` for the field-combination rules. */
+export interface SidebarItemObject {
+	/**
+	 * Explicit display label. When omitted and `link` is set, falls back to the linked page's
+	 * title. An object with `items` but neither `label` nor `link` has no label source and is a
+	 * config error.
+	 */
+	label?: string;
+	/** Content id this item (or, for a group, the group's own heading) links to. */
 	link?: string;
+	/** Nested items, in author-controlled order. Presence makes this a group node. */
+	items?: SidebarItem[];
 }
 
 /**
@@ -104,7 +116,7 @@ export interface DocsConfig {
 	 * Author-controlled sidebar structure. When present, drives `getNavTree()` instead of the
 	 * default auto-generated (alphabetical, directory-mirroring) tree.
 	 */
-	sidebar?: SidebarGroup[];
+	sidebar?: SidebarItem[];
 	/** Version string, e.g. `v2.4.1`. Rendered in the header and at the bottom of the sidebar. */
 	version?: string;
 	/** Multiline string; each non-empty line renders as its own row in the sidebar's bottom meta block. */
@@ -135,7 +147,7 @@ export interface ResolvedConfig {
 	site?: string;
 	header?: ConfigLinks;
 	footer?: FooterConfig;
-	sidebar?: SidebarGroup[];
+	sidebar?: SidebarItem[];
 	version?: string;
 	sidebarMeta?: string;
 	toc?: TocConfig;

@@ -1,0 +1,30 @@
+---
+// Groups <HeroNote> marginalia into the column beside the lead paragraph (tablet up) or the row
+// below it (mobile):
+//
+//   <HeroNotes>
+//     <HeroNote>First note.</HeroNote>
+//     <HeroNote>Second note.</HeroNote>
+//   </HeroNotes>
+//
+// Same reasoning as HeroEyebrows: Hero.astro places this wrapper as the single grid item for the
+// notes column/row, and the individual notes stack inside it with an ordinary flex column.
+---
+
+<div class="hero-notes">
+	<slot />
+</div>
+
+<style>
+	.hero-notes {
+		display: flex;
+		flex-direction: column;
+		gap: 28px;
+	}
+
+	@media (max-width: 767px) {
+		.hero-notes {
+			gap: 16px;
+		}
+	}
+</style>

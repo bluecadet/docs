@@ -5,67 +5,88 @@ description: Shows how to add hero eyebrows, stat strips, transcripts, and featu
 # Build a rich landing page
 
 Your site's `/` route comes from `landing:` in `docs.config.yaml` — a path to one `.md`/`.mdx`
-file. Either extension gives you a working landing page: a headline and a lead paragraph, rendered
-from the file's title and description.
-
-Everything else — eyebrow chips, a copyable install command, a stat strip, a terminal transcript,
-feature pillars, the section card grid, a closing call to action — is optional, and only available
-from an `.mdx` landing file: plain markdown has no way to import a component. Point `landing:` at
-an `.mdx` file and add the pieces you want; every piece is independent, so skipping one just leaves
-it out.
+file. Either extension gives you a working page — your body content, rendered under the site
+header — but the hero, the stat strip, the terminal transcript, feature pillars, the section card
+grid, a closing call to action, are all components, and plain markdown has no way to import a
+component. Point `landing:` at an `.mdx` file and add the pieces you want; every piece is
+independent, so skipping one just leaves it out. Without a hero, a `.md` landing page has no
+headline of its own — it starts straight into whatever content you write.
 
 > [!NOTE]
 > With no `landing:` key at all, `/` redirects to the first page in the sidebar instead of showing
 > a landing page — see [docs.config.yaml](/reference/docs-config-yaml/#landing).
 
-## Hero pieces go in frontmatter
-
-The hero renders before your MDX body, so its pieces are authored as frontmatter rather than as
-components:
+## Frontmatter feeds the page, not the hero
 
 ```mdx
 ---
 title: acme build
 description: A build tool for people who would rather not think about build tools.
-eyebrows:
-  - label: static output
-    tone: state
-  - label: no config
-    tone: attention
-  - label: any repo
-    tone: neutral
-installCommand: npx acme-build
-heroNotes:
-  - "↖ the config file is optional. it has four keys."
-  - nothing here phones home.
 ---
 ```
 
-| Field | Type | Renders as |
-| --- | --- | --- |
-| `eyebrows` | up to 3 `{ label, tone }` | Uppercase mono chips above the headline. `tone` is `state` (solid, sage by default), `attention` (outlined, amber by default) or `neutral` (outlined, default). |
-| `installCommand` | string | A `$ …` chip under the lead with a copy button, plus a link through to your first doc page. |
-| `heroNotes` | up to 2 strings | Marginalia beside the hero. The first is the attention accent, a second is neutral. |
+`title` and `description` set the page's `<title>` tag and its Open Graph meta — nothing on the
+page itself. They no longer render the hero; that's `<Hero>`, a body component covered below, and
+its `title`/`lead` props are free to read differently than what search engines and link previews
+show.
 
-The footer's right-aligned meta line (`MIT licensed · no telemetry`) isn't landing frontmatter —
-it's `footer.meta` in [`docs.config.yaml`](/reference/docs-config-yaml/), because the footer is
-the same on every page.
-
-`title` and `description` do double duty: they're the hero headline and lead. A `title` containing
-a comma-separated clause (`Reproducible builds, without the ceremony.`) splits across two lines,
-with the second set in italic state accent (sage by default).
+The footer's right-aligned meta line (`MIT licensed · no telemetry`) isn't landing frontmatter
+either — it's `footer.meta` in [`docs.config.yaml`](/reference/docs-config-yaml/), because the
+footer is the same on every page.
 
 ## Body blocks are components
 
-Everything after the hero is your MDX body. Import the blocks you want from the package — the CLI
-leaves `.mdx` imports untouched, and it can always resolve itself:
+The hero and everything after it is your MDX body, built from components. Import the ones you
+want from the package — the CLI leaves `.mdx` imports untouched, and it can always resolve itself:
 
 ```mdx
-import { StatStrip, Stat } from "@bluecadet/docs/components";
+import {
+  Hero, HeroEyebrows, HeroEyebrow, HeroInstall, HeroNotes, HeroNote,
+  StatStrip, Stat,
+} from "@bluecadet/docs/components";
 ```
 
 Ordinary markdown between the blocks stays at the usual reading measure; the blocks themselves run
 edge to edge.
+
+### Hero
+
+Six components, composed together — `<Hero>` renders the headline, lead and "read the
+quickstart" link itself; everything inside it is its own component. `<HeroEyebrows>` and
+`<HeroNotes>` group their chips/notes into a single region each — Astro gives `<Hero>` no way to
+tell several flat `<HeroEyebrow>`/`<HeroNote>` children apart from one, so each group is one child
+for `<Hero>` to place, not several it would have to spread out on its own:
+
+```mdx
+<Hero
+  title="acme build"
+  lead="A build tool for people who would rather not think about build tools."
+>
+  <HeroEyebrows>
+    <HeroEyebrow tone="state">static output</HeroEyebrow>
+    <HeroEyebrow tone="attention">no config</HeroEyebrow>
+    <HeroEyebrow>any repo</HeroEyebrow>
+  </HeroEyebrows>
+  <HeroInstall>npx acme-build</HeroInstall>
+  <HeroNotes>
+    <HeroNote>↖ the config file is optional. it has four keys.</HeroNote>
+    <HeroNote>nothing here phones home.</HeroNote>
+  </HeroNotes>
+</Hero>
+```
+
+| Component | Props | Renders as |
+| --- | --- | --- |
+| `<Hero>` | `title` (required), `lead`, `quickstartHref` | The headline and lead paragraph. `quickstartHref` targets the "read the quickstart" link, which always renders beside the install chip; it defaults to your first sidebar page. |
+| `<HeroEyebrows>` | children | Groups `<HeroEyebrow>` chips into the row above the headline. |
+| `<HeroEyebrow>` | `tone`: `state` \| `attention` \| `neutral` (default), label as children | Uppercase mono chips above the headline. `state` is solid (sage by default), `attention` is outlined (amber by default), `neutral` is outlined (default). Up to 3 render; extras are hidden. |
+| `<HeroInstall>` | command as children | A `$ …` chip under the lead with a copy button. |
+| `<HeroNotes>` | children | Groups `<HeroNote>` marginalia into the column beside the lead paragraph (tablet width up) or the row below it (mobile). |
+| `<HeroNote>` | note text as children | One marginalia note. The first renders in the attention accent, a second (max) renders neutral; extras are hidden. |
+
+`title` accepts a comma-separated clause (`title="Reproducible builds, without the ceremony."`),
+which splits across two lines, with the second set in italic state accent (sage by default) — a
+bare title without a comma renders as a single plain line.
 
 ### StatStrip
 
@@ -197,6 +218,7 @@ Every component is imported from the same barrel:
 
 ```mdx
 import {
+  Hero, HeroEyebrows, HeroEyebrow, HeroInstall, HeroNotes, HeroNote,
   StatStrip, Stat,
   TerminalBand, Terminal, Line, Ok, Warn,
   Features, Feature,

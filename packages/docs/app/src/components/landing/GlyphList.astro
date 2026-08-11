@@ -31,7 +31,7 @@ const { before, accent: highlight, after } = splitAccent(title, accent, true);
 		</h2>
 		{intro && <p class="glyph-list-intro">{intro}</p>}
 	</div>
-	<div class="glyph-list-items">
+	<div class="glyph-list-items" data-reveal-stagger>
 		<slot />
 	</div>
 </div>
@@ -42,8 +42,6 @@ const { before, accent: highlight, after } = splitAccent(title, accent, true);
 		grid-template-columns: 360px minmax(0, 1fr);
 		gap: 88px;
 		padding: 80px var(--content-pad-x) 88px;
-		border-block-end: 1px solid var(--hairline-08);
-		background: var(--surface-panel-2);
 	}
 
 	.glyph-list-title {
@@ -96,6 +94,38 @@ const { before, accent: highlight, after } = splitAccent(title, accent, true);
 
 		.glyph-list-title {
 			font-size: 28px;
+		}
+	}
+</style>
+
+<style is:global>
+	/* Enter-motion for GlyphList: fire-once reveal triggered by the IntersectionObserver in
+	   index.astro; the trigger script, the `--reveal-*` tokens, and `@keyframes landing-reveal`
+	   all live in landing.css. The `[data-landing-reveal]` gate on every rule below means these
+	   are inert everywhere but the landing route, so GlyphList stays safe to use on doc pages
+	   too. `is:global` (rather than the scoped <style> above) because `.glyph-item` is
+	   GlyphItem.astro's own root element, which this component's scope attribute can't reach. */
+	@media (prefers-reduced-motion: no-preference) {
+		/* The heading/intro column settles as one unit at delay 0; the glyph rows stagger below by
+		   `--reveal-index` (assigned to .glyph-list-items' children — see its `data-reveal-stagger`
+		   attribute above and index.astro's bundled script), one --reveal-stagger step apart, offset
+		   by one extra step (`+ 1`) so the first row still lands one step after the head, matching the
+		   second-group offset every other multi-part band uses. */
+		[data-landing-reveal] .glyph-list:not(.is-revealed) > .glyph-list-head {
+			opacity: 0;
+		}
+
+		[data-landing-reveal] .glyph-list.is-revealed > .glyph-list-head {
+			animation: landing-reveal var(--reveal-duration) var(--reveal-ease) both;
+		}
+
+		[data-landing-reveal] .glyph-list:not(.is-revealed) .glyph-item {
+			opacity: 0;
+		}
+
+		[data-landing-reveal] .glyph-list.is-revealed .glyph-item {
+			animation: landing-reveal var(--reveal-duration) var(--reveal-ease) both;
+			animation-delay: calc(var(--reveal-stagger) * (var(--reveal-index, 0) + 1));
 		}
 	}
 </style>

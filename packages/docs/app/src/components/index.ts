@@ -1,3 +1,9 @@
+export { default as Hero } from "./landing/Hero.astro";
+export { default as HeroEyebrows } from "./landing/HeroEyebrows.astro";
+export { default as HeroEyebrow } from "./landing/HeroEyebrow.astro";
+export { default as HeroInstall } from "./landing/HeroInstall.astro";
+export { default as HeroNotes } from "./landing/HeroNotes.astro";
+export { default as HeroNote } from "./landing/HeroNote.astro";
 export { default as StatStrip } from "./landing/StatStrip.astro";
 export { default as Stat } from "./landing/Stat.astro";
 export { default as Terminal } from "./Terminal.astro";

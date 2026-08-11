@@ -51,6 +51,8 @@ sidebar:
   - label: Reference
     items:
       - reference/cli
+      - label: Config (renamed)
+        link: reference/config/overview
       - label: Config
         items:
           - reference/config/base
@@ -77,7 +79,7 @@ toc:
 | `header.links` | `{ label, href }[]` | — | Extra links rendered in the header after its fixed "docs" link, replacing the default GitHub link entirely when set — see [Notes](#notes). |
 | `footer.groups` | `{ title, links: { label, href, note? }[] }[]` | — | Titled groups of links rendered in the footer, replacing the default "docs"/"github" pair entirely when set — see [Notes](#notes). |
 | `footer.meta` | `string` | — | Right-aligned meta string in the footer (e.g. `MIT licensed · no telemetry`), rendered on every page. |
-| `sidebar` | array of groups | — | Author-controlled sidebar structure. When present, replaces the default auto-generated (alphabetical, route-mirroring) sidebar — see [Sidebar semantics](#sidebar-semantics). |
+| `sidebar` | `SidebarItem[]` | — | Author-controlled sidebar structure. When present, replaces the default auto-generated (alphabetical, route-mirroring) sidebar — see [Sidebar semantics](#sidebar-semantics). |
 | `version` | `string` | — | Version string (e.g. `v2.4.1`), rendered as small mono text in the header and at the bottom of the sidebar. |
 | `sidebarMeta` | `string` | — | Multiline string rendered at the bottom of the sidebar, below `version` if both are set. Each non-empty line becomes its own row (e.g. `MIT licensed` / `no telemetry`). |
 | `toc.note` | `string` | — | Short note shown in the attention accent color (amber by default) below the desktop "on this page" list (e.g. `updated for 2.4`). |
@@ -177,15 +179,39 @@ whatever `header.links` you configure.
 
 ## Sidebar semantics
 
-`sidebar` is a list of groups: `{ label: string, items: (pageId | group)[] }`. Each `pageId` string
-is a synced page's content id — the route with the leading/trailing slashes stripped (a `content`
-entry with `base: docs` publishing `docs/reference/config/base.md` gives it the id
-`reference/config/base`). Groups can nest.
+`sidebar` is a list of items: `SidebarItem[]`, where `SidebarItem` is either a bare content-id
+string or an object:
 
-A `pageId` may also reference a `content`-matched `.astro` page with `export const layout = "docs"`
-(see [`.astro` pages](/reference/content-conventions/#astro-pages)) — it joins the sidebar exactly
-like a markdown page. A `layout: "raw"` astro page can't: it owns its entire document and has
-nowhere to sit in the nav, so referencing one in `sidebar` is a build error naming the page.
+```ts
+type SidebarItem = string | SidebarItemObject;
+interface SidebarItemObject {
+  label?: string;   // explicit display label; falls back to the linked page's title when omitted
+  link?: string;    // page id, same ids the bare string form uses
+  items?: SidebarItem[];  // presence makes this a group node
+}
+```
+
+A bare string is sugar for `{ link: string }` — its label is always the linked page's title. An
+object needs `link`, `items`, or both:
+
+```yaml
+sidebar:
+  - reference/cli                          # bare string
+  - label: Config (renamed)                # labeled leaf
+    link: reference/config/base
+  - label: Reference                       # group
+    items:
+      - reference/config/base
+      - reference/config/advanced
+```
+
+A page id (in a bare string, or in an object's `link`) is a synced page's content id — the route
+with the leading/trailing slashes stripped (a `content` entry with `base: docs` publishing
+`docs/reference/config/base.md` gives it the id `reference/config/base`). It may also reference a
+`content`-matched `.astro` page with `export const layout = "docs"` (see
+[`.astro` pages](/reference/content-conventions/#astro-pages)) — it joins the sidebar exactly like
+a markdown page. A `layout: "raw"` astro page can't: it owns its entire document and has nowhere to
+sit in the nav, so referencing one in `sidebar` is a build error naming the page.
 
 - **The tree is fully explicit.** There's no merging with the auto-generated tree — once `sidebar`
   is set, it's the entire sidebar, in the exact order written. Nothing is sorted for you.
@@ -195,8 +221,13 @@ nowhere to sit in the nav, so referencing one in `sidebar` is a build error nami
   the day-to-day nav).
 - **A `sidebar` entry referencing a page id with no matching synced content is a hard build
   error** naming the missing id — typo'd or renamed page ids don't fail silently.
-- Group labels are display-only; a group node itself never has its own route or link; its `items`
-  are what render as links.
+- **An object with neither `link` nor `items` is a config error** — it has nothing to render.
+- **A group (`items` set) with no `label` and no `link` is a config error** — it has no label
+  source for its own heading. Add a `label`, a `link` (whose page title is used as a fallback), or
+  both.
+- A group's own heading can link to a page via `link`, exactly like a leaf item, e.g.
+  `{ label: Config, link: reference/config, items: [...] }`. A group with a `link` behaves like any
+  other page for active-state highlighting and pagination.
 
 ## Notes
 
@@ -209,7 +240,7 @@ nowhere to sit in the nav, so referencing one in `sidebar` is a build error nami
   known field with the wrong type, a required field missing, or an empty `content`) is a hard build
   error naming the file path and the offending field.
 - Unknown top-level keys — and unknown keys nested inside a `content` entry, `header`, `footer`, a
-  footer group, `toc`, a link object, or a sidebar group — are reported as a console warning (not a
+  footer group, `toc`, a link object, or a sidebar item — are reported as a console warning (not a
   build error) and otherwise ignored; a typo'd field name won't fail your build, but it also won't
   do anything.
 - `repoUrl` normalization handles both SSH (`git@github.com:org/repo.git`) and `.git`-suffixed

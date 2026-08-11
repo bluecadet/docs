@@ -22,21 +22,23 @@
 //   prefix of its descendants' ids. `trailFor`/`containsId` below both find ancestors by actually
 //   walking the tree (not by comparing id strings), so this holds in both modes.
 //
-// A group may declare its own page via `SidebarGroup.link` (a content id, exactly like a leaf
-// item) — its node then behaves as a real page (`isPage: true`, `id` set to that content id) so
-// active-state/trail matching and pagination treat it like any other page. Without a `link`, a
-// group nested below the root still needs somewhere to send a click: its `href` becomes its first
-// descendant's href (depth-first, `isPage` stays false so it isn't double-counted as a page).
-// Root-level groups with no `link` keep the inert "section heading" treatment. Auto mode mirrors
-// the no-link case for nested directories with no index page.
+// A group (a `SidebarItem` object with `items`) may declare its own page via `link` (a content id,
+// exactly like a leaf item) — its node then behaves as a real page (`isPage: true`, `id` set to
+// that content id) so active-state/trail matching and pagination treat it like any other page.
+// Without a `link`, a group nested below the root still needs somewhere to send a click: its
+// `href` becomes its first descendant's href (depth-first, `isPage` stays false so it isn't
+// double-counted as a page). Root-level groups with no `link` keep the inert "section heading"
+// treatment. Auto mode mirrors the no-link case for nested directories with no index page. A leaf
+// item's `label`, when set, overrides the linked page's title; a group's `label`, when omitted,
+// falls back to its `link`'s page title.
 import { getCollection } from "astro:content";
 import { docsAstroPages, rawAstroPages } from "./astro-pages.js";
 import {
 	type DocsAppConfig,
 	type FooterGroup,
 	getDocsConfig,
-	type SidebarGroup,
 	type SidebarItem,
+	type SidebarItemObject,
 } from "./config.js";
 
 export interface NavNode {
@@ -55,9 +57,10 @@ export interface NavNode {
 	/** True when a real content entry backs this node. */
 	isPage: boolean;
 	/**
-	 * True for config-mode group nodes (see `SidebarGroup`). Lets renderers keep the root-level
-	 * "section heading" treatment even when the group gains an `href` via `link` or a first-descendant
-	 * fallback — only nested group headings adopt the plain sidebar-item look.
+	 * True for config-mode group nodes (a `SidebarItem` object with `items`; see
+	 * `SidebarItemObject`). Lets renderers keep the root-level "section heading" treatment even
+	 * when the group gains an `href` via `link` or a first-descendant fallback — only nested group
+	 * headings adopt the plain sidebar-item look.
 	 */
 	isGroup?: boolean;
 	children: NavNode[];
@@ -208,10 +211,10 @@ function fillDirectoryHrefs(nodes: NavNode[]): void {
  * sorting. Group nodes are synthetic (see the module-level comment on why `trailFor`/`containsId`
  * can't rely on id prefixes here).
  */
-function buildConfigNodes(groups: SidebarGroup[], entries: NavEntry[], base: string): NavNode[] {
+function buildConfigNodes(items: SidebarItem[], entries: NavEntry[], base: string): NavNode[] {
 	const byId = new Map(entries.map((entry) => [entry.id, entry]));
 	const usedIds = new Set<string>(entries.map((entry) => entry.id));
-	return groups.map((group) => buildGroupNode(group, byId, usedIds, base, 0));
+	return items.map((item) => buildItemNode(item, byId, usedIds, base, 0));
 }
 
 /**
@@ -236,14 +239,18 @@ function requireNavEntry(id: string, byId: Map<string, NavEntry>): NavEntry {
 	);
 }
 
+/** Builds a group node (a `SidebarItem` object with `items`). Validation guarantees `group.items`
+ * is set, and that a group with no `link` has a `label` to use as its own heading. */
 function buildGroupNode(
-	group: SidebarGroup,
+	group: SidebarItemObject,
 	byId: Map<string, NavEntry>,
 	usedIds: Set<string>,
 	base: string,
 	depth: number,
 ): NavNode {
-	const children = group.items.map((item) => buildItemNode(item, byId, usedIds, base, depth + 1));
+	// Non-null: only called with objects that have `items` (see buildItemNode).
+	const items = group.items as SidebarItem[];
+	const children = items.map((item) => buildItemNode(item, byId, usedIds, base, depth + 1));
 
 	if (group.link !== undefined) {
 		const entry = requireNavEntry(group.link, byId);
@@ -251,7 +258,7 @@ function buildGroupNode(
 		return {
 			id: group.link,
 			segment: group.link.slice(cut + 1),
-			label: group.label,
+			label: group.label ?? entry.title,
 			description: entry.description,
 			href: `${base}${group.link}/`,
 			depth,
@@ -261,11 +268,13 @@ function buildGroupNode(
 		};
 	}
 
-	const id = uniqueSlug(group.label, usedIds);
+	// Non-null: config validation requires a `label` when a group has no `link` (see config.ts).
+	const label = group.label as string;
+	const id = uniqueSlug(label, usedIds);
 	return {
 		id,
 		segment: id,
-		label: group.label,
+		label,
 		depth,
 		isPage: false,
 		isGroup: true,
@@ -276,6 +285,7 @@ function buildGroupNode(
 	};
 }
 
+/** Builds a leaf node: a bare content-id string, or an object with `link` and no `items`. */
 function buildItemNode(
 	item: SidebarItem,
 	byId: Map<string, NavEntry>,
@@ -283,16 +293,23 @@ function buildItemNode(
 	base: string,
 	depth: number,
 ): NavNode {
-	if (typeof item !== "string") return buildGroupNode(item, byId, usedIds, base, depth);
+	if (typeof item === "object" && item.items !== undefined) {
+		return buildGroupNode(item, byId, usedIds, base, depth);
+	}
 
-	const entry = requireNavEntry(item, byId);
-	const cut = item.lastIndexOf("/");
+	// Non-null: string sugar for `{ link: item }`, or config validation requires an object leaf
+	// (no `items`) to have `link` (see config.ts).
+	const id = typeof item === "string" ? item : (item.link as string);
+	const labelOverride = typeof item === "string" ? undefined : item.label;
+
+	const entry = requireNavEntry(id, byId);
+	const cut = id.lastIndexOf("/");
 	return {
-		id: item,
-		segment: item.slice(cut + 1),
-		label: entry.title,
+		id,
+		segment: id.slice(cut + 1),
+		label: labelOverride ?? entry.title,
 		description: entry.description,
-		href: `${base}${item}/`,
+		href: `${base}${id}/`,
 		depth,
 		isPage: true,
 		children: [],
@@ -399,8 +416,8 @@ export function childrenAreNested(node: NavNode, nested: boolean): boolean {
 }
 
 /**
- * Shared by SidebarNav.astro and NavSheet.astro: root-level sidebar groups (see `SidebarGroup` in
- * ./config.ts) keep the dim mono "section heading" look even once they gain an `href` via `link`
+ * Shared by SidebarNav.astro and NavSheet.astro: root-level sidebar groups (a `SidebarItem` object with `items`; see `SidebarItemObject`
+ * in ./config.ts) keep the dim mono "section heading" look even once they gain an `href` via `link`
  * — only a group nested below the root switches to the plain sidebar-item treatment other links
  * at its depth use.
  */

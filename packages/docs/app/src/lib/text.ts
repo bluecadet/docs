@@ -1,5 +1,5 @@
 // Shared "plain clause + italic accent-2 clause" heading split, used by every landing component
-// that highlights part of a heading in the accent-2 color (LandingHero's hero title, GlyphList's
+// that highlights part of a heading in the accent-2 color (Hero.astro's hero title, GlyphList's
 // band title, ClosingCta's derived/explicit headline).
 
 /** The three pieces of an accent-split heading, ready to render as `{before}{accent}{after}`. */
@@ -22,7 +22,7 @@ export interface AccentSplit {
  * - `markerIsAccent: true` (GlyphList's arbitrary highlighted phrase within a longer title;
  *   ClosingCta's already-separate headline + accent, pre-joined by the caller before calling
  *   this) — `marker` itself becomes the accent, and any text after it survives as `after`.
- * - `markerIsAccent: false`, the default (LandingHero's ", " clause break) — `marker` is a plain
+ * - `markerIsAccent: false`, the default (Hero.astro's ", " clause break) — `marker` is a plain
  *   delimiter, not the accent: the accent is everything after it, `after` is always `""`, and
  *   `before` keeps only the delimiter's first character (so ", " reads as a trailing comma with
  *   the space dropped, matching the design's "plain clause, *accent clause*" title convention).

@@ -11,8 +11,8 @@ import type {
 	FooterGroup,
 	FooterLink,
 	ResolvedConfig,
-	SidebarGroup,
 	SidebarItem,
+	SidebarItemObject,
 	TocConfig,
 } from "./types.js";
 
@@ -43,7 +43,7 @@ const FOOTER_KEYS = new Set<string>(["groups", "meta"]);
 const FOOTER_GROUP_KEYS = new Set<string>(["title", "links"]);
 const FOOTER_LINK_KEYS = new Set<string>(["label", "href", "note"]);
 const LINK_KEYS = new Set<string>(["label", "href"]);
-const SIDEBAR_GROUP_KEYS = new Set<string>(["label", "items", "link"]);
+const SIDEBAR_ITEM_KEYS = new Set<string>(["label", "items", "link"]);
 const TOC_KEYS = new Set<string>(["note", "editLink"]);
 
 export interface CliOverrides {
@@ -430,58 +430,21 @@ function validateLink(
 	return { label: obj.label, href: obj.href };
 }
 
-/** Validates the top-level `sidebar` array: a list of group objects `{ label, items }`. */
-function validateSidebar(value: unknown, configPath: string, warnings: string[]): SidebarGroup[] {
+/** Validates the top-level `sidebar` array: a list of `SidebarItem`s. */
+function validateSidebar(value: unknown, configPath: string, warnings: string[]): SidebarItem[] {
 	if (!Array.isArray(value)) {
 		throw new Error(`${configPath}: "sidebar" must be an array (got ${describeType(value)}).`);
 	}
-	return value.map((item, i) => validateSidebarGroup(item, `sidebar[${i}]`, configPath, warnings));
+	return value.map((item, i) => validateSidebarItem(item, `sidebar[${i}]`, configPath, warnings));
 }
 
-function validateSidebarGroup(
-	value: unknown,
-	label: string,
-	configPath: string,
-	warnings: string[],
-): SidebarGroup {
-	if (typeof value !== "object" || value === null || Array.isArray(value)) {
-		throw new Error(`${configPath}: "${label}" must be an object (got ${describeType(value)}).`);
-	}
-	const obj = value as Record<string, unknown>;
-
-	for (const childKey of Object.keys(obj)) {
-		if (!SIDEBAR_GROUP_KEYS.has(childKey)) {
-			warnings.push(`${configPath}: unknown key "${label}.${childKey}" is ignored.`);
-		}
-	}
-
-	if (typeof obj.label !== "string") {
-		throw new Error(
-			`${configPath}: "${label}.label" must be a string (got ${describeType(obj.label)}).`,
-		);
-	}
-	if (!Array.isArray(obj.items)) {
-		throw new Error(
-			`${configPath}: "${label}.items" must be an array (got ${describeType(obj.items)}).`,
-		);
-	}
-
-	const items: SidebarItem[] = obj.items.map((item, i) =>
-		validateSidebarItem(item, `${label}.items[${i}]`, configPath, warnings),
-	);
-
-	const group: SidebarGroup = { label: obj.label, items };
-	if (obj.link !== undefined) {
-		if (typeof obj.link !== "string") {
-			throw new Error(
-				`${configPath}: "${label}.link" must be a string (got ${describeType(obj.link)}).`,
-			);
-		}
-		group.link = obj.link;
-	}
-	return group;
-}
-
+/**
+ * Validates a single `SidebarItem`: a bare content-id string, or an object needing `link`,
+ * `items`, or both. `items` present makes it a group (which may still also carry its own `link`);
+ * without `items` it's a leaf, equivalent to the bare string case plus an optional `label`
+ * override. An object with neither `link` nor `items` has nothing to render and is a config error,
+ * as is an `items` group with no `label` and no `link` to fall back on for its own heading.
+ */
 function validateSidebarItem(
 	value: unknown,
 	label: string,
@@ -489,7 +452,62 @@ function validateSidebarItem(
 	warnings: string[],
 ): SidebarItem {
 	if (typeof value === "string") return value;
-	return validateSidebarGroup(value, label, configPath, warnings);
+	if (typeof value !== "object" || value === null || Array.isArray(value)) {
+		throw new Error(
+			`${configPath}: "${label}" must be a string or an object (got ${describeType(value)}).`,
+		);
+	}
+	const obj = value as Record<string, unknown>;
+
+	for (const childKey of Object.keys(obj)) {
+		if (!SIDEBAR_ITEM_KEYS.has(childKey)) {
+			warnings.push(`${configPath}: unknown key "${label}.${childKey}" is ignored.`);
+		}
+	}
+
+	const item: SidebarItemObject = {};
+
+	if (obj.label !== undefined) {
+		if (typeof obj.label !== "string") {
+			throw new Error(
+				`${configPath}: "${label}.label" must be a string (got ${describeType(obj.label)}).`,
+			);
+		}
+		item.label = obj.label;
+	}
+
+	if (obj.link !== undefined) {
+		if (typeof obj.link !== "string") {
+			throw new Error(
+				`${configPath}: "${label}.link" must be a string (got ${describeType(obj.link)}).`,
+			);
+		}
+		item.link = obj.link;
+	}
+
+	if (obj.items !== undefined) {
+		if (!Array.isArray(obj.items)) {
+			throw new Error(
+				`${configPath}: "${label}.items" must be an array (got ${describeType(obj.items)}).`,
+			);
+		}
+		item.items = obj.items.map((child, i) =>
+			validateSidebarItem(child, `${label}.items[${i}]`, configPath, warnings),
+		);
+	}
+
+	if (item.link === undefined && item.items === undefined) {
+		throw new Error(
+			`${configPath}: "${label}" must have a "link", "items", or both (got neither).`,
+		);
+	}
+	if (item.items !== undefined && item.label === undefined && item.link === undefined) {
+		throw new Error(
+			`${configPath}: "${label}" has "items" but no "label" or "link" to use as its own heading — add one or the other.`,
+		);
+	}
+
+	return item;
 }
 
 /**

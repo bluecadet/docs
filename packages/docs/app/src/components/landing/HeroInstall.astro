@@ -1,0 +1,114 @@
+---
+// Copyable install-command chip inside <Hero>'s default slot:
+//
+//   <HeroInstall>npm i @bluecadet/docs</HeroInstall>
+//
+// The command is plain text taken from this component's own slot (not a prop) so the source reads
+// like a shell line. Hero.astro positions the rendered chip in its actions row, beside the "read
+// the quickstart" link Hero renders itself; the copy-to-clipboard behavior lives here since it's
+// this component's own concern, not Hero's.
+//
+// Astro.slots.render() returns already-HTML-escaped markup (it's meant to be written straight into
+// the page) — for slot content that's just text, that's the text with `&<>'"` turned into entities.
+// {command} below and the data-install-copy attribute both escape their value again on the way
+// out, so without unescaping first, a command with e.g. `&&` would render/copy as `&amp;&amp;`.
+// unescapeSlotText() undoes exactly Astro's own escaping (see astro/runtime/server's escapeHTML,
+// backed by html-escaper) so the round trip nets out to the original plain text.
+function unescapeSlotText(html: string): string {
+	return html
+		.replaceAll("&lt;", "<")
+		.replaceAll("&gt;", ">")
+		.replaceAll("&quot;", '"')
+		.replaceAll("&#39;", "'")
+		.replaceAll("&amp;", "&"); // last, so a literal "&lt;" in the source isn't unescaped twice
+}
+
+const command = unescapeSlotText((await Astro.slots.render("default")).trim());
+---
+
+<div class="hero-install">
+	<span class="hero-install-prompt">$</span>
+	<code class="hero-install-command">{command}</code>
+	<button
+		class="hero-install-copy"
+		type="button"
+		aria-label="Copy install command"
+		data-install-copy={command}
+	>
+		⧉
+	</button>
+</div>
+
+<script>
+	// Copy-to-clipboard for the install chip. Swaps the glyph for a checkmark for a beat so the
+	// click has visible feedback; falls back silently when the Clipboard API is unavailable
+	// (insecure origins), leaving the command selectable by hand. Astro dedupes this script even
+	// when <HeroInstall> is used more than once on a page.
+	for (const button of document.querySelectorAll<HTMLButtonElement>("[data-install-copy]")) {
+		button.addEventListener("click", async () => {
+			const command = button.dataset.installCopy;
+			if (!command) return;
+			try {
+				await navigator.clipboard.writeText(command);
+			} catch {
+				return;
+			}
+			button.textContent = "✓";
+			button.classList.add("hero-install-copy--copied");
+			window.setTimeout(() => {
+				button.textContent = "⧉";
+				button.classList.remove("hero-install-copy--copied");
+			}, 1400);
+		});
+	}
+</script>
+
+<style>
+	.hero-install {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		padding: 11px 16px;
+		border: 1px solid var(--accent-border-30);
+		border-radius: var(--radius-md);
+		background: var(--accent-tint-05);
+		font: 400 13.5px var(--font-mono);
+		color: var(--text-code);
+	}
+
+	.hero-install-prompt {
+		color: var(--accent);
+	}
+
+	.hero-install-command {
+		font: inherit;
+		white-space: nowrap;
+	}
+
+	.hero-install-copy {
+		background: none;
+		border: none;
+		color: var(--accent);
+		cursor: pointer;
+		font: 400 13px var(--font-mono);
+		padding-block: 0 0;
+		padding-inline: 8px 0;
+	}
+
+	.hero-install-copy--copied {
+		color: var(--accent-2);
+	}
+
+	@media (max-width: 767px) {
+		.hero-install {
+			min-block-size: 48px;
+			padding: 0 14px;
+			font-size: 12.5px;
+			overflow-x: auto;
+		}
+
+		.hero-install-copy {
+			margin-inline-start: auto;
+		}
+	}
+</style>

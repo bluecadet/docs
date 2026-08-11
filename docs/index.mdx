@@ -1,17 +1,6 @@
 ---
 title: bluecadet docs
 description: A CLI that turns a docs.config.yaml and the files it names into a static docs site — no Astro project, no build pipeline to maintain.
-eyebrows:
-  - label: static output
-    tone: state
-  - label: yaml config
-    tone: attention
-  - label: any repo
-    tone: neutral
-installCommand: npx @bluecadet/docs build
-heroNotes:
-  - "↖ one required input: a docs.config.yaml naming a title and where your content lives."
-  - the repo you point it at needs no package.json, no dependencies and no astro config.
 ---
 
 import {
@@ -22,6 +11,12 @@ import {
   Features,
   GlyphItem,
   GlyphList,
+  Hero,
+  HeroEyebrows,
+  HeroEyebrow,
+  HeroInstall,
+  HeroNotes,
+  HeroNote,
   Line,
   Ok,
   Stat,
@@ -29,6 +24,22 @@ import {
   TerminalBand,
   Warn,
 } from "@bluecadet/docs/components";
+
+<Hero
+  title="bluecadet docs"
+  lead="A CLI that turns a docs.config.yaml and the files it names into a static docs site — no Astro project, no build pipeline to maintain."
+>
+  <HeroEyebrows>
+    <HeroEyebrow tone="state">static output</HeroEyebrow>
+    <HeroEyebrow tone="attention">yaml config</HeroEyebrow>
+    <HeroEyebrow>any repo</HeroEyebrow>
+  </HeroEyebrows>
+  <HeroInstall>npx @bluecadet/docs build</HeroInstall>
+  <HeroNotes>
+    <HeroNote>↖ one required input: a docs.config.yaml naming a title and where your content lives.</HeroNote>
+    <HeroNote>the repo you point it at needs no package.json, no dependencies and no astro config.</HeroNote>
+  </HeroNotes>
+</Hero>
 
 <StatStrip>
   <Stat value="1" label="command to build the whole site" />

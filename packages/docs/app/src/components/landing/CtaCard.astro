@@ -53,9 +53,6 @@ const hasDescription = Astro.slots.has("default");
 		content: counter(cta-card, decimal-leading-zero) " / ";
 	}
 
-	/* This 4n+2/4n+3 pairing only alternates colors row-by-row (rather than card-by-card) because
-	   CtaCards.astro fixes the grid at 2 columns — a different column count would break the
-	   checkerboard. */
 	.cta-card:nth-child(4n + 2) .cta-num,
 	.cta-card:nth-child(4n + 3) .cta-num {
 		color: var(--accent-2);
@@ -80,17 +77,5 @@ const hasDescription = Astro.slots.has("default");
 	   with `.cta-desc` rather than dropping to its own block. */
 	.cta-desc :global(p) {
 		display: inline;
-	}
-
-	@media (min-width: 1024px) {
-		/* align with other landing elements on desktop */
-
-		.cta-card:nth-child(2n - 1) {
-			padding-inline-start: var(--content-pad-x);
-
-		}
-		.cta-card:nth-child(2n) {
-			padding-inline-end: var(--content-pad-x);
-		}
 	}
 </style>

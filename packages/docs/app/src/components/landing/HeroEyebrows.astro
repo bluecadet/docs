@@ -1,0 +1,32 @@
+---
+// Groups <HeroEyebrow> chips into the row above the headline:
+//
+//   <HeroEyebrows>
+//     <HeroEyebrow tone="state">Label</HeroEyebrow>
+//     <HeroEyebrow>Neutral label</HeroEyebrow>
+//   </HeroEyebrows>
+//
+// Hero.astro lays its children out with CSS Grid, and a grid area can only take one item without
+// its slotted contents overlapping (Astro gives Hero no way to inspect a slotted child's type, so
+// it can't tell three flat <HeroEyebrow> siblings apart from one to spread them across a track
+// itself). This wrapper is that one item — the chips inside it lay out with an ordinary flex row.
+---
+
+<div class="hero-eyebrows">
+	<slot />
+</div>
+
+<style>
+	.hero-eyebrows {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 12px;
+	}
+
+	@media (max-width: 767px) {
+		.hero-eyebrows {
+			gap: 7px;
+		}
+	}
+</style>

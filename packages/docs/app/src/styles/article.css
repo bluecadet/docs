@@ -311,13 +311,32 @@
 	font: 400 13px/1.8 var(--font-mono);
 }
 
+/* `<code>` is forced to `display: block; inline-size: max-content` so it grows to the width of its
+   widest `.line` — including under horizontal scroll overflow, where the pre's own content box
+   would otherwise stay clamped to the visible viewport width. That gives `.line`'s
+   `min-inline-size: 100%` below a containing block as wide as the full scrollable content, not just
+   what's currently in view, so every line's background — including shorter highlighted lines —
+   reaches the true scrolled-right edge, not just the viewport edge. `line-height: inherit` undoes
+   `.prose code`'s `font` shorthand (above), which resets line-height to `normal` — harmless while
+   `<code>` stayed inline (the row strut came from block-level `pre`'s own 1.8 line-height either
+   way), but load-bearing now that `<code>` itself is the block container establishing the line
+   boxes: without it, rows would compress from `pre`'s deliberate 1.8 down to the mono font's
+   `normal` metric. */
+.prose .code-block pre > code {
+	display: block;
+	inline-size: max-content;
+	min-inline-size: 100%;
+	line-height: inherit;
+}
+
 /* Shiki wraps each source line in its own `.line` span inside `<pre><code>`. The inline padding
    lives here (not on `pre`, where it used to be) so a highlighted line's background can reach both
    edges of the block — including under horizontal scroll overflow, where `pre`-level padding would
    only ever cover the visible viewport, not the full scrollable width. `min-inline-size: 100%`
-   resolves against `pre`'s content box (its nearest block-container ancestor, since `<code>` stays
-   inline) and stretches every line to fill it; lines longer than that grow past it exactly as they
-   did when the padding lived on `pre`. */
+   resolves against `code`'s content box (now `display: block` and sized to the widest line — see
+   above — rather than `pre`'s, which only ever reflects the unscrolled viewport width) and
+   stretches every line to fill it; lines longer than that grow past it exactly as they did when the
+   padding lived on `pre`. */
 .prose .code-block pre .line {
 	display: inline-block;
 	min-inline-size: 100%;

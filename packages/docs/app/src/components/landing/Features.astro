@@ -12,28 +12,12 @@
 // both done in CSS rather than in JS.
 ---
 
-<div class="landing-band features">
+<div class="landing-band features landing-grid landing-grid-3" data-reveal-stagger>
 	<slot />
 </div>
 
 <style>
 	.features {
-		display: grid;
-		grid-template-columns: repeat(3, minmax(0, 1fr));
-		border-block-end: 1px solid var(--hairline-08);
-		background: var(--surface-panel-1);
 		counter-reset: landing-feature;
-	}
-
-	@media (max-width: 1023px) {
-		.features {
-			grid-template-columns: repeat(2, minmax(0, 1fr));
-		}
-	}
-
-	@media (max-width: 767px) {
-		.features {
-			grid-template-columns: minmax(0, 1fr);
-		}
 	}
 </style>

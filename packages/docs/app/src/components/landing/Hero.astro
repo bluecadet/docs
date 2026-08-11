@@ -1,0 +1,290 @@
+---
+// Landing hero, composed from the MDX body instead of frontmatter:
+//
+//   <Hero title="Same title text" lead="Same lead text">
+//     <HeroEyebrows>
+//       <HeroEyebrow tone="state">Label</HeroEyebrow>
+//     </HeroEyebrows>
+//     <HeroInstall>npm i @bluecadet/docs</HeroInstall>
+//     <HeroNotes>
+//       <HeroNote>First note.</HeroNote>
+//     </HeroNotes>
+//   </Hero>
+//
+// `title`/`lead` are props (not slotted) because Hero renders them itself — splitAccent() needs
+// the raw title string, and lead's typography differs from a plain paragraph. HeroEyebrows,
+// HeroInstall and HeroNotes arrive as one flat, opaquely-typed default slot: Astro gives no way to
+// inspect a slotted child's component type, so there's no `slot="eyebrows"` to write and no way
+// for Hero to sort children into groups itself. Each of those three renders exactly one element
+// with a stable class name — HeroEyebrows/HeroNotes exist specifically so "several chips" and
+// "up to two notes" are each a single item here too, not N flat items Hero would have to spread
+// across a grid area on its own (grid items sharing one area overlap; see those two components'
+// comments) — and the :global() rules below place that single element with CSS Grid, matching the
+// original frontmatter-driven hero's layout exactly: a notes column beside the lead paragraph
+// from tablet width up, stacked with everything else below it.
+import { splitAccent } from "../../lib/text";
+import { docsEntryHref } from "../../lib/nav";
+
+interface Props {
+	title: string;
+	lead?: string;
+	/** Target for the "read the quickstart" link beside the install chip. Defaults to the first sidebar page. */
+	quickstartHref?: string;
+}
+
+const { title, lead, quickstartHref = await docsEntryHref() } = Astro.props;
+
+// Only split into the design's two-clause hero treatment (plain line + italic accent line) when
+// the title has a natural clause break; a bare title (the common case for real doc collections)
+// renders as a single plain line rather than faking one.
+const { before: firstClause, accent: secondClause } = splitAccent(title, ", ");
+---
+
+<div class="hero landing-band landing-band--flush">
+	<slot />
+
+	<h1>
+		{firstClause}
+		{secondClause && (
+			<>
+				<br />
+				<span class="hero-accent">{secondClause}</span>
+			</>
+		)}
+	</h1>
+
+	{lead && <p class="hero-lead">{lead}</p>}
+
+	{quickstartHref && (
+		<a class="hero-quickstart" href={quickstartHref}>
+			read the quickstart →
+		</a>
+	)}
+</div>
+
+<style>
+	/* Base (mobile): one column, six stacked rows — eyebrows, title, lead, notes, install,
+	   quickstart. Tablet up (768px) reshapes this into the original's 4-row/2-column grid: notes
+	   moves into its own column beside lead (spanning down through the install/quickstart row
+	   too, so a tall note stack doesn't push the install chip down), and install/quickstart move
+	   back onto one shared row. */
+	.hero {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr);
+		padding: 104px var(--content-pad-x) 96px;
+	}
+
+	.hero > :global(.hero-eyebrows) {
+		grid-row: 1;
+		margin-block-end: 34px;
+	}
+
+	h1 {
+		grid-row: 2;
+		margin: 0;
+		font: 300 68px/1.08 var(--font-serif);
+		max-inline-size: 15ch;
+		letter-spacing: -0.02em;
+		color: var(--ink);
+	}
+
+	.hero-accent {
+		font-style: italic;
+		color: var(--accent);
+	}
+
+	/* Font size holds constant across breakpoints — it's the hero's reading copy, not display
+	   type, so (unlike the H1) it doesn't step down at tablet/mobile. */
+	.hero-lead {
+		grid-row: 3;
+		margin: 36px 0 0;
+		max-inline-size: 58ch;
+		color: var(--text-muted);
+		font-size: 17px;
+		line-height: 1.8;
+		text-wrap: pretty;
+	}
+
+	.hero > :global(.hero-notes) {
+		grid-row: 4;
+		margin-block-start: 36px;
+	}
+
+	.hero > :global(.hero-install) {
+		grid-row: 5;
+		margin-block-start: 48px;
+	}
+
+	.hero-quickstart {
+		grid-row: 6;
+		margin-block-start: 10px;
+		font: 400 13px var(--font-mono);
+		color: var(--accent);
+	}
+
+	/* Tablet up: two columns (main content + a fixed-width notes column), and two extra
+	   content-sized columns carved out of the main column just for the install chip and
+	   quickstart link, so they sit snugly side by side instead of each stretching to the full
+	   main-column width the way a plain 2-column grid would force a lone item to. Eyebrows/title/
+	   lead all still span the full main column by spanning across those two extra column lines —
+	   nothing about their own width changes, they just cross an internal division that only the
+	   install/quickstart row cares about. */
+	@media (min-width: 768px) {
+		.hero {
+			grid-template-columns:
+				[main-start action-1-start] auto
+				[action-1-end action-2-start] auto
+				[action-2-end] minmax(0, 1fr)
+				[main-end notes-start] 200px
+				[notes-end];
+			align-items: start;
+		}
+
+		.hero > :global(.hero-eyebrows) {
+			grid-column: main-start / notes-end;
+		}
+
+		h1 {
+			grid-column: main-start / notes-end;
+		}
+
+		.hero-lead {
+			grid-column: main-start / main-end;
+		}
+
+		.hero > :global(.hero-notes) {
+			grid-column: notes-start / notes-end;
+			/* Spans exactly the lead row and the install/quickstart row below (3 and 4) — not a
+			   wider span through the unused row 5/6 (mobile's separate install/quickstart rows) —
+			   so it doesn't pull an empty track into the row-sizing and throw off the two rows it
+			   actually shares with lead/install. margin-block-start carries over unchanged from the
+			   base rule — the notes column keeps the same top offset from the row it starts in
+			   whether that row holds lead alone (this breakpoint) or is its own row (mobile). */
+			grid-row: 3 / 5;
+			align-self: start;
+		}
+
+		.hero > :global(.hero-install) {
+			grid-column: action-1-start / action-1-end;
+			grid-row: 4;
+			align-self: center;
+		}
+
+		.hero-quickstart {
+			grid-column: action-2-start / action-2-end;
+			grid-row: 4;
+			align-self: center;
+			margin-block-start: 48px;
+			margin-inline-start: 24px;
+		}
+	}
+
+	@media (min-width: 1024px) {
+		.hero {
+			grid-template-columns:
+				[main-start action-1-start] auto
+				[action-1-end action-2-start] auto
+				[action-2-end] minmax(0, 1fr)
+				[main-end notes-start] 240px
+				[notes-end];
+		}
+	}
+
+	@media (max-width: 1023px) {
+		.hero {
+			padding: 80px var(--content-pad-x) 70px;
+		}
+
+		h1 {
+			font-size: 56px;
+			max-inline-size: none;
+		}
+
+		.hero > :global(.hero-install) {
+			margin-block-start: 40px;
+		}
+
+		.hero-quickstart {
+			margin-block-start: 40px;
+		}
+	}
+
+	/* Mobile: the install chip becomes a full-width 48px tap target and the quickstart link a
+	   button below it. */
+	@media (max-width: 767px) {
+		.hero {
+			padding: 58px var(--content-pad-x) 52px;
+		}
+
+		h1 {
+			font-size: 40px;
+			line-height: 1.12;
+			letter-spacing: -0.015em;
+		}
+
+		.hero-lead {
+			margin-block-start: 22px;
+		}
+
+		.hero > :global(.hero-notes) {
+			margin-block-start: 22px;
+		}
+
+		.hero > :global(.hero-install) {
+			margin-block-start: 30px;
+		}
+
+		.hero-quickstart {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			min-block-size: 48px;
+			margin-block-start: 10px;
+			border: 1px solid var(--hairline-14);
+			border-radius: var(--radius-md);
+			font-size: 12.5px;
+		}
+	}
+</style>
+
+<style is:global>
+	/* Enter-motion for Hero: fire-once reveal triggered by the IntersectionObserver in
+	   index.astro; the trigger script, the `--reveal-*` tokens, and `@keyframes landing-reveal`
+	   all live in landing.css. The `[data-landing-reveal]` gate on every rule below means these
+	   are inert everywhere but the landing route, so Hero stays safe to use on doc pages too.
+	   `is:global` (rather than the scoped <style> above) because `.hero`'s children targeted here
+	   include slotted wrapper roots — `.hero-eyebrows`, `.hero-notes`, `.hero-install` — that this
+	   component's own scope attribute can't reach. */
+	@media (prefers-reduced-motion: no-preference) {
+		/* eyebrows → h1 → lead → notes → install → quickstart, in visual (grid) order, one
+		   --reveal-stagger step apart — not DOM order, which interleaves the slotted eyebrows/
+		   install/notes ahead of the h1/lead/quickstart Hero renders itself. */
+		[data-landing-reveal] .hero:not(.is-revealed) > * {
+			opacity: 0;
+		}
+
+		[data-landing-reveal] .hero.is-revealed > * {
+			animation: landing-reveal var(--reveal-duration) var(--reveal-ease) both;
+		}
+
+		[data-landing-reveal] .hero.is-revealed > h1 {
+			animation-delay: var(--reveal-stagger);
+		}
+
+		[data-landing-reveal] .hero.is-revealed > .hero-lead {
+			animation-delay: calc(var(--reveal-stagger) * 2);
+		}
+
+		[data-landing-reveal] .hero.is-revealed > .hero-notes {
+			animation-delay: calc(var(--reveal-stagger) * 3);
+		}
+
+		[data-landing-reveal] .hero.is-revealed > .hero-install {
+			animation-delay: calc(var(--reveal-stagger) * 4);
+		}
+
+		[data-landing-reveal] .hero.is-revealed > .hero-quickstart {
+			animation-delay: calc(var(--reveal-stagger) * 5);
+		}
+	}
+</style>

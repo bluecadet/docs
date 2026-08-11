@@ -9,18 +9,19 @@
 // in favor of a single full-bleed main column with its own wider gutters (see the .landing-body
 // override below) — only the header/footer variants and the full-bleed main differ otherwise.
 //
-// The hero and footer meta render from the landing entry's frontmatter (see src/content.config.ts)
-// because they sit outside the MDX body. Everything below the hero — stat strip, terminal demo,
-// feature pillars, the CTA cards, the "will not do" list, the closing CTA — is MDX components the
-// author drops into their own index.mdx instead, so the shape of the page is theirs. Everything is
-// optional: with none of it, this route is still a headline and a lead.
+// The page title / Open Graph description still come from the landing entry's frontmatter (`title`/
+// `description`), since BaseLayout needs them before the MDX body renders. Everything else —
+// the hero, stat strip, terminal demo, feature pillars, the CTA cards, the "will not do" list, the
+// closing CTA — is MDX components the author drops into their own index.mdx, Hero included, so the
+// shape of the page is entirely theirs. With none of it beyond a bare `title`, this route still
+// renders — BaseLayout just gets a page title and no body content.
 import { getCollection, render } from "astro:content";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import LandingHeader from "../components/landing/LandingHeader.astro";
-import LandingHero from "../components/landing/LandingHero.astro";
 import LandingRedirect from "../components/landing/LandingRedirect.astro";
 import { docsEntryHref } from "../lib/nav";
 import { getDocsConfig } from "../lib/config";
+import "../styles/landing.css";
 
 const { title: siteTitle, hasLanding } = getDocsConfig();
 
@@ -47,19 +48,26 @@ const pageDescription = data?.description;
 		>
 			<LandingHeader slot="header" />
 
+			{/* Reveal gate: sets an attribute on <html> before the landing content below parses, so
+			    every hiding/animation rule in landing.css can scope itself under `[data-landing-reveal]`.
+			    Content is never hidden unless this attribute is present, and it's only set when JS
+			    actually ran and the visitor hasn't asked for reduced motion — the no-JS/no-IO/
+			    reduced-motion cases all fall through to a fully visible, motionless page. Must be
+			    `is:inline` (unbundled, unhoisted) so it runs synchronously at this exact point in the
+			    document, ahead of `.landing-content`. */}
+			<script is:inline>
+				if (
+					!matchMedia("(prefers-reduced-motion: reduce)").matches &&
+					"IntersectionObserver" in window
+				)
+					document.documentElement.setAttribute("data-landing-reveal", "");
+			</script>
+
 			{/* data-pagefind-body scopes the search index to the landing page's own content — see the
 			    pagefindIndex() comment in astro.config.mjs for why this also determines which pages are
 			    indexed at all. Everything the landing route renders into BaseLayout's default slot lives
 			    here, so it's all wrapped together rather than piecemeal. */}
 			<div class="landing-body" data-pagefind-body data-pagefind-meta={`title:${pageTitle}`}>
-				<LandingHero
-					title={pageTitle}
-					lead={pageDescription}
-					eyebrows={data?.eyebrows}
-					installCommand={data?.installCommand}
-					notes={data?.heroNotes}
-					quickstartHref={docsHref}
-				/>
 				{Content && (
 					<article class="landing-content">
 						<Content />
@@ -71,6 +79,60 @@ const pageDescription = data?.description;
 		<LandingRedirect href={docsHref} />
 	)
 }
+
+<script>
+	// Fire-once enter animation trigger — see landing.css's "Enter motion" section for the CSS side.
+	// Does nothing unless the inline gate script above set the reveal attribute (no JS, ancient
+	// browser, or reduced motion all skip this entirely, leaving content statically visible).
+	if (document.documentElement.hasAttribute("data-landing-reveal")) {
+		const content = document.querySelector(".landing-content");
+
+		if (content) {
+			// Per-child stagger contract: any container — a band's own root or a nested wrapper,
+			// authored here or by an MDX consumer — marked `data-reveal-stagger` gets each of its
+			// DIRECT children an inline `--reveal-index` (0-based, capped at 8 so a long list doesn't
+			// crawl) before it's ever observed. Components read the index back in their own colocated
+			// motion CSS via `calc(var(--reveal-stagger) * var(--reveal-index, 0))`; this script only
+			// assigns the index, never the delay math.
+			for (const container of content.querySelectorAll("[data-reveal-stagger]")) {
+				Array.from(container.children).forEach((child, i) => {
+					child.style.setProperty("--reveal-index", String(Math.min(i, 8)));
+				});
+			}
+
+			// When several elements enter in the same observer batch — which in practice only happens
+			// for everything above the fold at load — ramp them one BATCH_STEP_MS apart so the page
+			// reveals as a single wave downward instead of every band cascading at once. Normal
+			// scrolling delivers one element per batch, so this is a no-op there.
+			const BATCH_STEP_MS = 200;
+
+			const observer = new IntersectionObserver(
+				(entries) => {
+					entries
+						.filter((entry) => entry.isIntersecting)
+						.forEach((entry, i) => {
+							// Unobserve immediately (not in the timeout) so a re-fire can't queue a duplicate.
+							observer.unobserve(entry.target);
+							if (i === 0) entry.target.classList.add("is-revealed");
+							else setTimeout(() => entry.target.classList.add("is-revealed"), i * BATCH_STEP_MS);
+						});
+				},
+				// Reveals start once ~12% of the viewport bottom is cleared; threshold 0 so a band taller
+				// than the viewport still triggers as soon as its top edge crosses that line.
+				{ rootMargin: "0px 0px -12% 0px", threshold: 0 },
+			);
+
+			// Every direct child of .landing-content — bands and prose paragraphs alike — plus any
+			// band an author nested deeper (e.g. inside a wrapper <div> in their MDX): the CSS keys
+			// band reveals off `.landing-band`-level classes, so a band that never got observed would
+			// keep its content hidden forever. Elements already above the fold at load intersect
+			// immediately, giving a load-time cascade for free.
+			for (const el of new Set([...content.children, ...content.querySelectorAll(".landing-band")])) {
+				observer.observe(el);
+			}
+		}
+	}
+</script>
 
 <style>
 	/* Without the sidebar rail (see BaseLayout's `sidebar={false}`), the landing page is one full-
@@ -120,10 +182,12 @@ const pageDescription = data?.description;
 	}
 
 	/* Bands supply their own vertical rhythm and hairlines. A band that opens or closes the body
-	   cancels the article's padding on that edge so it butts straight against the hero above, or
-	   the page's own bottom edge below, the way the design's bands do. Deriving these from
-	   --landing-rhythm rather than repeating the padding value keeps the two enforced by
-	   construction instead of hand-kept equal. */
+	   cancels the article's padding on that edge so it butts straight against the header above, or
+	   the page's own bottom edge below, instead of sitting the article's rhythm further in — this
+	   is what lets <Hero>, itself just the first `.landing-band` in the MDX body now, start flush
+	   under the header the way the design's bands do. Deriving these from --landing-rhythm rather
+	   than repeating the padding value keeps the two enforced by construction instead of
+	   hand-kept equal. */
 	.landing-content > :global(.landing-band:first-child) {
 		margin-block-start: calc(-1 * var(--landing-rhythm));
 	}
