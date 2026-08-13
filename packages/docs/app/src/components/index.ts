@@ -20,3 +20,5 @@ export { default as TerminalBand } from "./landing/TerminalBand.astro";
 export { default as Ok } from "./Ok.astro";
 export { default as Terminal } from "./Terminal.astro";
 export { default as Warn } from "./Warn.astro";
+export { default as OtherTools } from "./landing/OtherTools.astro";
+export { default as OtherToolItem } from "./landing/OtherToolItem.astro";

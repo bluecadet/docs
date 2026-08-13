@@ -1,0 +1,77 @@
+---
+interface Props {
+	title: string;
+	subtitle: string;
+  url: string;
+  description: string;
+  accentOverride?: string;
+  glyph?: string;
+}
+
+const { title, subtitle, url, description, accentOverride, glyph } = Astro.props;
+---
+
+<a class="other-tool-item" href={url} style={accentOverride ? `--accent-override: ${accentOverride}` : ""}>
+  <h2 class="type-heading title">
+    {glyph && <span class="glyph">{glyph}</span>}
+    <span>{title}</span>
+  </h2>
+  <p class="type-sm subtitle">{subtitle}</p>
+  <p class="type-prose-sm desc">{description}</p>
+  <p aria-hidden="true" class="link type-sm">{url} →</p>
+</a>
+
+<style>
+  .other-tool-item {
+    display: block;
+    padding: 2.5rem;
+    background-color: var(--bg);
+    transition: background-color var(--transition-fast);
+
+    &:hover {
+      background-color: var(--surface-panel-2);
+    }
+  }
+
+  .other-tool-item:not(:last-child) {
+    border-block-end: 1px solid var(--hairline-06);
+  }
+
+  .title {
+    color: var(--ink);
+  }
+
+  .subtitle {
+    text-transform: uppercase;
+    margin-block-start: 0.25rem;
+    color: var(--text-dim);
+    letter-spacing: 0.08em;
+  }
+
+  .desc {
+    margin-block-start: 0.75rem;
+    color: var(--text-muted);
+    text-wrap: balance;
+  }
+
+  .link {
+    margin-block-start: 0.75rem;
+    display: block;
+    color: var(--accent-override, var(--accent));
+  }
+
+  .other-tool-item:nth-child(2n) .link {
+    color: var(--accent-override, var(--accent-2));
+  }
+
+  @media (min-width: 768px) {
+    .other-tool-item {
+      flex: 1;
+    }
+    
+    .other-tool-item:not(:last-child) {
+      border-block-end: none;
+      border-inline-end: 1px solid var(--hairline-06);
+    }
+  }
+</style>

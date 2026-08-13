@@ -24,7 +24,9 @@ import {
   TerminalBand,
   Warn,
   GeneralBand,
-  LandingBlockQuote
+  LandingBlockQuote,
+  OtherToolItem,
+  OtherTools
 } from "@bluecadet/docs/components";
 
 <Hero
@@ -125,5 +127,21 @@ import {
     Explains why docs are synced into a bundled Astro app and rewritten, not read in place.
   </CtaCard>
 </CtaCards>
+
+<OtherTools title="More tools from Bluecadet" subtitle="Other open source utilties for exhibit and web development.">
+  <OtherToolItem
+    title="bluecadet dev"
+    subtitle="lorem ipsum"
+    url="dev.bluecadet.com"
+    description="The dev site is a companion to the docs site, and is used to preview and test content before it is published. It can be used to build and test interactive exhibits, web apps, and other digital experiences."
+  />
+  <OtherToolItem
+    title="bluecadet dev"
+    subtitle="lorem ipsum"
+    url="dev.bluecadet.com"
+    accentOverride="#ffaabb"
+    description="The dev site is a companion to the docs site, and is used to preview and test content before it is published. It can be used to build and test interactive exhibits, web apps, and other digital experiences."
+  />
+</OtherTools>
 
 <ClosingCta accent="It is one command." />
