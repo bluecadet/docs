@@ -1,0 +1,99 @@
+---
+interface Props {
+	eyebrow?: string;
+}
+
+const { eyebrow } = Astro.props;
+---
+
+<div class="landing-band general-band">
+	{eyebrow && (
+		<div class="eyebrow">
+			{eyebrow}
+		</div>
+	)}
+	<div class="content">
+			<slot />
+	</div>
+
+</div>
+
+<style>
+	.general-band {
+		padding: 64px var(--content-pad-x) 72px;
+	}
+
+	.eyebrow {
+		font: 400 11.5px var(--font-mono);
+		color: var(--text-dim);
+		text-transform: uppercase;
+		margin-block-end: 16px;
+	}
+
+	.content :global(> h2) {
+		font: 400 28px/1.2 var(--font-serif);
+		color: var(--ink);
+	}
+
+	.content :global(> p) {
+		font-size: 17px;
+		line-height: 1.8;
+		color: var(--text-muted);
+	}
+
+	.content {
+		display: flex;
+		flex-direction: column;
+		gap: 18px;
+	}
+
+
+	@media (min-width: 1024px) {
+		.general-band {
+			display: grid;
+			grid-template-columns: 1fr 3fr 2fr;
+			gap: 48px;
+			align-items: baseline;
+		}
+
+		.eyebrow {
+			grid-column: 1 / 2;
+		}
+
+		.content {
+			grid-column: 2 / 3;
+			gap: 32px;
+		}
+
+		.content :global(> h2) {
+			font-size: 32px;
+		}
+	}
+</style>
+
+<style is:global>
+	/* Enter-motion for GeneralBand: fire-once reveal triggered by the IntersectionObserver in
+	   index.astro; the trigger script, the `--reveal-*` tokens, and `@keyframes landing-reveal`
+	   all live in landing.css. The `[data-landing-reveal]` gate on every rule below means these
+	   are inert everywhere but the landing route, so TerminalBand stays safe to use on doc pages
+	   too. `is:global` for consistency with the rest of the landing components' motion blocks,
+	   all of which key off the same gate attribute and keyframe defined in landing.css. */
+	@media (prefers-reduced-motion: no-preference) {
+		/* caption row, then the terminal window one step later. */
+		[data-landing-reveal] .general-band:not(.is-revealed) > * {
+			opacity: 0;
+		}
+
+		[data-landing-reveal] .general-band.is-revealed > * {
+			animation: landing-reveal var(--reveal-duration) var(--reveal-ease) both;
+		}
+
+		[data-landing-reveal] .general-band.is-revealed .content > * {
+			animation: landing-reveal var(--reveal-duration) var(--reveal-ease) both;
+		}
+
+		[data-landing-reveal] .general-band.is-revealed .content {
+			animation-delay: var(--reveal-stagger);
+		}
+	}
+</style>

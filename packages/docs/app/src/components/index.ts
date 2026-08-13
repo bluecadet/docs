@@ -18,3 +18,5 @@ export { default as GlyphItem } from "./landing/GlyphItem.astro";
 export { default as CtaCards } from "./landing/CtaCards.astro";
 export { default as CtaCard } from "./landing/CtaCard.astro";
 export { default as ClosingCta } from "./landing/ClosingCta.astro";
+export { default as GeneralBand } from "./landing/GeneralBand.astro";
+export { default as LandingBlockQuote } from "./landing/LandingBlockQuote.astro";

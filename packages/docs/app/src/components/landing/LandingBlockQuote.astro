@@ -1,0 +1,51 @@
+---
+interface Props {
+	name: string;
+	title: string;
+}
+
+const { name, title } = Astro.props;
+---
+
+<div class="landing-band landing-block-quote">
+  <blockquote>
+    <slot />
+  </blockquote>
+  <p class="attribution">
+    <span class="attribution-name">{name}</span>
+    <span class="attribution-title">{title}</span>
+  </p>
+</div>
+
+<style>
+  .landing-block-quote {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+    padding-inline-start: 32px;
+    border-inline-start: 2px solid var(--accent);
+  }
+
+  blockquote {
+		font: 300 34px/1.4 var(--font-serif);
+    color: var(--ink);
+
+    & i {
+      font-style: italic;
+      color: var(--accent);
+    }
+  }
+
+  .attribution {
+    display: flex;
+    flex-direction: column;
+    font: 12px/1.8 var(--font-mono);
+    color: var(--text-dim);
+  }
+
+  .attribution-title {
+    color: var(--text-faint);
+
+  }
+
+</style>

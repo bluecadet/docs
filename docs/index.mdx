@@ -23,6 +23,8 @@ import {
   StatStrip,
   TerminalBand,
   Warn,
+  GeneralBand,
+  LandingBlockQuote
 } from "@bluecadet/docs/components";
 
 <Hero
@@ -59,8 +61,16 @@ import {
   <Line><Ok>done</Ok> · 13 page(s) built in 440ms</Line>
 </TerminalBand>
 
-`@bluecadet/docs` is published on GitHub Packages, not npmjs.com — see
-[registry setup](/tutorials/add-docs-to-your-repo/#1-set-up-registry-access) before the first `npx` call.
+<GeneralBand eyebrow="hello world">
+  ## Lorem ipsum doler sit amet
+
+  `@bluecadet/docs` is published on GitHub Packages, not npmjs.com — see
+  [registry setup](/tutorials/add-docs-to-your-repo/#1-set-up-registry-access) before the first `npx` call.
+
+  <LandingBlockQuote name="Foo Bar" title="foo bar baz">
+    Proident officia eiusmod aliqua nisi cupidatat. Ut deserunt anim sint est labore esse sit sunt elit dolore adipisicing nostrud.
+  </LandingBlockQuote>
+</GeneralBand>
 
 <Features>
   <Feature title="Config is the source of truth">
