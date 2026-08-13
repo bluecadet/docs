@@ -8,16 +8,16 @@
 
 .prose {
 	color: var(--text-body);
-	font-size: 15px;
+	font-size: 0.9375rem; /* 15px */
 	line-height: var(--leading-relaxed);
 
 	/* Vertical offset a jumped-to (or anchor-linked) heading scrolls to rest under, so the sticky
 	   header never covers it. Derived from `--header-height` (declared at :root in global.css,
 	   owned by a concurrent agent) rather than a fixed px value: that variable already changes per
 	   breakpoint (68px desktop, 60px tablet, 56px mobile), and `.prose` inherits whichever value is
-	   current. The extra 16px is breathing room so the heading doesn't sit flush against the
+	   current. The extra 1rem is breathing room so the heading doesn't sit flush against the
 	   header. */
-	--heading-scroll-offset: calc(var(--header-height) + 16px);
+	--heading-scroll-offset: calc(var(--header-height) + 1rem);
 }
 
 /* ---- Headings --------------------------------------------------------- */
@@ -28,7 +28,7 @@
    it so this one stylesheet owns all article-scope type (H1 through H4) without splitting the
    scale across two rulesets. */
 .prose h1 {
-	margin: 0 0 16px;
+	margin: 0 0 1rem;
 	font: var(--weight-regular) var(--type-h1)/1.15 var(--font-serif);
 	letter-spacing: var(--tracking-heading);
 	color: var(--ink);
@@ -41,39 +41,39 @@
    doesn't step down at tablet/mobile the way the H1 does. */
 .prose h1 + p,
 .prose .lead {
-	margin: 0 0 28px;
-	font-size: 17px;
+	margin: 0 0 1.75rem;
+	font-size: 1.0625rem; /* 17px */
 	line-height: var(--leading-relaxed);
 	color: var(--text-muted);
 }
 
 @media (max-width: 1023px) {
 	.prose h1 {
-		margin: 0 0 12px;
+		margin: 0 0 0.75rem;
 		font-size: var(--type-h1-md);
 	}
 
 	.prose h1 + p,
 	.prose .lead {
-		margin: 0 0 26px;
+		margin: 0 0 1.625rem;
 	}
 }
 
 @media (max-width: 767px) {
 	.prose h1 {
-		margin: 0 0 12px;
+		margin: 0 0 0.75rem;
 		font-size: var(--type-h1-sm);
 	}
 
 	.prose h1 + p,
 	.prose .lead {
-		margin: 0 0 24px;
+		margin: 0 0 1.5rem;
 	}
 }
 
 .prose h2 {
-	margin: 64px 0 6px;
-	padding-block-end: 14px;
+	margin: 4rem 0 0.375rem;
+	padding-block-end: 0.875rem;
 	font: var(--weight-regular) var(--type-h2)/1.25 var(--font-serif);
 	color: var(--ink);
 	border-block-end: 1px solid var(--hairline-08);
@@ -81,7 +81,7 @@
 }
 
 .prose h3 {
-	margin: 40px 0 10px;
+	margin: 2.5rem 0 0.625rem;
 	font: var(--weight-medium) var(--type-h3) var(--font-serif);
 	color: var(--ink);
 	scroll-margin-block-start: var(--heading-scroll-offset);
@@ -108,13 +108,13 @@
 }
 
 .prose h2 .heading-anchor {
-	margin-inline-end: 9px;
-	font-size: 20px;
+	margin-inline-end: 0.5625rem; /* 9px */
+	font-size: 1.25rem; /* 20px */
 }
 
 .prose h3 .heading-anchor {
-	margin-inline-end: 7px;
-	font-size: 16px;
+	margin-inline-end: 0.4375rem; /* 7px */
+	font-size: 1rem; /* 16px */
 }
 
 .prose h2 .heading-anchor:hover,
@@ -138,7 +138,7 @@
 }
 
 .prose h4 {
-	margin: 30px 0 8px;
+	margin: 1.875rem 0 0.5rem;
 	font: var(--weight-medium) var(--type-h4) var(--font-mono);
 	letter-spacing: var(--tracking-label);
 	color: var(--text-muted);
@@ -148,7 +148,7 @@
 /* ---- Body text --------------------------------------------------------- */
 
 .prose p {
-	margin: 20px 0;
+	margin: 1.25rem 0;
 	color: var(--text-body);
 }
 
@@ -159,14 +159,14 @@
 
 .prose ul,
 .prose ol {
-	margin: 20px 0;
-	padding-inline-start: 22px;
+	margin: 1.25rem 0;
+	padding-inline-start: 1.375rem;
 	color: var(--text-body);
 	line-height: 1.7;
 }
 
 .prose li + li {
-	margin-block-start: 8px;
+	margin-block-start: 0.5rem;
 }
 
 .prose li::marker {
@@ -174,9 +174,9 @@
 }
 
 .prose blockquote {
-	margin: 24px 0;
-	padding-block: 2px 2px;
-	padding-inline: 14px 0;
+	margin: 1.5rem 0;
+	padding-block: 0.125rem 0.125rem;
+	padding-inline: 0.875rem 0;
 	border-inline-start: 2px solid var(--hairline-14);
 	color: var(--text-muted);
 	font-style: normal;
@@ -191,7 +191,7 @@
 }
 
 .prose hr {
-	margin: 44px 0;
+	margin: 2.75rem 0;
 	border: 0;
 	border-block-start: 1px solid var(--hairline-10);
 }
@@ -225,10 +225,10 @@
 /* ---- Inline code, kbd, badges ------------------------------------------ */
 
 .prose code {
-	font: var(--weight-regular) 12.5px var(--font-mono);
+	font: var(--weight-regular) 0.78125rem var(--font-mono); /* 12.5px */
 	background: var(--white-07);
 	border-radius: var(--radius-sm);
-	padding: 2px 5px;
+	padding: 0.125rem 0.3125rem;
 }
 
 .prose pre code {
@@ -240,18 +240,18 @@
 }
 
 .prose kbd {
-	font: var(--weight-regular) 11px var(--font-mono);
+	font: var(--weight-regular) 0.6875rem var(--font-mono); /* 11px */
 	color: var(--text-muted);
 }
 
 .prose .badge {
 	display: inline-block;
-	font: var(--weight-medium) 9.5px var(--font-mono);
+	font: var(--weight-medium) 0.59375rem var(--font-mono); /* 9.5px */
 	letter-spacing: var(--tracking-label);
 	color: var(--accent-2);
 	border: 1px solid var(--accent-2-border-40);
 	border-radius: var(--radius-sm);
-	padding: 1px 5px;
+	padding: 0.0625rem 0.3125rem;
 }
 
 /* ---- Code blocks --------------------------------------------------------
@@ -260,7 +260,7 @@
    `rehype-code-blocks.ts` in this `.code-block` header-bar + copy-button chrome. */
 
 .prose .code-block {
-	margin: 24px 0;
+	margin: 1.5rem 0;
 	border: 1px solid var(--hairline-10);
 	border-radius: var(--radius-md);
 	background: var(--surface-code);
@@ -270,10 +270,10 @@
 .prose .code-block-header {
 	display: flex;
 	align-items: center;
-	gap: 12px;
-	padding: 8px 14px;
+	gap: 0.75rem;
+	padding: 0.5rem 0.875rem;
 	border-block-end: 1px solid var(--hairline-08);
-	font: var(--weight-regular) 11px var(--font-mono);
+	font: var(--weight-regular) 0.6875rem var(--font-mono); /* 11px */
 	color: var(--text-dim);
 }
 
@@ -287,8 +287,8 @@
 	border: 1px solid var(--hairline-14);
 	border-radius: var(--radius-sm);
 	color: var(--text-muted);
-	font: var(--weight-regular) 10.5px var(--font-mono);
-	padding: 2px 8px;
+	font: var(--weight-regular) 0.65625rem var(--font-mono); /* 10.5px */
+	padding: 0.125rem 0.5rem;
 	cursor: pointer;
 	transition:
 		color var(--transition-fast),
@@ -307,8 +307,8 @@
 
 .prose .code-block pre {
 	margin: 0;
-	padding-block: 14px;
-	font: var(--weight-regular) 13px/var(--leading-relaxed) var(--font-mono);
+	padding-block: 0.875rem;
+	font: var(--weight-regular) 0.8125rem/var(--leading-relaxed) var(--font-mono); /* 13px */
 }
 
 /* `<code>` is forced to `display: block; inline-size: max-content` so it grows to the width of its
@@ -340,7 +340,7 @@
 .prose .code-block pre .line {
 	display: inline-block;
 	min-inline-size: 100%;
-	padding-inline: 18px;
+	padding-inline: 1.125rem;
 }
 
 /* Highlighted lines from the `{2,5-7}` meta-string syntax (@shikijs/transformers'
@@ -355,7 +355,7 @@
    by `landing/TerminalBand.astro` — so it needs the same rhythm as `.code-block`/`.table-wrap`
    here, or it would butt against surrounding paragraphs. */
 .prose .terminal {
-	margin-block: 24px;
+	margin-block: 1.5rem;
 }
 
 /* Shiki's `css-variables` theme (astro.config.mjs `markdown.shikiConfig.theme`) reads token colors
@@ -385,16 +385,16 @@
 .prose .callout {
 	display: grid;
 	grid-template-columns: auto 1fr;
-	gap: 14px;
-	margin: 24px 0;
-	padding: 14px 18px;
+	gap: 0.875rem;
+	margin: 1.5rem 0;
+	padding: 0.875rem 1.125rem;
 	border-radius: var(--radius-md);
-	font-size: 13.5px;
+	font-size: 0.84375rem; /* 13.5px */
 }
 
 .prose .callout-label {
-	padding-block-start: 2px;
-	font: var(--weight-medium) 11px var(--font-mono);
+	padding-block-start: 0.125rem;
+	font: var(--weight-medium) 0.6875rem var(--font-mono); /* 11px */
 	letter-spacing: var(--tracking-wide);
 	text-transform: uppercase;
 }
@@ -443,7 +443,7 @@
    the wrapper, not the table itself, so border-radius doesn't fight border-collapse. */
 
 .prose .table-wrap {
-	margin: 24px 0;
+	margin: 1.5rem 0;
 	border: 1px solid var(--hairline-10);
 	border-radius: var(--radius-md);
 	overflow-x: auto;
@@ -452,7 +452,7 @@
 .prose table {
 	inline-size: 100%;
 	border-collapse: collapse;
-	font-size: 13.5px;
+	font-size: 0.84375rem; /* 13.5px */
 }
 
 .prose thead tr {
@@ -460,9 +460,9 @@
 }
 
 .prose th {
-	padding: 9px 18px;
+	padding: 0.5625rem 1.125rem;
 	text-align: start;
-	font: var(--weight-regular) 11px var(--font-mono);
+	font: var(--weight-regular) 0.6875rem var(--font-mono); /* 11px */
 	letter-spacing: var(--tracking-label);
 	text-transform: uppercase;
 	color: var(--text-dim);
@@ -471,7 +471,7 @@
 }
 
 .prose td {
-	padding: 11px 18px;
+	padding: 0.6875rem 1.125rem;
 	color: var(--text-muted);
 	border-block-end: 1px solid var(--hairline-06);
 	vertical-align: top;
@@ -482,7 +482,7 @@
 }
 
 .prose td:first-child {
-	font: var(--weight-regular) 12.5px var(--font-mono);
+	font: var(--weight-regular) 0.78125rem var(--font-mono); /* 12.5px */
 	color: var(--text-code);
 }
 
@@ -516,10 +516,10 @@
 	}
 
 	.prose tbody tr {
-		margin-block-end: 10px;
+		margin-block-end: 0.625rem;
 		border: 1px solid var(--hairline-10);
 		border-radius: var(--radius-md);
-		padding: 13px 14px;
+		padding: 0.8125rem 0.875rem;
 	}
 
 	.prose tbody tr:last-child {
@@ -533,15 +533,15 @@
 	.prose td {
 		display: flex;
 		align-items: baseline;
-		gap: 10px;
-		padding: 4px 0;
+		gap: 0.625rem;
+		padding: 0.25rem 0;
 		border-block-end: none;
 	}
 
 	.prose td::before {
 		content: attr(data-label);
 		flex: 0 0 auto;
-		font: var(--weight-regular) 11px var(--font-mono);
+		font: var(--weight-regular) 0.6875rem var(--font-mono); /* 11px */
 		color: var(--text-dim);
 		text-transform: uppercase;
 		letter-spacing: var(--tracking-label);

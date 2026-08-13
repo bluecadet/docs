@@ -56,7 +56,7 @@ const lastGroupIsWide = groupCount > 1;
 						const hasNotes = group.links.some((link) => link.note);
 						const isLast = index === groups.length - 1;
 						return (
-							<div class:list={["site-footer__group", { "site-footer__group--wide": lastGroupIsWide && isLast }]}>
+							<div class:list={["site-footer__group", "type-sm", { "site-footer__group--wide": lastGroupIsWide && isLast }]}>
 								<div class="site-footer__group-title">{group.title}</div>
 								<div
 									class:list={[
@@ -113,7 +113,7 @@ const lastGroupIsWide = groupCount > 1;
 	.site-footer__brand {
 		display: flex;
 		align-items: center;
-		gap: 8px;
+		gap: 0.5rem;
 		color: var(--text-faint);
 		text-transform: lowercase;
 		min-inline-size: 0;
@@ -126,12 +126,12 @@ const lastGroupIsWide = groupCount > 1;
 	.site-footer__brand--rail {
 		/* The grid row stretches this cell to match the (taller) groups cell's height, and
 		   `.site-footer__brand`'s `align-items: center` above would then center the one-line brand
-		   mark inside that stretched box — dropping it well below the 40px top padding and out of
+		   mark inside that stretched box — dropping it well below the 2.5rem top padding and out of
 		   line with the group titles beside it. Pin it to the top of its own box instead so both
 		   cells' first line start at the same y. */
 		align-items: flex-start;
 		border-inline-end: var(--rail-divider);
-		padding-block: 40px 32px;
+		padding-block: 2.5rem 2rem;
 		padding-inline: var(--brand-pad-start) var(--brand-pad-end);
 	}
 
@@ -146,20 +146,22 @@ const lastGroupIsWide = groupCount > 1;
 
 	.site-footer__groups {
 		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-		padding: 40px var(--content-pad-x) 32px var(--content-pad-x);
+		grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+		padding: 2.5rem var(--content-pad-x) 2rem var(--content-pad-x);
 	}
 
+	/* Adopts .type-sm (see typography.css) for family/weight/size; line-height alone stays local
+	   since the mono UI ramp classes deliberately omit it (see typography.css's header comment). */
 	.site-footer__group {
 		display: flex;
 		flex-direction: column;
-		gap: 14px;
-		font: 400 12px/var(--leading-relaxed) var(--font-mono);
+		gap: 0.875rem;
+		line-height: var(--leading-relaxed);
 		min-inline-size: 0;
 	}
 
 	.site-footer__group-title {
-		font-size: 11.5px;
+		font-size: 0.71875rem;
 		letter-spacing: 0.12em;
 		text-transform: uppercase;
 		color: var(--text-dim);
@@ -178,7 +180,7 @@ const lastGroupIsWide = groupCount > 1;
 	.site-footer__link {
 		display: flex;
 		align-items: baseline;
-		gap: 8px;
+		gap: 0.5rem;
 	}
 
 	.site-footer__note {
@@ -190,9 +192,9 @@ const lastGroupIsWide = groupCount > 1;
 	.site-footer__bottom {
 		display: flex;
 		align-items: center;
-		gap: 24px;
+		gap: 1.5rem;
 		flex-wrap: wrap;
-		padding-block: 20px 24px;
+		padding-block: 1.25rem 1.5rem;
 		padding-inline: var(--brand-pad-start) var(--content-pad-x);
 		border-block-start: 1px solid var(--hairline-08);
 		color: var(--text-faint);
@@ -212,7 +214,7 @@ const lastGroupIsWide = groupCount > 1;
 		.site-footer__groups {
 			grid-template-columns: var(--groups-columns-rail);
 			flex: var(--nav-flex, initial);
-			gap: 40px 48px;
+			gap: 2.5rem 3rem;
 		}
 
 		:global(.page--no-sidebar) .site-footer__groups {
@@ -256,7 +258,7 @@ const lastGroupIsWide = groupCount > 1;
 		.site-footer__brand--rail {
 			border-inline-end: none;
 			border-block-end: 1px solid var(--hairline-08);
-			padding: 26px var(--content-pad-x) 22px;
+			padding: 1.625rem var(--content-pad-x) 1.375rem;
 		}
 
 		.site-footer__groups {
@@ -266,17 +268,17 @@ const lastGroupIsWide = groupCount > 1;
 		}
 
 		.site-footer__group {
-			padding: 26px var(--content-pad-x);
+			padding: 1.625rem var(--content-pad-x);
 			border-block-end: 1px solid var(--hairline-06);
-			gap: 16px;
-			font-size: 13px;
+			gap: 1rem;
+			font-size: 0.8125rem;
 			line-height: 1.7;
 		}
 
 		.site-footer__group-links {
 			display: grid;
 			grid-template-columns: 1fr 1fr;
-			gap: 16px 20px;
+			gap: 1rem 1.25rem;
 		}
 
 		/* A group whose links carry notes (e.g. the "from the same shop" URLs) renders as a single
@@ -285,11 +287,11 @@ const lastGroupIsWide = groupCount > 1;
 		   (18px, slightly more breathing room than the 2-col grid's 16px) comes along with it. */
 		.site-footer__group-links--notes {
 			grid-template-columns: 1fr;
-			gap: 18px;
+			gap: 1.125rem;
 		}
 
 		.site-footer__bottom {
-			padding: 22px var(--content-pad-x) 30px;
+			padding: 1.375rem var(--content-pad-x) 1.875rem;
 		}
 	}
 

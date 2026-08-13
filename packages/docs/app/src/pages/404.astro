@@ -27,7 +27,7 @@ const routesPayload = {
 
 	<div class="notfound-main">
 		<div class="notfound-eyebrow type-eyebrow">404 — no page here</div>
-		<h1 class="notfound-h1">
+		<h1 class="notfound-h1 type-display">
 			This page moved,<br />
 			<span class="notfound-h1-accent">or never existed.</span>
 		</h1>
@@ -43,7 +43,7 @@ const routesPayload = {
 					<pre class="requested-panel-body"><span class="requested-line" data-requested-path>…</span><span class="requested-line"><span class="dim">status  </span>404</span><span class="requested-line requested-closest" data-requested-closest hidden><span class="dim">closest </span><span data-closest-path></span> <span class="state" data-closest-pct></span></span></pre>
 				</div>
 
-				<div class="dym-label" data-dym-label hidden>DID YOU MEAN</div>
+				<div class="dym-label type-xs" data-dym-label hidden>DID YOU MEAN</div>
 				<div class="dym-list" data-dym-list hidden></div>
 
 				<div class="notfound-cta">
@@ -78,19 +78,22 @@ const routesPayload = {
 <style>
 	.notfound-main {
 		min-inline-size: 0;
-		padding: 88px var(--content-pad-x) 96px;
+		padding: 5.5rem var(--content-pad-x) 6rem; /* 88px, 96px */
 	}
 
 	.notfound-eyebrow {
 		color: var(--accent-2);
-		margin-block-end: 22px;
+		margin-block-end: 1.375rem; /* 22px */
 	}
 
 	.notfound-h1 {
 		margin: 0;
-		font: 300 56px/1.05 var(--font-serif);
-		letter-spacing: -0.02em;
-		max-inline-size: 760px;
+		/* family/weight/tracking come from .type-display; this size/line-height is unique to this
+		   page's display heading, so it stays local as longhand-only (never a `font:` shorthand,
+		   which would reset the properties .type-display sets). */
+		font-size: 3.5rem; /* 56px */
+		line-height: 1.05;
+		max-inline-size: 47.5rem; /* 760px */
 		color: var(--ink);
 	}
 
@@ -100,18 +103,18 @@ const routesPayload = {
 	}
 
 	.notfound-lead {
-		margin: 22px 0 0;
-		max-inline-size: 560px;
+		margin: 1.375rem 0 0; /* 22px */
+		max-inline-size: 35rem; /* 560px */
 		color: var(--text-muted);
-		font-size: 16px;
+		font-size: 1rem; /* 16px */
 		text-wrap: balance;
 	}
 
 	.notfound-grid {
 		display: grid;
-		grid-template-columns: minmax(0, 620px) 300px;
-		gap: 56px;
-		margin-block-start: 38px;
+		grid-template-columns: minmax(0, 38.75rem) 18.75rem; /* 620px, 300px */
+		gap: 3.5rem; /* 56px */
+		margin-block-start: 2.375rem; /* 38px */
 		align-items: start;
 	}
 
@@ -130,7 +133,7 @@ const routesPayload = {
 	.requested-panel-header {
 		display: flex;
 		align-items: center;
-		padding: 8px 14px;
+		padding: 0.5rem 0.875rem; /* 8px 14px */
 		border-block-end: 1px solid var(--hairline-08);
 		color: var(--text-dim);
 	}
@@ -138,8 +141,8 @@ const routesPayload = {
 	.requested-panel-body {
 		white-space: pre-wrap;
 		margin: 0;
-		padding: 14px 16px;
-		font: 400 13px/1.8 var(--font-mono);
+		padding: 0.875rem 1rem; /* 14px 16px */
+		font: 400 0.8125rem/1.8 var(--font-mono); /* 13px */
 		color: var(--text-code);
 	}
 
@@ -160,11 +163,12 @@ const routesPayload = {
 	}
 
 	/* -- DID YOU MEAN -- */
+	/* family/weight/size come from .type-xs (exact match: 400 11.5px mono); letter-spacing/margin
+	   are this page's own, kept local. */
 	.dym-label {
-		font: 400 11.5px var(--font-mono);
 		color: var(--text-dim);
 		letter-spacing: 0.08em;
-		margin: 32px 0 10px;
+		margin: 2rem 0 0.625rem; /* 32px 0 10px */
 	}
 
 	.dym-list {
@@ -176,9 +180,9 @@ const routesPayload = {
 	:global(.dym-row) {
 		text-decoration: none;
 		display: grid;
-		grid-template-columns: 22px 1fr auto;
-		gap: 14px;
-		padding: 13px 16px;
+		grid-template-columns: 1.375rem 1fr auto; /* 22px */
+		gap: 0.875rem; /* 14px */
+		padding: 0.8125rem 1rem; /* 13px 16px */
 		color: inherit;
 	}
 
@@ -188,23 +192,23 @@ const routesPayload = {
 
 	:global(.dym-row .dym-bullet) {
 		color: var(--text-faint);
-		font: 400 12px var(--font-mono);
+		font: 400 0.75rem var(--font-mono); /* 12px */
 	}
 
 	:global(.dym-row .dym-title) {
 		display: block;
 		color: var(--text-body);
-		margin-block-end: 3px;
+		margin-block-end: 0.1875rem; /* 3px */
 	}
 
 	:global(.dym-row .dym-path) {
 		display: block;
-		font-size: 12.5px;
+		font-size: 0.78125rem; /* 12.5px */
 		color: var(--text-muted);
 	}
 
 	:global(.dym-row .dym-enter) {
-		font: 400 11px var(--font-mono);
+		font: 400 0.6875rem var(--font-mono); /* 11px */
 		color: var(--text-dim);
 	}
 
@@ -221,15 +225,15 @@ const routesPayload = {
 	/* -- CTA row -- */
 	.notfound-cta {
 		display: flex;
-		gap: 14px;
-		margin-block-start: 30px;
+		gap: 0.875rem; /* 14px */
+		margin-block-start: 1.875rem; /* 30px */
 	}
 
 	.btn {
 		display: inline-flex;
 		align-items: center;
-		gap: 6px;
-		padding: 11px 18px;
+		gap: 0.375rem; /* 6px */
+		padding: 0.6875rem 1.125rem; /* 11px 18px */
 		border-radius: var(--radius-md);
 		cursor: pointer;
 	}
@@ -246,16 +250,16 @@ const routesPayload = {
 	}
 
 	.kbd {
-		margin-inline-start: 6px;
-		font-size: 11px;
+		margin-inline-start: 0.375rem; /* 6px */
+		font-size: 0.6875rem; /* 11px */
 	}
 
 	/* -- Margin note -- */
 	.margin-note {
 		border-inline-start: 2px solid var(--accent-2);
-		padding-block: 2px 2px;
-		padding-inline: 14px 0;
-		font: 400 12px/1.8 var(--font-mono);
+		padding-block: 0.125rem 0.125rem; /* 2px */
+		padding-inline: 0.875rem 0; /* 14px */
+		font: 400 0.75rem/1.8 var(--font-mono); /* 12px */
 		color: var(--accent-2-annotation);
 	}
 
@@ -265,26 +269,26 @@ const routesPayload = {
 
 	@media (min-width: 1920px) {
 		.notfound-main {
-			padding: 96px 80px 104px;
+			padding: 6rem 5rem 6.5rem; /* 96px 80px 104px */
 		}
 
 		.notfound-h1 {
-			font-size: 62px;
+			font-size: 3.875rem; /* 62px */
 		}
 	}
 
 	@media (max-width: 1023px) {
 		.notfound-main {
-			padding: 40px var(--content-pad-x) 48px;
+			padding: 2.5rem var(--content-pad-x) 3rem; /* 40px, 48px */
 		}
 
 		.notfound-h1 {
-			font-size: 40px;
+			font-size: 2.5rem; /* 40px */
 		}
 
 		.notfound-grid {
 			grid-template-columns: 1fr;
-			gap: 32px;
+			gap: 2rem; /* 32px */
 		}
 
 		.notfound-cta {

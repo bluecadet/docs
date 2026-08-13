@@ -71,18 +71,18 @@ const { before: firstClause, accent: secondClause } = splitAccent(title, ", ");
 	.hero {
 		display: grid;
 		grid-template-columns: minmax(0, 1fr);
-		padding: 104px var(--content-pad-x) 96px;
+		padding: 6.5rem var(--content-pad-x) 6rem;
 	}
 
 	.hero > :global(.hero-eyebrows) {
 		grid-row: 1;
-		margin-block-end: 34px;
+		margin-block-end: 2.125rem;
 	}
 
 	h1 {
 		grid-row: 2;
 		margin: 0;
-		font-size: 68px;
+		font-size: 4.25rem;
 		line-height: 1.08;
 		max-inline-size: 15ch;
 		color: var(--ink);
@@ -97,7 +97,7 @@ const { before: firstClause, accent: secondClause } = splitAccent(title, ", ");
 	   type, so (unlike the H1) it doesn't step down at tablet/mobile. */
 	.hero-lead {
 		grid-row: 3;
-		margin: 36px 0 0;
+		margin: 2.25rem 0 0;
 		max-inline-size: 58ch;
 		color: var(--text-muted);
 		text-wrap: balance;
@@ -105,17 +105,17 @@ const { before: firstClause, accent: secondClause } = splitAccent(title, ", ");
 
 	.hero > :global(.hero-notes) {
 		grid-row: 4;
-		margin-block-start: 36px;
+		margin-block-start: 2.25rem;
 	}
 
 	.hero > :global(.hero-install) {
 		grid-row: 5;
-		margin-block-start: 48px;
+		margin-block-start: 3rem;
 	}
 
 	.hero-quickstart {
 		grid-row: 6;
-		margin-block-start: 10px;
+		margin-block-start: 0.625rem;
 		color: var(--accent);
 	}
 
@@ -132,7 +132,7 @@ const { before: firstClause, accent: secondClause } = splitAccent(title, ", ");
 				[main-start action-1-start] auto
 				[action-1-end action-2-start] auto
 				[action-2-end] minmax(0, 1fr)
-				[main-end notes-start] 200px
+				[main-end notes-start] 12.5rem
 				[notes-end];
 			align-items: start;
 		}
@@ -171,8 +171,8 @@ const { before: firstClause, accent: secondClause } = splitAccent(title, ", ");
 			grid-column: action-2-start / action-2-end;
 			grid-row: 4;
 			align-self: center;
-			margin-block-start: 48px;
-			margin-inline-start: 24px;
+			margin-block-start: 3rem;
+			margin-inline-start: 1.5rem;
 		}
 	}
 
@@ -182,27 +182,27 @@ const { before: firstClause, accent: secondClause } = splitAccent(title, ", ");
 				[main-start action-1-start] auto
 				[action-1-end action-2-start] auto
 				[action-2-end] minmax(0, 1fr)
-				[main-end notes-start] 240px
+				[main-end notes-start] 15rem
 				[notes-end];
 		}
 	}
 
 	@media (max-width: 1023px) {
 		.hero {
-			padding: 80px var(--content-pad-x) 70px;
+			padding: 5rem var(--content-pad-x) 4.375rem;
 		}
 
 		h1 {
-			font-size: 56px;
+			font-size: 3.5rem;
 			max-inline-size: none;
 		}
 
 		.hero > :global(.hero-install) {
-			margin-block-start: 40px;
+			margin-block-start: 2.5rem;
 		}
 
 		.hero-quickstart {
-			margin-block-start: 40px;
+			margin-block-start: 2.5rem;
 		}
 	}
 
@@ -210,25 +210,25 @@ const { before: firstClause, accent: secondClause } = splitAccent(title, ", ");
 	   button below it. */
 	@media (max-width: 767px) {
 		.hero {
-			padding: 58px var(--content-pad-x) 52px;
+			padding: 3.625rem var(--content-pad-x) 3.25rem;
 		}
 
 		h1 {
-			font-size: 40px;
+			font-size: 2.5rem;
 			line-height: 1.12;
 			letter-spacing: -0.015em;
 		}
 
 		.hero-lead {
-			margin-block-start: 22px;
+			margin-block-start: 1.375rem;
 		}
 
 		.hero > :global(.hero-notes) {
-			margin-block-start: 22px;
+			margin-block-start: 1.375rem;
 		}
 
 		.hero > :global(.hero-install) {
-			margin-block-start: 30px;
+			margin-block-start: 1.875rem;
 		}
 
 		.hero-quickstart {
@@ -236,10 +236,10 @@ const { before: firstClause, accent: secondClause } = splitAccent(title, ", ");
 			align-items: center;
 			justify-content: center;
 			min-block-size: 48px;
-			margin-block-start: 10px;
+			margin-block-start: 0.625rem;
 			border: 1px solid var(--hairline-14);
 			border-radius: var(--radius-md);
-			font-size: 12.5px;
+			font-size: 0.78125rem;
 		}
 	}
 </style>

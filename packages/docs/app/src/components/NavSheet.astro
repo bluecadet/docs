@@ -57,7 +57,7 @@ if (isRoot) {
 			<button type="button" class="nav-sheet__search type-code" data-search-trigger>
 				<span class="nav-sheet__search-icon">⌕</span>
 				search docs
-				<span class="nav-sheet__search-kbd">/</span>
+				<span class="nav-sheet__search-kbd type-2xs">/</span>
 			</button>
 
 			<div class="nav-sheet__body dialog-body">
@@ -166,7 +166,7 @@ if (isRoot) {
 	.nav-sheet__header {
 		display: flex;
 		align-items: center;
-		gap: 12px;
+		gap: 0.75rem;
 		min-block-size: var(--header-height);
 		/* Matches .header-shell-inner's <=767px padding (HeaderShell.astro) exactly — the sheet is
 		   mobile-only, so there's no wider breakpoint to account for here. */
@@ -192,12 +192,13 @@ if (isRoot) {
 		margin-inline-start: auto;
 		display: flex;
 		align-items: center;
+		/* WCAG tap-target minimum — stays fixed CSS px, doesn't track text zoom. */
 		min-block-size: 44px;
 		padding: 0;
 		background: none;
 		border: none;
 		color: var(--text-muted);
-		font-size: 18px;
+		font-size: 1.125rem;
 		line-height: 1;
 		cursor: pointer;
 	}
@@ -206,16 +207,19 @@ if (isRoot) {
 		content: "";
 		position: absolute;
 		inset-block: 0;
+		/* Extends the tap-target hit area, not visual layout — stays px alongside the 44px
+		   min-block-size above rather than scaling with text zoom. */
 		inset-inline: -32px -12px;
 	}
 
 	.nav-sheet__search {
 		display: flex;
 		align-items: center;
-		gap: 9px;
+		gap: 0.5625rem;
 		inline-size: 100%;
+		/* WCAG tap-target minimum — stays fixed CSS px, doesn't track text zoom. */
 		min-block-size: 48px;
-		padding: 0 26px;
+		padding: 0 1.625rem;
 		/* Matches Breadcrumb.astro's .breadcrumb-pill background — the two are the same "search /
 		   wayfinding bar" affordance at different breakpoints and should read as the same surface. */
 		background: var(--white-02);
@@ -234,7 +238,6 @@ if (isRoot) {
 	.nav-sheet__search-kbd {
 		margin-inline-start: auto;
 		color: var(--text-faint);
-		font-size: 11px;
 	}
 
 	/* Only this region scrolls — .nav-sheet__header and .nav-sheet__search stay flex items above
@@ -248,7 +251,7 @@ if (isRoot) {
 	}
 
 	.nav-sheet__nav {
-		padding: 8px 0;
+		padding: 0.5rem 0;
 	}
 
 	/* Hairline between each top-level section of the tree. Direct-child selectors keep it off
@@ -265,17 +268,18 @@ if (isRoot) {
 	}
 
 	.nav-sheet__label {
-		padding: 16px 26px 4px;
+		padding: 1rem 1.625rem 0.25rem;
 		color: var(--text-dim);
 	}
 
 	.nav-sheet__item {
 		display: flex;
 		align-items: center;
+		/* WCAG tap-target minimum — stays fixed CSS px, doesn't track text zoom. */
 		min-block-size: 48px;
-		padding: 0 26px;
+		padding: 0 1.625rem;
 		color: var(--text-muted);
-		font-size: 14.5px;
+		font-size: 0.90625rem;
 	}
 
 	/* Exactly one row — the current page — carries the "you are here" mark
@@ -287,8 +291,15 @@ if (isRoot) {
 	/* A root-level group heading (see isSectionHeading()) keeps the dim "section" look even once
 	   it's clickable via `sidebar[].link` — only a nested group heading adopts the plain
 	   .nav-sheet__item look above. Three-class selector so it reliably wins over the plainer
-	   .nav-sheet__item rules regardless of source order. */
+	   .nav-sheet__item rules regardless of source order. `font-size` is restated here (matching
+	   .type-label-plain's own 0.6875rem, see typography.css) rather than left to that class alone:
+	   `.nav-sheet__item`'s own font-size above is a plain unlayered declaration that would otherwise
+	   always beat `.type-label-plain`'s layered one on this specific property, silently widening
+	   section labels back to body size even though the class's family/weight/letter-spacing still
+	   apply correctly (pre-existing cascade footgun, fixed here — see this file's `.type-label-plain`
+	   adoption on the markup side). */
 	.nav-sheet__item.nav-sheet__item--section {
+		font-size: 0.6875rem;
 		color: var(--text-dim);
 	}
 
@@ -297,15 +308,23 @@ if (isRoot) {
 	}
 
 	.nav-sheet__list.is-nested {
-		margin-block: 2px 4px;
-		margin-inline: 40px 0;
+		margin-block: 0.125rem 0.25rem;
+		margin-inline: 2.5rem 0;
 		border-inline-start: 1px solid var(--hairline-10);
 	}
 
 	.nav-sheet__list.is-nested .nav-sheet__item {
+		/* WCAG tap-target minimum — stays fixed CSS px, doesn't track text zoom. */
 		min-block-size: 44px;
-		padding: 0 16px;
-		font-size: 13.5px;
+		padding: 0 1rem;
+		font-size: 0.84375rem;
+	}
+
+	/* Same cascade-footgun fix as the root `.nav-sheet__item.nav-sheet__item--section` rule above —
+	   this nested-scope font-size is just as unlayered and would otherwise win over
+	   .type-label-plain's for a nested section heading too. */
+	.nav-sheet__list.is-nested .nav-sheet__item.nav-sheet__item--section {
+		font-size: 0.6875rem;
 	}
 
 	/* The active sub-page keeps the canonical "you are here" treatment; the -1px pull lets its
@@ -315,7 +334,7 @@ if (isRoot) {
 	}
 
 	.nav-sheet__list.is-nested .nav-sheet__label {
-		padding: 12px 16px 4px;
+		padding: 0.75rem 1rem 0.25rem;
 	}
 
 	.nav-sheet__footer {
@@ -324,44 +343,45 @@ if (isRoot) {
 		/* No row gap and symmetric vertical padding — the 48px-tall links carry the vertical rhythm
 		   themselves, so wrapped rows stack at the same cadence as the nav list's rows and the space
 		   above the first row equals the space below the last. */
-		gap: 0 24px;
+		gap: 0 1.5rem;
 		border-block-start: 1px solid var(--hairline-08);
 		background: var(--surface-panel-1);
-		padding: 8px 26px;
+		padding: 0.5rem 1.625rem;
 		flex-shrink: 0;
 	}
 
 	.nav-sheet__footer-link {
 		display: flex;
 		align-items: center;
+		/* WCAG tap-target minimum — stays fixed CSS px, doesn't track text zoom. */
 		min-block-size: 48px;
 		color: var(--text-muted);
 	}
 
 	@media (max-width: 767px) {
 		.nav-sheet__search {
-			padding: 0 18px;
+			padding: 0 1.125rem;
 		}
 
 		.nav-sheet__label {
-			padding-inline: 18px;
+			padding-inline: 1.125rem;
 		}
 
 		.nav-sheet__item {
-			padding: 0 18px;
+			padding: 0 1.125rem;
 		}
 
 		.nav-sheet__list.is-nested {
-			margin-inline-start: 32px;
+			margin-inline-start: 2rem;
 		}
 
 		.nav-sheet__list.is-nested .nav-sheet__item,
 		.nav-sheet__list.is-nested .nav-sheet__label {
-			padding-inline: 14px;
+			padding-inline: 0.875rem;
 		}
 
 		.nav-sheet__footer {
-			padding: 8px 18px;
+			padding: 0.5rem 1.125rem;
 		}
 	}
 </style>

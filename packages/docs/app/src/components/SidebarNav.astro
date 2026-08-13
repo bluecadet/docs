@@ -115,8 +115,8 @@ const metaLines = [
 	}
 
 	.sidebar-nav {
-		padding: var(--content-pad-top) 0 48px;
-		font-size: 13.5px;
+		padding: var(--content-pad-top) 0 3rem;
+		font-size: 0.84375rem;
 		line-height: 1.6;
 		/* Overrides the shared .scroll-rail thin scrollbar (see global.css) — the sidebar itself
 		   should scroll without a visible scrollbar, unlike Toc.astro's .toc-aside. */
@@ -135,15 +135,15 @@ const metaLines = [
 	/* Bottom-of-rail meta block (version/sidebarMeta) — only rendered when configured, after the
 	   last nav group. Dimmest text tier: this is the least-emphasis content in the whole rail. */
 	.sidebar-meta {
-		margin: 34px 34px 0;
-		padding-block-start: 24px;
+		margin: 2.125rem 2.125rem 0;
+		padding-block-start: 1.5rem;
 		border-block-start: 1px solid var(--hairline-08);
 		line-height: var(--leading-loose);
 		color: var(--text-faint);
 	}
 
 	.sidebar-label {
-		padding: 20px 34px 8px;
+		padding: 1.25rem 2.125rem 0.5rem;
 		color: var(--text-dim);
 	}
 
@@ -153,7 +153,7 @@ const metaLines = [
 	}
 
 	.sidebar-item {
-		padding: 6px 34px;
+		padding: 0.375rem 2.125rem;
 	}
 
 	/* Exactly one node in the whole tree — the current page — carries the "you are here" mark
@@ -171,7 +171,7 @@ const metaLines = [
 	   .sidebar-item look above. Three-class selectors here so these reliably win over the plainer
 	   .sidebar-item rules regardless of source order. */
 	.sidebar-item.sidebar-item--section {
-		padding: 20px 34px 8px;
+		padding: 1.25rem 2.125rem 0.5rem;
 		color: var(--text-dim);
 	}
 
@@ -185,18 +185,18 @@ const metaLines = [
 
 	/* Sub-page column: hairline rail, indented, smaller type. */
 	.sidebar-list.is-nested {
-		margin-block: 4px 6px;
-		margin-inline: 36px 0;
+		margin-block: 0.25rem 0.375rem;
+		margin-inline: 2.25rem 0;
 		border-inline-start: 1px solid var(--hairline-10);
 	}
 
 	/* 2 or more levels of nesting */
 	.sidebar-list.is-nested .sidebar-list.is-nested {
-		margin-inline: 16px 0;
+		margin-inline: 1rem 0;
 	}
 
 	.sidebar-list.is-nested .sidebar-item {
-		padding: 5px 16px;
+		padding: 0.3125rem 1rem;
 	}
 
 	/* The active sub-page keeps the canonical "you are here" treatment; the -1px pull lets its
@@ -206,16 +206,16 @@ const metaLines = [
 	}
 
 	.sidebar-list.is-nested .sidebar-label {
-		padding: 10px 16px 5px;
-		font-size: 11.5px;
+		padding: 0.625rem 1rem 0.3125rem;
+		font-size: 0.71875rem;
 	}
 
 	/* Tablet: rail narrows (see BaseLayout.astro's .page-body grid) — a little less padding keeps
 	   items from feeling cramped. */
 	@media (max-width: 1023px) {
 		.sidebar-nav {
-			padding: var(--content-pad-top) 0 32px;
-			font-size: 13px;
+			padding: var(--content-pad-top) 0 2rem;
+			font-size: 0.8125rem;
 		}
 	}
 

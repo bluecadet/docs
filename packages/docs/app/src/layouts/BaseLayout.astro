@@ -125,24 +125,24 @@ const hasToc = main === "article" && headings.some((heading) => heading.depth ==
 	.page {
 		/* Left rail width, shared by header/sidebar/footer so their columns stay aligned on every
 		   route. (--header-height lives at :root — see global.css.) */
-		--rail-width: 300px;
-		--toc-width: 272px;
+		--rail-width: 18.75rem; /* 300px */
+		--toc-width: 17rem; /* 272px */
 		/* Shared cap: header, body and footer each center an inner row to this width with matching
 		   border-inline hairlines, so the two rules read as one continuous edge running from the top
 		   of the header to the bottom of the footer. */
-		--shell-width: 1440px;
+		--shell-width: 90rem; /* 1440px */
 		/* Shared top gutter — every band that abuts the shell's outer edge pads from this so its
 		   top-aligned labels line up without each component re-declaring the number. (The matching
 		   horizontal gutter, --content-pad-x, lives at :root — see global.css — for the same reason
 		   as --header-height above.) */
-		--content-pad-top: 44px;
+		--content-pad-top: 2.75rem; /* 44px */
 		/* Header/footer read these instead of a hard-coded `grid`/border so both variants can drop
 		   the rail column and its divider in `.page--no-sidebar` below without duplicating the swap
 		   in HeaderShell/Wordmark/Footer directly. */
 		--rail-display: grid;
 		--rail-divider: 1px solid var(--hairline-08);
-		--brand-pad-start: 36px;
-		--brand-pad-end: 36px;
+		--brand-pad-start: 2.25rem; /* 36px */
+		--brand-pad-end: 2.25rem; /* 36px */
 		--nav-pad-start: var(--content-pad-x);
 		display: grid;
 		grid-template-rows: auto 1fr auto;
@@ -161,7 +161,7 @@ const hasToc = main === "article" && headings.some((heading) => heading.depth ==
 		--rail-display: flex;
 		--rail-divider: none;
 		--brand-pad-start: var(--content-pad-x);
-		--brand-pad-end: 40px;
+		--brand-pad-end: 2.5rem; /* 40px */
 		--nav-pad-start: 0px;
 		/* Desktop-only (consumers gate this behind their own `min-width: 1024px` query): with no
 		   rail column, the search/nav cell needs `flex: 1` to fill the row instead of the tablet
@@ -204,7 +204,7 @@ const hasToc = main === "article" && headings.some((heading) => heading.depth ==
 
 	.page-main-content {
 		min-inline-size: 0;
-		padding: var(--content-pad-top) var(--content-pad-x) 96px;
+		padding: var(--content-pad-top) var(--content-pad-x) 6rem; /* 96px */
 	}
 
 	.page-main--full .page-main-content {
@@ -216,12 +216,12 @@ const hasToc = main === "article" && headings.some((heading) => heading.depth ==
 	   the inline <details> disclosure the doc page renders inside its own content column. */
 	@media (max-width: 1023px) {
 		.page {
-			--rail-width: 212px;
-			--content-pad-top: 28px;
+			--rail-width: 13.25rem; /* 212px */
+			--content-pad-top: 1.75rem; /* 28px */
 		}
 
 		.page-main-content {
-			padding: var(--content-pad-top) var(--content-pad-x) 44px;
+			padding: var(--content-pad-top) var(--content-pad-x) 2.75rem; /* 44px */
 		}
 	}
 
@@ -229,7 +229,7 @@ const hasToc = main === "article" && headings.some((heading) => heading.depth ==
 	   the breadcrumb pill (Breadcrumb.astro) take over wayfinding. */
 	@media (max-width: 767px) {
 		.page {
-			--content-pad-top: 26px;
+			--content-pad-top: 1.625rem; /* 26px */
 		}
 
 		.page-body {
@@ -237,7 +237,7 @@ const hasToc = main === "article" && headings.some((heading) => heading.depth ==
 		}
 
 		.page-main-content {
-			padding: var(--content-pad-top) var(--content-pad-x) 40px;
+			padding: var(--content-pad-top) var(--content-pad-x) 2.5rem; /* 40px */
 		}
 	}
 </style>

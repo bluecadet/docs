@@ -73,16 +73,16 @@ if (!hasActions) {
 
 <style>
 	.closing-cta {
-		padding: 88px var(--content-pad-x) 96px;
+		padding: 5.5rem var(--content-pad-x) 6rem;
 		display: flex;
 		align-items: baseline;
-		gap: 56px;
+		gap: 3.5rem;
 		flex-wrap: wrap;
 	}
 
 	.closing-cta-title {
 		margin: 0;
-		font: 300 38px/1.2 var(--font-serif);
+		font: 300 2.375rem/1.2 var(--font-serif);
 		max-inline-size: 24ch;
 		color: var(--ink);
 	}
@@ -94,7 +94,7 @@ if (!hasActions) {
 
 	.closing-cta-actions {
 		display: flex;
-		gap: 14px;
+		gap: 0.875rem;
 		margin-inline-start: auto;
 	}
 
@@ -102,8 +102,8 @@ if (!hasActions) {
 	   one source of truth for the primary/secondary button look, keyed off DOM order rather than
 	   a class, since slotted <a> tags are authored plain. */
 	.closing-cta-actions :global(a) {
-		font: 400 13px var(--font-mono);
-		padding: 12px 20px;
+		font: 400 0.8125rem var(--font-mono);
+		padding: 0.75rem 1.25rem;
 		border-radius: var(--radius-md);
 	}
 
@@ -121,16 +121,16 @@ if (!hasActions) {
 	   only mobile stacks into a column. */
 	@media (max-width: 1023px) {
 		.closing-cta {
-			padding: 60px var(--content-pad-x);
+			padding: 3.75rem var(--content-pad-x);
 		}
 	}
 
 	@media (max-width: 767px) {
 		.closing-cta {
-			padding: 60px var(--content-pad-x);
+			padding: 3.75rem var(--content-pad-x);
 			flex-direction: column;
 			align-items: flex-start;
-			gap: 30px;
+			gap: 1.875rem;
 		}
 
 		.closing-cta-actions {

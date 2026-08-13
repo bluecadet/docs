@@ -43,10 +43,10 @@ const parent = ancestors.at(-1);
 	<span class="breadcrumb__current">{title}</span>
 </nav>
 
-<button type="button" class="breadcrumb-pill" data-nav-sheet-trigger aria-haspopup="dialog">
+<button type="button" class="breadcrumb-pill type-sm" data-nav-sheet-trigger aria-haspopup="dialog">
 	{parent && <span class="breadcrumb-pill__section">{parent.segment} /</span>}
 	<span class="breadcrumb-pill__current">{title}</span>
-	<span class="breadcrumb-pill__trigger">▾ all pages</span>
+	<span class="breadcrumb-pill__trigger type-micro">▾ all pages</span>
 </button>
 
 <style>
@@ -54,9 +54,9 @@ const parent = ancestors.at(-1);
 		display: flex;
 		align-items: center;
 		flex-wrap: wrap;
-		gap: 8px;
+		gap: 0.5rem;
 		color: var(--text-dim);
-		margin-block-end: 30px;
+		margin-block-end: 1.875rem;
 	}
 
 	.breadcrumb__segment {
@@ -84,15 +84,15 @@ const parent = ancestors.at(-1);
 			--page-pad-top: var(--content-pad-top);
 			display: flex;
 			align-items: center;
-			gap: 10px;
+			gap: 0.625rem;
 			inline-size: calc(100% + var(--page-pad-x) * 2);
+			/* WCAG tap-target minimum — stays fixed CSS px, doesn't track text zoom. */
 			min-block-size: 46px;
-			margin: calc(var(--page-pad-top) * -1) calc(var(--page-pad-x) * -1) 26px;
+			margin: calc(var(--page-pad-top) * -1) calc(var(--page-pad-x) * -1) 1.625rem;
 			padding: 0 var(--page-pad-x);
 			background: var(--white-02);
 			border: none;
 			border-block-end: 1px solid var(--hairline-08);
-			font: 400 12px var(--font-mono);
 			color: var(--text-muted);
 			cursor: pointer;
 			text-align: start;
@@ -122,7 +122,6 @@ const parent = ancestors.at(-1);
 			flex-shrink: 0;
 			white-space: nowrap;
 			margin-inline-start: auto;
-			font-size: 10px;
 			color: var(--text-dim);
 		}
 	}

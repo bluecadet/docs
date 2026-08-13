@@ -18,7 +18,7 @@ const links = [{ label: "docs", href: await docsEntryHref() }, ...configured];
 
 <nav class="header-nav" aria-label="Primary">
 	<NavLinks links={links} />
-	{config.version && <span class="header-nav__version">{config.version}</span>}
+	{config.version && <span class="header-nav__version type-sm">{config.version}</span>}
 </nav>
 
 <style>
@@ -26,12 +26,11 @@ const links = [{ label: "docs", href: await docsEntryHref() }, ...configured];
 		margin-inline-start: auto;
 		display: flex;
 		align-items: center;
-		gap: 22px;
-		font-size: 13px;
+		gap: 1.375rem; /* 22px */
+		font-size: 0.8125rem; /* 13px */
 	}
 
 	.header-nav__version {
-		font: 400 12px var(--font-mono);
 		color: var(--text-dim);
 	}
 

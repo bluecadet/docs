@@ -20,7 +20,9 @@
  * defaults. Being unlayered, a local font-size-only override still correctly beats the base class.
  *
  * See styles/tokens.css for the weight/leading/tracking tokens, and the comment there on why the
- * mono UI ramp below is sized in literal px rather than tokens.
+ * mono UI ramp below is sized in literal rem rather than tokens. Sizes are rem so they scale with
+ * a user's browser font-size setting; each declaration comments its px equivalent at the 16px
+ * default root size for readability.
  *
  * Failure mode to watch for: adopting a `.type-*` class on an element whose markup is ALSO generated
  * by client-side JS (an `innerHTML` template string, e.g. search.ts's result rows and kbd hints)
@@ -33,45 +35,45 @@
 /* ---- Mono UI ramp (family + weight + size; no tracking or transform) --- */
 
 .type-micro {
-	font: var(--weight-regular) 10px var(--font-mono);
+	font: var(--weight-regular) 0.625rem var(--font-mono); /* 10px */
 }
 
 .type-2xs {
-	font: var(--weight-regular) 11px var(--font-mono);
+	font: var(--weight-regular) 0.6875rem var(--font-mono); /* 11px */
 }
 
 .type-xs {
-	font: var(--weight-regular) 11.5px var(--font-mono);
+	font: var(--weight-regular) 0.71875rem var(--font-mono); /* 11.5px */
 }
 
 .type-sm {
-	font: var(--weight-regular) 12px var(--font-mono);
+	font: var(--weight-regular) 0.75rem var(--font-mono); /* 12px */
 }
 
 .type-code {
-	font: var(--weight-regular) 12.5px var(--font-mono);
+	font: var(--weight-regular) 0.78125rem var(--font-mono); /* 12.5px */
 }
 
 .type-md {
-	font: var(--weight-regular) 13px var(--font-mono);
+	font: var(--weight-regular) 0.8125rem var(--font-mono); /* 13px */
 }
 
 /* ---- Label / eyebrow (tracking, optional uppercase) --------------------- */
 
 .type-label-plain {
-	font: var(--weight-regular) 11px var(--font-mono);
+	font: var(--weight-regular) 0.6875rem var(--font-mono); /* 11px */
 	letter-spacing: var(--tracking-label);
 }
 
 .type-eyebrow {
-	font: var(--weight-regular) 11.5px var(--font-mono);
+	font: var(--weight-regular) 0.71875rem var(--font-mono); /* 11.5px */
 	letter-spacing: var(--tracking-eyebrow);
 	text-transform: uppercase;
 }
 
 @media (max-width: 767px) {
 	.type-eyebrow {
-		font-size: 10.5px;
+		font-size: 0.65625rem; /* 10.5px */
 		letter-spacing: var(--tracking-brand);
 	}
 }
@@ -89,15 +91,15 @@
 }
 
 .type-title {
-	font: var(--weight-regular) 32px/var(--leading-tight) var(--font-serif);
+	font: var(--weight-regular) 2rem/var(--leading-tight) var(--font-serif); /* 32px */
 }
 
 .type-heading {
-	font: var(--weight-medium) 20px/var(--leading-snug) var(--font-serif);
+	font: var(--weight-medium) 1.25rem/var(--leading-snug) var(--font-serif); /* 20px */
 }
 
 .type-stat {
-	font: var(--weight-light) 34px/var(--leading-none) var(--font-serif);
+	font: var(--weight-light) 2.125rem/var(--leading-none) var(--font-serif); /* 34px */
 }
 
 /* ---- Body / reading -------------------------------------------------------
@@ -105,11 +107,11 @@
    context declares (typically --font-sans via global.css's `body` rule). */
 
 .type-lead {
-	font-size: 17px;
+	font-size: 1.0625rem; /* 17px */
 	line-height: var(--leading-relaxed);
 }
 
 .type-prose-sm {
-	font-size: 14px;
+	font-size: 0.875rem; /* 14px */
 	line-height: var(--leading-relaxed);
 }

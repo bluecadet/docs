@@ -18,7 +18,7 @@ const base = import.meta.env.BASE_URL;
 <HeaderShell>
 	<Wordmark title={config.title} href={base} />
 	<div class="landing-header-nav">
-		<SearchTrigger tabletWidth="230px" />
+		<SearchTrigger tabletWidth="14.375rem" />
 		<HeaderNav />
 		<NavToggle />
 	</div>
@@ -28,7 +28,7 @@ const base = import.meta.env.BASE_URL;
 	.landing-header-nav {
 		display: flex;
 		align-items: center;
-		gap: 24px;
+		gap: 1.5rem;
 		padding-block: 0;
 		padding-inline: var(--nav-pad-start) var(--content-pad-x);
 		min-inline-size: 0;
@@ -48,13 +48,13 @@ const base = import.meta.env.BASE_URL;
 		.landing-header-nav {
 			margin-inline-start: auto;
 			padding: 0;
-			gap: 20px;
+			gap: 1.25rem;
 		}
 	}
 
 	@media (max-width: 767px) {
 		.landing-header-nav {
-			gap: 16px;
+			gap: 1rem;
 		}
 	}
 </style>

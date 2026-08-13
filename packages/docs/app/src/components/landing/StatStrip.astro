@@ -18,8 +18,8 @@
 	.stat-strip {
 		display: grid;
 		grid-template-columns: repeat(4, minmax(0, 1fr));
-		gap: 48px;
-		padding: 44px var(--content-pad-x);
+		gap: 3rem;
+		padding: 2.75rem var(--content-pad-x);
 	}
 
 	/* Tablet and mobile both go two-up; four stat cells in one row stops reading as a row well
@@ -27,15 +27,15 @@
 	@media (max-width: 1023px) {
 		.stat-strip {
 			grid-template-columns: repeat(2, minmax(0, 1fr));
-			gap: 30px 60px;
-			padding: 36px var(--content-pad-x);
+			gap: 1.875rem 3.75rem;
+			padding: 2.25rem var(--content-pad-x);
 		}
 	}
 
 	@media (max-width: 767px) {
 		.stat-strip {
-			gap: 27px 36px;
-			padding: 30px var(--content-pad-x);
+			gap: 1.6875rem 2.25rem;
+			padding: 1.875rem var(--content-pad-x);
 		}
 	}
 </style>

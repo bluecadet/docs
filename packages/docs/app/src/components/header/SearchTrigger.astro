@@ -7,7 +7,7 @@ interface Props {
 	tabletWidth?: string;
 }
 
-const { tabletWidth = "220px" } = Astro.props;
+const { tabletWidth = "13.75rem" } = Astro.props; // 220px
 ---
 
 <button
@@ -25,10 +25,10 @@ const { tabletWidth = "220px" } = Astro.props;
 	.search-trigger {
 		display: flex;
 		align-items: center;
-		gap: 8px;
-		inline-size: 340px;
+		gap: 0.5rem; /* 8px */
+		inline-size: 21.25rem; /* 340px */
 		max-inline-size: 100%;
-		padding: 9px 14px;
+		padding: 0.5625rem 0.875rem; /* 9px 14px */
 		border: 1px solid var(--hairline-12);
 		border-radius: var(--radius-md);
 		background: var(--white-02);
@@ -47,12 +47,12 @@ const { tabletWidth = "220px" } = Astro.props;
 
 	.search-trigger__kbd {
 		margin-inline-start: auto;
-		font-size: 11px;
+		font-size: 0.6875rem; /* 11px */
 	}
 
 	@media (max-width: 1023px) {
 		.search-trigger {
-			inline-size: var(--search-trigger-tablet-width, 220px);
+			inline-size: var(--search-trigger-tablet-width, 13.75rem); /* 220px */
 		}
 	}
 
@@ -74,7 +74,7 @@ const { tabletWidth = "220px" } = Astro.props;
 
 		.search-trigger__icon {
 			opacity: 1;
-			font-size: 22px;
+			font-size: 1.375rem; /* 22px */
 			color: var(--text-muted);
 		}
 	}

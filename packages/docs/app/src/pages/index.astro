@@ -148,7 +148,7 @@ const pageDescription = data?.description;
 	   single column at those widths. */
 	@media (min-width: 1024px) {
 		:global(.page) {
-			--content-pad-x: 88px;
+			--content-pad-x: 5.5rem; /* 88px */
 		}
 	}
 
@@ -159,16 +159,16 @@ const pageDescription = data?.description;
 	.landing-content {
 		/* Drives both this padding and the first/last band's cancelling negative margins below, so
 		   the two can never drift out of sync — see the margin rules' comment. */
-		--landing-rhythm: 66px;
+		--landing-rhythm: 4.125rem; /* 66px */
 
 		display: grid;
 		grid-template-columns:
 			[full-start] var(--content-pad-x)
-			[content-start] minmax(0, 1004px)
+			[content-start] minmax(0, 62.75rem)
 			[content-end] 1fr
 			[full-end];
 		padding: var(--landing-rhythm) 0;
-		font-size: 15.5px;
+		font-size: 0.96875rem; /* 15.5px */
 		line-height: 1.75;
 	}
 
@@ -198,7 +198,7 @@ const pageDescription = data?.description;
 
 	@media (max-width: 1023px) {
 		.landing-content {
-			--landing-rhythm: 54px;
+			--landing-rhythm: 3.375rem; /* 54px */
 
 			grid-template-columns:
 				[full-start] var(--content-pad-x)
@@ -210,7 +210,7 @@ const pageDescription = data?.description;
 
 	@media (max-width: 767px) {
 		.landing-content {
-			--landing-rhythm: 42px;
+			--landing-rhythm: 2.625rem; /* 42px */
 
 			grid-template-columns:
 				[full-start] var(--content-pad-x)

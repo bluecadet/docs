@@ -52,14 +52,14 @@ const { caption, duration, ...terminalProps } = Astro.props;
 
 <style>
 	.terminal-band {
-		padding: 64px var(--content-pad-x) 72px;
+		padding: 4rem var(--content-pad-x) 4.5rem;
 	}
 
 	.terminal-caption {
 		display: flex;
 		align-items: baseline;
-		gap: 16px;
-		margin-block-end: 24px;
+		gap: 1rem;
+		margin-block-end: 1.5rem;
 		color: var(--text-dim);
 	}
 
@@ -68,28 +68,28 @@ const { caption, duration, ...terminalProps } = Astro.props;
 	}
 
 	.terminal-band-window {
-		max-inline-size: 880px;
+		max-inline-size: 55rem;
 	}
 
 	@media (max-width: 1023px) {
 		.terminal-band {
-			padding: 46px var(--content-pad-x) 54px;
+			padding: 2.875rem var(--content-pad-x) 3.375rem;
 		}
 
 		.terminal-caption {
-			gap: 18px;
-			margin-block-end: 20px;
+			gap: 1.125rem;
+			margin-block-end: 1.25rem;
 		}
 	}
 
 	@media (max-width: 767px) {
 		.terminal-band {
-			padding: 40px var(--content-pad-x) 46px;
+			padding: 2.5rem var(--content-pad-x) 2.875rem;
 		}
 
 		.terminal-caption {
-			gap: 15px;
-			margin-block-end: 18px;
+			gap: 0.9375rem;
+			margin-block-end: 1.125rem;
 		}
 	}
 </style>

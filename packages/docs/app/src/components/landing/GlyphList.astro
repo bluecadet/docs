@@ -39,13 +39,13 @@ const { before, accent: highlight, after } = splitAccent(title, accent, true);
 <style>
 	.glyph-list {
 		display: grid;
-		grid-template-columns: 360px minmax(0, 1fr);
-		gap: 88px;
-		padding: 80px var(--content-pad-x) 88px;
+		grid-template-columns: 22.5rem minmax(0, 1fr);
+		gap: 5.5rem;
+		padding: 5rem var(--content-pad-x) 5.5rem;
 	}
 
 	.glyph-list-title {
-		margin: 0 0 18px;
+		margin: 0 0 1.125rem;
 		color: var(--ink);
 	}
 
@@ -69,28 +69,28 @@ const { before, accent: highlight, after } = splitAccent(title, accent, true);
 	@media (max-width: 1023px) {
 		.glyph-list {
 			grid-template-columns: minmax(0, 1fr);
-			gap: 15px;
-			padding: 56px var(--content-pad-x) 64px;
+			gap: 0.9375rem;
+			padding: 3.5rem var(--content-pad-x) 4rem;
 		}
 
 		.glyph-list-title {
-			margin-block-end: 12px;
-			font-size: 30px;
+			margin-block-end: 0.75rem;
+			font-size: 1.875rem;
 		}
 
 		.glyph-list-intro {
-			max-inline-size: 520px;
+			max-inline-size: 32.5rem;
 		}
 	}
 
 	@media (max-width: 767px) {
 		.glyph-list {
-			gap: 12px;
-			padding: 48px var(--content-pad-x) 50px;
+			gap: 0.75rem;
+			padding: 3rem var(--content-pad-x) 3.125rem;
 		}
 
 		.glyph-list-title {
-			font-size: 28px;
+			font-size: 1.75rem;
 		}
 	}
 </style>

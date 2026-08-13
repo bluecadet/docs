@@ -5,21 +5,21 @@
 	   `.page` in BaseLayout.astro) — declared at :root, not scoped to `.page`, because NavSheet.astro
 	   and SearchModal.astro mount as siblings of `.page` and need the same values without a
 	   hand-synced local copy. */
-	--header-height: 68px;
-	--content-pad-x: 56px;
+	--header-height: 4.25rem; /* 68px */
+	--content-pad-x: 3.5rem; /* 56px */
 }
 
 @media (max-width: 1023px) {
 	:root {
-		--header-height: 60px;
-		--content-pad-x: 36px;
+		--header-height: 3.75rem; /* 60px */
+		--content-pad-x: 2.25rem; /* 36px */
 	}
 }
 
 @media (max-width: 767px) {
 	:root {
-		--header-height: 56px;
-		--content-pad-x: 18px;
+		--header-height: 3.5rem; /* 56px */
+		--content-pad-x: 1.125rem; /* 18px */
 	}
 }
 
@@ -152,7 +152,7 @@ kbd {
 	display: inline-block;
 	border: 1px solid var(--hairline-14);
 	border-radius: var(--radius-sm);
-	padding: 0 5px;
+	padding: 0 0.3125rem; /* 5px */
 	font: inherit;
 }
 

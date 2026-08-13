@@ -25,10 +25,10 @@ const { lead, glyph = "✕", color = "var(--text-faint)" } = Astro.props;
 <style>
 	.glyph-item {
 		display: grid;
-		grid-template-columns: 28px minmax(0, 1fr);
-		gap: 20px;
-		padding: 20px 0;
-		font-size: 15px;
+		grid-template-columns: 1.75rem minmax(0, 1fr);
+		gap: 1.25rem;
+		padding: 1.25rem 0;
+		font-size: 0.9375rem;
 		color: var(--text-muted);
 		text-wrap: balance;
 	}
@@ -57,24 +57,24 @@ const { lead, glyph = "✕", color = "var(--text-faint)" } = Astro.props;
 
 	@media (max-width: 1023px) {
 		.glyph-item {
-			grid-template-columns: 24px minmax(0, 1fr);
-			gap: 18px;
-			padding: 18px 0;
-			font-size: 14.5px;
+			grid-template-columns: 1.5rem minmax(0, 1fr);
+			gap: 1.125rem;
+			padding: 1.125rem 0;
+			font-size: 0.90625rem;
 		}
 	}
 
 	@media (max-width: 767px) {
 		.glyph-item {
-			grid-template-columns: 22px minmax(0, 1fr);
-			gap: 16px;
-			padding: 16px 0;
-			font-size: 14px;
+			grid-template-columns: 1.375rem minmax(0, 1fr);
+			gap: 1rem;
+			padding: 1rem 0;
+			font-size: 0.875rem;
 		}
 
 		.glyph-item-icon {
-			padding-block-start: 2px;
-			font-size: 11.5px;
+			padding-block-start: 0.125rem;
+			font-size: 0.71875rem;
 		}
 	}
 </style>

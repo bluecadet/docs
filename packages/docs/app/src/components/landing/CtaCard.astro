@@ -21,9 +21,9 @@ const hasDescription = Astro.slots.has("default");
 
 <a class="cta-card" href={href}>
 	<span class="cta-num type-xs">{label.toLowerCase()}</span>
-	<span class="cta-title">{title}</span>
+	<span class="cta-title type-heading">{title}</span>
 	{hasDescription && (
-		<span class="cta-desc">
+		<span class="cta-desc type-prose-sm">
 			<slot />
 		</span>
 	)}
@@ -33,8 +33,8 @@ const hasDescription = Astro.slots.has("default");
 	.cta-card {
 		display: flex;
 		flex-direction: column;
-		gap: 8px;
-		padding: 32px;
+		gap: 0.5rem;
+		padding: 2rem;
 		background: var(--bg);
 		transition: background var(--transition-fast);
 		counter-increment: cta-card;
@@ -58,7 +58,6 @@ const hasDescription = Astro.slots.has("default");
 	}
 
 	.cta-title {
-		font: 500 20px var(--font-serif);
 		color: var(--ink);
 		transition: color var(--transition-fast);
 	}
@@ -68,7 +67,6 @@ const hasDescription = Astro.slots.has("default");
 	}
 
 	.cta-desc {
-		font-size: 14px;
 		color: var(--text-muted);
 		text-wrap: balance;
 		max-width: 50ch;

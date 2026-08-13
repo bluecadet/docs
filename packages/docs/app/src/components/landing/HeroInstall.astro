@@ -67,12 +67,12 @@ const command = unescapeSlotText((await Astro.slots.render("default")).trim());
 	.hero-install {
 		display: flex;
 		align-items: center;
-		gap: 10px;
-		padding: 11px 16px;
+		gap: 0.625rem;
+		padding: 0.6875rem 1rem;
 		border: 1px solid var(--accent-border-30);
 		border-radius: var(--radius-md);
 		background: var(--accent-tint-05);
-		font: 400 13.5px var(--font-mono);
+		font: 400 0.84375rem var(--font-mono);
 		color: var(--text-code);
 	}
 
@@ -91,7 +91,7 @@ const command = unescapeSlotText((await Astro.slots.render("default")).trim());
 		color: var(--accent);
 		cursor: pointer;
 		padding-block: 0 0;
-		padding-inline: 8px 0;
+		padding-inline: 0.5rem 0;
 	}
 
 	.hero-install-copy--copied {
@@ -101,8 +101,8 @@ const command = unescapeSlotText((await Astro.slots.render("default")).trim());
 	@media (max-width: 767px) {
 		.hero-install {
 			min-block-size: 48px;
-			padding: 0 14px;
-			font-size: 12.5px;
+			padding: 0 0.875rem;
+			font-size: 0.78125rem;
 			overflow-x: auto;
 		}
 
