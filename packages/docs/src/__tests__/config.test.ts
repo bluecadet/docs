@@ -63,14 +63,11 @@ describe("validateConfig", () => {
 		"version",
 		"sidebarMeta",
 		"landing",
-	] as const)(
-		'throws a clear error when "%s" is not a string',
-		(key) => {
-			expect(() => validate({ content: CONTENT, [key]: 5 }, CONFIG_PATH)).toThrowError(
-				new RegExp(`"${key}" must be a string \\(got number\\)`),
-			);
-		},
-	);
+	] as const)('throws a clear error when "%s" is not a string', (key) => {
+		expect(() => validate({ content: CONTENT, [key]: 5 }, CONFIG_PATH)).toThrowError(
+			new RegExp(`"${key}" must be a string \\(got number\\)`),
+		);
+	});
 
 	describe("content", () => {
 		it("expands a bare glob string into a full entry", () => {
@@ -656,10 +653,7 @@ describe("validateConfig", () => {
 
 	describe("accent/accent2", () => {
 		it("accepts valid 6-digit hex colors", () => {
-			const { config, warnings } = validate(
-				{ accent: "#9cc3a9", accent2: "#E0A75E" },
-				CONFIG_PATH,
-			);
+			const { config, warnings } = validate({ accent: "#9cc3a9", accent2: "#E0A75E" }, CONFIG_PATH);
 			expect(config.accent).toBe("#9cc3a9");
 			expect(config.accent2).toBe("#E0A75E");
 			expect(warnings).toEqual([]);

@@ -184,7 +184,9 @@ export function validateConfig(
 			throw new Error(`${configPath}: "${key}" must be a string (got ${describeType(value)}).`);
 		}
 		if ((key === "accent" || key === "accent2") && !HEX_COLOR.test(value)) {
-			throw new Error(`${configPath}: "${key}" must be a 6-digit hex color, e.g. "#9cc3a9" (got "${value}").`);
+			throw new Error(
+				`${configPath}: "${key}" must be a 6-digit hex color, e.g. "#9cc3a9" (got "${value}").`,
+			);
 		}
 		config[key] = value;
 	}
