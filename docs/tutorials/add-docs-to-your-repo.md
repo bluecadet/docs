@@ -23,11 +23,9 @@ Add an `.npmrc` at the repo root:
 **Local dev:** create a classic GitHub personal access token with the `read:packages` scope, then
 export it as `NODE_AUTH_TOKEN` (e.g. in your shell profile). Never commit the token.
 
-**GitHub Actions:** set `NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}` on the install step and
-`permissions: packages: read` on the job. For repos other than `bluecadet/docs` itself, the package
-must also grant the repo access (package settings → Manage Actions access), or use a PAT stored as
-a secret. Repos using the reusable `build-docs.yml` workflow (step 5 below) get the registry wiring
-from that workflow but still need `permissions: packages: read` on the calling job.
+**CI (e.g. Netlify):** set `NODE_AUTH_TOKEN` as a build environment variable, using a classic PAT
+with the `read:packages` scope — CI hosts other than GitHub Actions have no GitHub-issued token to
+substitute, so a PAT is the only option.
 
 ## 2. Write some markdown
 
@@ -111,33 +109,16 @@ Search is inert in `dev` (the index only exists after a real build) — see
 
 ## 5. Wire it into CI
 
-> **Prerequisite:** enable GitHub Pages on your repo first — Settings → Pages → Build and
-> deployment → Source → "GitHub Actions". Without this, the deploy step below fails even if the
-> build succeeds.
+Once the local build looks right, deploy it from CI instead of building locally. `@bluecadet/docs`
+has no CI product of its own to wire in — point your host's build at the same two things you ran
+locally:
 
-Once the local build looks right, deploy it from CI instead of building locally. This repo
-publishes a reusable `workflow_call` workflow for exactly this — add a caller workflow like:
+- **Build command:** `npx @bluecadet/docs build`
+- **Publish directory:** `dist`
 
-```yaml
-# .github/workflows/docs.yml
-name: Docs
-on:
-  push:
-    branches: [main]
-permissions:
-  contents: read
-  packages: read
-  pages: write
-  id-token: write
-concurrency:
-  group: pages
-  cancel-in-progress: false
-jobs:
-  docs:
-    uses: bluecadet/docs/.github/workflows/build-docs.yml@main
-```
-
-See that workflow's own inputs for deploy targets and options (e.g. GitHub Pages `base` path).
+This repo deploys via Netlify; any static host works the same way. Set `NODE_AUTH_TOKEN` as a
+build environment variable (see [step 1](#1-set-up-registry-access)) so the install step can
+authenticate against GitHub Packages.
 
 ## Next steps
 

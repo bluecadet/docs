@@ -22,11 +22,9 @@ Add an `.npmrc` at your repo root:
 
 - **Local dev:** create a classic GitHub personal access token with the `read:packages` scope, then
   export it as `NODE_AUTH_TOKEN` (e.g. in your shell profile). Never commit the token.
-- **GitHub Actions:** set `NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}` on the install step and
-  `permissions: packages: read` on the job. For repos other than `bluecadet/docs` itself, the
-  package must also grant the repo access (package settings → Manage Actions access), or use a PAT
-  stored as a secret. Repos using the reusable `build-docs.yml` workflow below get the registry
-  wiring for free but still need `permissions: packages: read` on the calling job.
+- **CI (e.g. Netlify):** set `NODE_AUTH_TOKEN` as a build environment variable, using a classic PAT
+  with the `read:packages` scope — CI hosts other than GitHub Actions have no GitHub-issued token
+  to substitute, so a PAT is the only option.
 
 From any repo:
 
@@ -37,8 +35,8 @@ npx @bluecadet/docs build
 Reads `README.md` and `docs/` from the current directory and writes a static site to `./dist`. Add
 an optional `docs.config.yaml` at the repo root for a custom title, GitHub URL, deploy base path,
 extra content globs (monorepo package READMEs, etc.), header/footer links, or a hand-ordered
-sidebar. Run it from CI with the reusable `bluecadet/docs/.github/workflows/build-docs.yml@main`
-workflow.
+sidebar. Deploy it from CI by pointing the build command at `npx @bluecadet/docs build` and the
+publish directory at `dist`.
 
 See the [full docs](https://bluecadet.github.io/docs/) for a tutorial, how-to guides, and
 reference material.

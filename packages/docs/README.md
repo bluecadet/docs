@@ -25,11 +25,9 @@ Add an `.npmrc` at the consumer repo's root:
 
 - **Local dev:** create a classic GitHub personal access token with the `read:packages` scope, then
   export it as `NODE_AUTH_TOKEN` (e.g. in your shell profile). Never commit the token.
-- **GitHub Actions:** set `NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}` on the install step and
-  `permissions: packages: read` on the job. For repos other than `bluecadet/docs` itself, the
-  package must also grant the repo access (package settings → Manage Actions access), or use a PAT
-  stored as a secret. Repos using the reusable `build-docs.yml` workflow get the registry wiring
-  from that workflow but still need `permissions: packages: read` on the calling job.
+- **CI (e.g. Netlify):** set `NODE_AUTH_TOKEN` as a build environment variable, using a classic PAT
+  with the `read:packages` scope — CI hosts other than GitHub Actions have no GitHub-issued token
+  to substitute, so a PAT is the only option.
 
 From any repo, with a `docs.config.yaml` at its root:
 
@@ -44,9 +42,9 @@ content:
 npx @bluecadet/docs build
 ```
 
-This reads `./docs.config.yaml` and writes a static site to `./dist`. Run it from CI (e.g. a
-GitHub Actions workflow that deploys `dist/` to GitHub Pages). With no config file, the build
-fails and names the path it looked at.
+This reads `./docs.config.yaml` and writes a static site to `./dist`. Run it from CI (e.g. Netlify,
+pointing the build command at this and the publish directory at `dist`). With no config file, the
+build fails and names the path it looked at.
 
 Run a local dev server on the same synced content:
 
