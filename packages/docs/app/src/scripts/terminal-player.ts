@@ -142,7 +142,7 @@ function setUpCast(mount: HTMLElement): void {
 // stylesheet off pages with no Terminal.
 async function loadStockPlayerCss(): Promise<void> {
 	const { default: href } = await import("asciinema-player/dist/bundle/asciinema-player.css?url");
-	if (document.querySelector(`link[data-terminal-player-css]`)) return;
+	if (document.querySelector("link[data-terminal-player-css]")) return;
 	await new Promise<void>((resolve) => {
 		const link = document.createElement("link");
 		link.rel = "stylesheet";

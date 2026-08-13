@@ -16,15 +16,23 @@ function levenshtein(a: string, b: string): number {
 			const cost = a[i - 1] === b[j - 1] ? 0 : 1;
 			// j, j - 1 are within [0, n] and prev/cur are built up to index j on every
 			// iteration, so these reads are always in bounds.
-			const curLeft = cur[j - 1]!;
-			const prevSame = prev[j]!;
-			const prevDiag = prev[j - 1]!;
+			const curLeft = cur[j - 1];
+			const prevSame = prev[j];
+			const prevDiag = prev[j - 1];
+
+			if (curLeft === undefined || prevSame === undefined || prevDiag === undefined) {
+				throw new Error("Unexpected undefined value in Levenshtein computation");
+			}
+
 			cur[j] = Math.min(curLeft + 1, prevSame + 1, prevDiag + cost);
 		}
 		prev = cur;
 	}
 	// prev has length n + 1, so index n is always in bounds.
-	return prev[n]!;
+	if (prev[n] === undefined) {
+		throw new Error("Unexpected undefined value in Levenshtein computation");
+	}
+	return prev[n];
 }
 
 /** Similarity in [0, 1] — 1 means identical, 0 means maximally different. */
