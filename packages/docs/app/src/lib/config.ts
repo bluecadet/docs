@@ -77,6 +77,12 @@ export interface SidebarItemObject {
 /** The parsed shape of `DOCS_CONFIG`, with fallbacks already applied. */
 export interface DocsAppConfig {
 	title: string;
+	/** Character (or short string) rendered before the site title in the header and footer. Empty by default — no glyph. */
+	glyph: string;
+	/** STATE accent color (hex), e.g. what succeeded, where you are. Falls back to tokens.css's sage default when unset. */
+	accent?: string;
+	/** ATTENTION accent color (hex), e.g. what changed, what's required. Falls back to tokens.css's amber default when unset. */
+	accent2?: string;
 	/**
 	 * The config file's own basename, e.g. `docs.config.yaml`, or `other-name.yaml` when the CLI
 	 * ran with `--config other-name.yaml`. Used in user-facing error messages (see nav.ts) so they
@@ -103,8 +109,9 @@ export interface DocsAppConfig {
 	toc?: TocConfig;
 }
 
-const DEFAULTS: Pick<DocsAppConfig, "title" | "configFileName"> = {
+const DEFAULTS: Pick<DocsAppConfig, "title" | "glyph" | "configFileName"> = {
 	title: "docs",
+	glyph: "",
 	configFileName: "docs.config.yaml",
 };
 

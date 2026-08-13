@@ -62,9 +62,23 @@ const {
 	ogType = "article",
 } = Astro.props;
 
-const siteTitle = getDocsConfig().title;
+const docsConfig = getDocsConfig();
+const siteTitle = docsConfig.title;
 const pageTitle = appendSiteTitle && title ? `${title} — ${siteTitle}` : title || siteTitle;
 const base = import.meta.env.BASE_URL;
+
+// Per-site override of the two source accent tokens (see app/src/styles/tokens.css) — every other
+// color in the design system is color-mix()-derived from these two, so setting just these here
+// re-skins the whole site. `:root:root` (doubled pseudo-class) outranks tokens.css's plain `:root`
+// on specificity alone, so this wins regardless of stylesheet load order instead of depending on
+// appearing later in the document.
+const accentOverrides = [
+	docsConfig.accent && `--accent:${docsConfig.accent};`,
+	docsConfig.accent2 && `--accent-2:${docsConfig.accent2};`,
+]
+	.filter(Boolean)
+	.join("");
+const accentOverrideCss = accentOverrides ? `:root:root{${accentOverrides}}` : "";
 
 // Canonical/OG tags need an absolute origin (`site`) to build a full URL from, and are skipped for
 // noindex pages (404, the no-landing redirect) — there is nothing worth a search engine or social
@@ -87,6 +101,7 @@ const hasToc = main === "article" && headings.some((heading) => heading.depth ==
 		{description && <meta name="description" content={description} />}
 		{robots && <meta name="robots" content={robots} />}
 		<link rel="icon" href={`${base}favicon.svg`} type="image/svg+xml" />
+		{accentOverrideCss && <style set:html={accentOverrideCss} />}
 		{canonicalUrl && (
 			<>
 				<link rel="canonical" href={canonicalUrl} />

@@ -7,7 +7,9 @@
  *                palette: amber.)
  * Do not reach for a third accent color. Do not use --accent for "attention" or --accent-2 for
  * "state." Re-skinning the site for another brand means changing the four source tokens below —
- * no other token name should hardcode a hue.
+ * no other token name should hardcode a hue. --bg/--ink are shared across every site; --accent/
+ * --accent-2 can be overridden per-consumer via docs.config.yaml's `accent`/`accent2` keys (see
+ * BaseLayout.astro), which is the only theming hook this package exposes.
  *
  * Architecture: a small set of SOURCE tokens (--bg, --ink, --accent, --accent-2). Every other
  * token in this file is derived from those four via color-mix() so there is one place to change

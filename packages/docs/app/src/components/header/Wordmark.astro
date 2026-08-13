@@ -5,13 +5,14 @@
 interface Props {
 	title: string;
 	href: string;
+	glyph: string;
 }
 
-const { title, href } = Astro.props;
+const { title, href, glyph } = Astro.props;
 ---
 
 <div class="wordmark">
-	<a href={href}><span class="glyph">▞</span>{title}</a>
+	<a href={href}>{glyph && <span class="glyph">{glyph}</span>}{title}</a>
 </div>
 
 <style>

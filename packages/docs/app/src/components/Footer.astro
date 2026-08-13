@@ -43,7 +43,7 @@ const lastGroupIsWide = groupCount > 1;
 	<div class="site-footer-inner">
 		<div class="site-footer__top">
 			<div class="site-footer__brand type-sm site-footer__brand--rail">
-				<span class="glyph">▞</span>{config.title}
+				{config.glyph && <span class="glyph">{config.glyph}</span>}{config.title}
 			</div>
 			<div
 				class="site-footer__groups"
@@ -82,7 +82,7 @@ const lastGroupIsWide = groupCount > 1;
 		</div>
 		<div class="site-footer__bottom type-sm">
 			<div class="site-footer__brand type-sm site-footer__brand--bottom">
-				<span class="glyph">▞</span>{config.title}
+				{config.glyph && <span class="glyph">{config.glyph}</span>}{config.title}
 			</div>
 			{meta && <span class="site-footer__meta">{meta}</span>}
 		</div>
