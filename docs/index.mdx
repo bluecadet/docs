@@ -30,9 +30,9 @@ import {
 } from "@bluecadet/docs/components";
 
 <Hero
-  title="bluecadet docs"
   lead="A CLI that turns a docs.config.yaml and the files it names into a static docs site — no Astro project, no build pipeline to maintain."
 >
+  <Fragment slot="title">bluecadet docs</Fragment>
   <HeroEyebrows>
     <HeroEyebrow tone="state">static output</HeroEyebrow>
     <HeroEyebrow tone="attention">yaml config</HeroEyebrow>
@@ -91,11 +91,8 @@ import {
   </Feature>
 </Features>
 
-<GlyphList
-  title="Things this will not do"
-  accent="will not"
-  intro="A short list, kept honest. If one of these is a dealbreaker, better you find out here than after you have moved your docs."
->
+<GlyphList intro="A short list, kept honest. If one of these is a dealbreaker, better you find out here than after you have moved your docs.">
+  <Fragment slot="title">Things this <em>will not</em> do</Fragment>
   <GlyphItem lead="Be a CMS.">
     It builds from files on disk. Nothing to log in to, and no copy of your content stored anywhere
     but your repo.
@@ -144,4 +141,6 @@ import {
   />
 </OtherTools>
 
-<ClosingCta accent="It is one command." />
+<ClosingCta>
+  <Fragment slot="title">Start with the tutorials. <em>It is one command.</em></Fragment>
+</ClosingCta>

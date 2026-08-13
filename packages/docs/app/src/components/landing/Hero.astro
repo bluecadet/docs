@@ -1,7 +1,8 @@
 ---
 // Landing hero, composed from the MDX body instead of frontmatter:
 //
-//   <Hero title="Same title text" lead="Same lead text">
+//   <Hero lead="Same lead text">
+//     <Fragment slot="title">Same title text, <em>with its accent clause</em></Fragment>
 //     <HeroEyebrows>
 //       <HeroEyebrow tone="state">Label</HeroEyebrow>
 //     </HeroEyebrows>
@@ -11,46 +12,35 @@
 //     </HeroNotes>
 //   </Hero>
 //
-// `title`/`lead` are props (not slotted) because Hero renders them itself — splitAccent() needs
-// the raw title string, and lead's typography differs from a plain paragraph. HeroEyebrows,
-// HeroInstall and HeroNotes arrive as one flat, opaquely-typed default slot: Astro gives no way to
-// inspect a slotted child's component type, so there's no `slot="eyebrows"` to write and no way
-// for Hero to sort children into groups itself. Each of those three renders exactly one element
-// with a stable class name — HeroEyebrows/HeroNotes exist specifically so "several chips" and
-// "up to two notes" are each a single item here too, not N flat items Hero would have to spread
-// across a grid area on its own (grid items sharing one area overlap; see those two components'
-// comments) — and the :global() rules below place that single element with CSS Grid, matching the
-// original frontmatter-driven hero's layout exactly: a notes column beside the lead paragraph
-// from tablet width up, stacked with everything else below it.
-import { splitAccent } from "../../lib/text";
+// The title is a named slot, not a prop: the author writes the exact markup that lands in the
+// h1, including any <br /> line break and the <em>/<i> that marks the italic accent clause — see
+// landing.css's `.landing-heading` for the highlight styling. `lead` stays a prop since its
+// typography differs from a plain paragraph. HeroEyebrows, HeroInstall and HeroNotes arrive as
+// one flat, opaquely-typed default slot: Astro gives no way to inspect a slotted child's
+// component type, so there's no `slot="eyebrows"` to write and no way for Hero to sort children
+// into groups itself. Each of those three renders exactly one element with a stable class name —
+// HeroEyebrows/HeroNotes exist specifically so "several chips" and "up to two notes" are each a
+// single item here too, not N flat items Hero would have to spread across a grid area on its own
+// (grid items sharing one area overlap; see those two components' comments) — and the :global()
+// rules below place that single element with CSS Grid, matching the original frontmatter-driven
+// hero's layout exactly: a notes column beside the lead paragraph from tablet width up, stacked
+// with everything else below it.
 import { docsEntryHref } from "../../lib/nav";
 
 interface Props {
-	title: string;
 	lead?: string;
 	/** Target for the "read the quickstart" link beside the install chip. Defaults to the first sidebar page. */
 	quickstartHref?: string;
 }
 
-const { title, lead, quickstartHref = await docsEntryHref() } = Astro.props;
-
-// Only split into the design's two-clause hero treatment (plain line + italic accent line) when
-// the title has a natural clause break; a bare title (the common case for real doc collections)
-// renders as a single plain line rather than faking one.
-const { before: firstClause, accent: secondClause } = splitAccent(title, ", ");
+const { lead, quickstartHref = await docsEntryHref() } = Astro.props;
 ---
 
 <div class="hero landing-band landing-band--flush">
 	<slot />
 
-	<h1 class="type-display">
-		{firstClause}
-		{secondClause && (
-			<>
-				<br />
-				<span class="hero-accent">{secondClause}</span>
-			</>
-		)}
+	<h1 class="type-display landing-heading">
+		<slot name="title" />
 	</h1>
 
 	{lead && <p class="hero-lead type-lead">{lead}</p>}
@@ -86,11 +76,7 @@ const { before: firstClause, accent: secondClause } = splitAccent(title, ", ");
 		line-height: 1.08;
 		max-inline-size: 15ch;
 		color: var(--ink);
-	}
-
-	.hero-accent {
-		font-style: italic;
-		color: var(--accent);
+		--heading-accent: var(--accent);
 	}
 
 	/* Font size holds constant across breakpoints — it's the hero's reading copy, not display

@@ -143,6 +143,25 @@
 	}
 }
 
+/* ---- Heading accent -------------------------------------------------------
+   Landing band headings (Hero's h1, ClosingCta's and GlyphList's h2) mark their attention-accent
+   clause with a literal `<em>`/`<i>` written directly into the slotted title markup — there is no
+   marker/prop-based splitting, so the author controls exactly which words are highlighted and
+   where any line break falls. Any heading carrying `.landing-heading` italicizes its `em`/`i`
+   children and colors them from `--heading-accent`, which defaults to `var(--accent-2)` (the
+   attention accent GlyphList and ClosingCta both use); Hero overrides it to `var(--accent)` on its
+   own scoped `h1` rule — a plain CSS custom property, so it inherits through the slot boundary
+   fine even though Hero's own scoped styles can't otherwise reach slotted content. */
+.landing-heading {
+	--heading-accent: var(--accent-2);
+}
+
+.landing-heading em,
+.landing-heading i {
+	font-style: italic;
+	color: var(--heading-accent);
+}
+
 /* ---- Enter motion ---------------------------------------------------------
    Fire-once "settle into place" animation, triggered by the IntersectionObserver in
    index.astro's bundled <script> (see there for the trigger; this is the visual side only).

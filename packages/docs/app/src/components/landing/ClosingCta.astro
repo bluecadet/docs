@@ -3,12 +3,15 @@
 // first doc section and an outbound repo link when one is configured — both derived from the nav
 // tree and site config:
 //
-//   <ClosingCta accent="It really is one command." />
+//   <ClosingCta />
 //
-// `title` replaces the derived headline; a default slot of plain <a> links replaces the two
-// default buttons (first one styled primary, the rest secondary):
+// A `title` slot replaces the derived "Start with the …" headline, with the author writing any
+// <em>/<i> accent clause directly into it (see landing.css's `.landing-heading`); a default slot
+// of plain <a> links replaces the two default buttons (first one styled primary, the rest
+// secondary):
 //
-//   <ClosingCta title="Ready when you are.">
+//   <ClosingCta>
+//     <Fragment slot="title">Ready when you are. <em>It really is one command.</em></Fragment>
 //     <a href="/tutorials/add-docs-to-your-repo/">read the docs →</a>
 //     <a href="https://github.com/acme/acme" target="_blank" rel="noopener noreferrer">github ↗</a>
 //   </ClosingCta>
@@ -16,27 +19,19 @@
 import { getDocsConfig } from "../../lib/config";
 import { firstPageOf, getNavTree, type NavNode } from "../../lib/nav";
 
-interface Props {
-	/** Replaces the derived "Start with the …" headline when given. */
-	title?: string;
-	/** Optional italic attention-accented second clause appended to the closing headline. */
-	accent?: string;
-}
-
-const { title, accent } = Astro.props;
+const hasTitle = Astro.slots.has("title");
 const hasActions = Astro.slots.has("default");
 
-// Only touch the nav tree when something actually needs it: the derived headline (no `title`) or
-// the derived buttons (no slotted actions).
+// Only touch the nav tree when something actually needs it: the derived headline (no `title`
+// slot) or the derived buttons (no slotted actions).
 let firstSection: NavNode | undefined;
-if (!title || !hasActions) {
+if (!hasTitle || !hasActions) {
 	({ 0: firstSection } = (await getNavTree()).nodes);
 }
 
-const headline = title ?? (firstSection && `Start with the ${firstSection.label.toLowerCase()}.`);
-// With an explicit title the band always renders; without one it keeps the old "no sections yet"
+// With a slotted title the band always renders; without one it keeps the old "no sections yet"
 // no-render behavior.
-const shouldRender = Boolean(title) || Boolean(firstSection);
+const shouldRender = hasTitle || Boolean(firstSection);
 
 let firstHref: string | undefined;
 let repoUrl: string | undefined;
@@ -49,9 +44,10 @@ if (!hasActions) {
 {
 	shouldRender && (
 		<div class="landing-band closing-cta">
-			<h2 class="closing-cta-title">
-				{headline}{" "}
-				{accent && <span class="closing-cta-accent">{accent}</span>}
+			<h2 class="closing-cta-title landing-heading">
+				<slot name="title">
+					{firstSection && `Start with the ${firstSection.label.toLowerCase()}.`}
+				</slot>
 			</h2>
 			<div class="closing-cta-actions">
 				{hasActions ? (
@@ -85,11 +81,6 @@ if (!hasActions) {
 		font: 300 2.375rem/1.2 var(--font-serif);
 		max-inline-size: 24ch;
 		color: var(--ink);
-	}
-
-	.closing-cta-accent {
-		font-style: italic;
-		color: var(--accent-2);
 	}
 
 	.closing-cta-actions {

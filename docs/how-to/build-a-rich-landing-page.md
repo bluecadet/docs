@@ -58,10 +58,8 @@ tell several flat `<HeroEyebrow>`/`<HeroNote>` children apart from one, so each 
 for `<Hero>` to place, not several it would have to spread out on its own:
 
 ```mdx
-<Hero
-  title="acme build"
-  lead="A build tool for people who would rather not think about build tools."
->
+<Hero lead="A build tool for people who would rather not think about build tools.">
+  <Fragment slot="title">acme build</Fragment>
   <HeroEyebrows>
     <HeroEyebrow tone="state">static output</HeroEyebrow>
     <HeroEyebrow tone="attention">no config</HeroEyebrow>
@@ -77,16 +75,17 @@ for `<Hero>` to place, not several it would have to spread out on its own:
 
 | Component | Props | Renders as |
 | --- | --- | --- |
-| `<Hero>` | `title` (required), `lead`, `quickstartHref` | The headline and lead paragraph. `quickstartHref` targets the "read the quickstart" link, which always renders beside the install chip; it defaults to your first sidebar page. |
+| `<Hero>` | `lead`, `quickstartHref`; a `title` slot (required) | The headline and lead paragraph. `quickstartHref` targets the "read the quickstart" link, which always renders beside the install chip; it defaults to your first sidebar page. |
 | `<HeroEyebrows>` | children | Groups `<HeroEyebrow>` chips into the row above the headline. |
 | `<HeroEyebrow>` | `tone`: `state` \| `attention` \| `neutral` (default), label as children | Uppercase mono chips above the headline. `state` is solid (sage by default), `attention` is outlined (amber by default), `neutral` is outlined (default). Up to 3 render; extras are hidden. |
 | `<HeroInstall>` | command as children | A `$ …` chip under the lead with a copy button. |
 | `<HeroNotes>` | children | Groups `<HeroNote>` marginalia into the column beside the lead paragraph (tablet width up) or the row below it (mobile). |
 | `<HeroNote>` | note text as children | One marginalia note. The first renders in the attention accent, a second (max) renders neutral; extras are hidden. |
 
-`title` accepts a comma-separated clause (`title="Reproducible builds, without the ceremony."`),
-which splits across two lines, with the second set in italic state accent (sage by default) — a
-bare title without a comma renders as a single plain line.
+The `title` slot is plain markup, not a prop, so you write exactly what should render: a `<br />`
+for a line break, and an `<em>`/`<i>` around the clause you want set in italic attention accent
+(`<Fragment slot="title">Reproducible builds, <br /><em>without the ceremony.</em></Fragment>`) — a
+bare title with no `<em>` renders as a single plain line.
 
 ### StatStrip
 
@@ -153,15 +152,12 @@ desktop, two-up on tablet, stacked on mobile.
 ### GlyphList
 
 A glyph-marked list band — originally shipped as the honest-limitations list, and general enough
-for any row-per-item list that wants a leading mark. `accent` is a substring of `title` to set in
-italic attention accent; it's ignored if it doesn't appear in the title.
+for any row-per-item list that wants a leading mark. The `title` slot is plain markup; wrap the
+clause that carries the point in `<em>`/`<i>` to set it in italic attention accent.
 
 ```mdx
-<GlyphList
-  title="Things acme will not do"
-  accent="will not"
-  intro="A short list, kept honest."
->
+<GlyphList intro="A short list, kept honest.">
+  <Fragment slot="title">Things acme <em>will not</em> do</Fragment>
   <GlyphItem lead="Manage your infrastructure.">It builds. That is the whole surface.</GlyphItem>
   <GlyphItem glyph="✓" color="var(--accent)" lead="Get out of the way.">That is the pitch.</GlyphItem>
 </GlyphList>
@@ -195,18 +191,20 @@ shown under the title. A childless `<CtaCards>` renders nothing.
 
 A closing call to action: a headline pointing at your first doc section, a "read the docs" button,
 and a link to your repo when `repoUrl` is configured. Zero-config, it reads its destinations from
-your nav tree and site config on its own — pass just an optional accent clause:
+your nav tree and site config on its own:
 
 ```mdx
-<ClosingCta accent="It really is one command." />
+<ClosingCta />
 ```
 
-Both halves can be replaced. A `title` prop swaps out the derived headline, and any `<a>` links
-passed as children replace the default buttons — the first is styled as the primary button, the
-rest as secondary:
+Both halves can be replaced. A `title` slot swaps out the derived headline — write the whole
+heading yourself, wrapping any clause you want in italic attention accent with `<em>`/`<i>` — and
+any `<a>` links passed as children replace the default buttons, the first styled as the primary
+button, the rest as secondary:
 
 ```mdx
-<ClosingCta title="Ready when you are." accent="Go.">
+<ClosingCta>
+  <Fragment slot="title">Ready when you are. <em>Go.</em></Fragment>
   <a href="/tutorials/add-docs-to-your-repo/">get started →</a>
   <a href="https://github.com/acme/acme">github ↗</a>
 </ClosingCta>

@@ -2,32 +2,27 @@
 // Full-bleed glyph-marked list band for the landing page's MDX body — originally the "here is
 // what this does not do" list, generalized to any glyph-per-row list:
 //
-//   <GlyphList title="Things this will not do" accent="will not" intro="A short list…">
+//   <GlyphList intro="A short list…">
+//     <Fragment slot="title">Things this <em>will not</em> do</Fragment>
 //     <GlyphItem lead="Replace your site.">…</GlyphItem>
 //     <GlyphItem glyph="✓" color="var(--accent)" lead="Get out of the way.">…</GlyphItem>
 //   </GlyphList>
 //
-// `accent` is an optional substring of `title` that renders in italic attention accent — the
-// design's attention treatment on the one clause that carries the point.
-import { splitAccent } from "../../lib/text";
-
+// The title is a named slot: the author marks the clause that carries the point with a literal
+// <em>/<i>, which lands in the design's italic attention accent (landing.css's `.landing-heading`)
+// — no separate prop, no substring matching.
 interface Props {
-	title: string;
-	/** Substring of `title` to italicise in the attention accent. Ignored when it isn't found in `title`. */
-	accent?: string;
 	/** Dim paragraph under the heading. */
 	intro?: string;
 }
 
-const { title, accent, intro } = Astro.props;
-
-const { before, accent: highlight, after } = splitAccent(title, accent, true);
+const { intro } = Astro.props;
 ---
 
 <div class="landing-band glyph-list">
 	<div class="glyph-list-head">
-		<h2 class="glyph-list-title type-title">
-			{before}{highlight && <span class="glyph-list-accent">{highlight}</span>}{after}
+		<h2 class="glyph-list-title type-title landing-heading">
+			<slot name="title" />
 		</h2>
 		{intro && <p class="glyph-list-intro type-prose-sm">{intro}</p>}
 	</div>
@@ -47,11 +42,6 @@ const { before, accent: highlight, after } = splitAccent(title, accent, true);
 	.glyph-list-title {
 		margin: 0 0 1.125rem;
 		color: var(--ink);
-	}
-
-	.glyph-list-accent {
-		font-style: italic;
-		color: var(--accent-2);
 	}
 
 	.glyph-list-intro {
