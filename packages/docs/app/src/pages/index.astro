@@ -91,12 +91,14 @@ const pageDescription = data?.description;
 			// Per-child stagger contract: any container — a band's own root or a nested wrapper,
 			// authored here or by an MDX consumer — marked `data-reveal-stagger` gets each of its
 			// DIRECT children an inline `--reveal-index` (0-based, capped at 8 so a long list doesn't
-			// crawl) before it's ever observed. Components read the index back in their own colocated
-			// motion CSS via `calc(var(--reveal-stagger) * var(--reveal-index, 0))`; this script only
-			// assigns the index, never the delay math.
+			// crawl) and a `data-reveal-item` marker before it's ever observed. landing.css's generic
+			// stagger-item rule reads the index back via
+			// `calc(var(--reveal-stagger) * (var(--reveal-index, 0) + var(--reveal-stagger-offset, 0)))`;
+			// this script only assigns the index and the marker, never the delay math.
 			for (const container of content.querySelectorAll("[data-reveal-stagger]")) {
 				Array.from(container.children).forEach((child, i) => {
 					child.style.setProperty("--reveal-index", String(Math.min(i, 8)));
+					child.setAttribute("data-reveal-item", "");
 				});
 			}
 

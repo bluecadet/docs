@@ -8,11 +8,11 @@ const { title, subtitle } = Astro.props;
 ---
 
 <div class="landing-band other-tools">
-  <div class="other-tools-head">
+  <div class="other-tools-head" data-reveal>
     <h2 class="type-title title">{title}</h2>
     <p class="type-prose-sm subtitle">{subtitle}</p>
   </div>
-  <div class="list-wrapper" data-reveal-stagger>
+  <div class="list-wrapper" data-reveal data-reveal-stagger>
     <slot />
   </div>
 </div>
@@ -37,6 +37,9 @@ const { title, subtitle } = Astro.props;
     border: 1px solid var(--hairline-06);
     border-radius: var(--radius-md);
     margin-block-start: 2.5rem;
+    overflow: hidden;
+    --reveal-delay: 1;
+    --reveal-stagger-offset: 2;
   }
 
   @media (min-width: 768px) {
@@ -58,36 +61,4 @@ const { title, subtitle } = Astro.props;
       margin-block-start: 0;
     }
   }
-</style>
-
-
-<style is:global>
-	@media (prefers-reduced-motion: no-preference) {
-		[data-landing-reveal] .other-tools:not(.is-revealed) > .other-tools-head {
-			opacity: 0;
-		}
-
-		[data-landing-reveal] .other-tools.is-revealed > .other-tools-head {
-			animation: landing-reveal var(--reveal-duration) var(--reveal-ease) both;
-		}
-
-		[data-landing-reveal] .other-tools:not(.is-revealed) .list-wrapper {
-			opacity: 0;
-		}
-
-		[data-landing-reveal] .other-tools.is-revealed .list-wrapper {
-			animation: landing-reveal var(--reveal-duration) var(--reveal-ease) both;
-			animation-delay: var(--reveal-stagger);
-      overflow: hidden;
-		}
-
-		[data-landing-reveal] .other-tools:not(.is-revealed) .list-wrapper .other-tool-item {
-			opacity: 0;
-		}
-
-		[data-landing-reveal] .other-tools.is-revealed .list-wrapper .other-tool-item {
-			animation: landing-reveal var(--reveal-duration) var(--reveal-ease) both;
-			animation-delay: calc(var(--reveal-stagger) * (var(--reveal-index, 0) + 2));
-		}
-	}
 </style>

@@ -171,18 +171,29 @@
    with zero motion, never hidden), and this file's own `prefers-reduced-motion: no-preference`
    query, belt-and-braces alongside global.css's sitewide reduced-motion kill switch.
 
-   This file owns the generic motion primitive only: the `--reveal-*` tokens, the
-   `@keyframes landing-reveal` itself, the bare prose-paragraph rule, and the two `.landing-grid`
-   item-grid stagger rules (Features and CtaCards ride these for free, since both are built from
-   `.landing-grid`, which this stylesheet already owns end to end). Per-item delay comes from
-   `--reveal-index`, a 0-based custom property the bundled script in index.astro assigns to every
-   direct child of a `data-reveal-stagger` container (capped at 8, so a long list doesn't crawl)
-   before observing it — see that script for the assignment side. Every other band's per-region
-   or per-item stagger (Hero, StatStrip, GlyphList, ClosingCta, TerminalBand) is colocated in that
-   component's own `is:global` <style> block instead — most of those targets are slotted children
-   or other components' root elements that a component's own scoped styles can't reach. Those
-   blocks still key off the tokens/keyframe defined here, so this file's `[data-landing-reveal]`
-   attribute and `landing-reveal` keyframe name are effectively public API for them.
+   This file owns every hide/animate rule for the whole landing page — no component ships its
+   own `is:global` motion block. A band opts individual elements in with plain attributes instead
+   of writing CSS at all:
+
+   - `data-reveal` marks a single element that fades in once its nearest ancestor `.landing-band`
+     is revealed. Its delay (in `--reveal-stagger` units) comes from `--reveal-delay`, a custom
+     property the owning component sets on that same element in its own scoped styles — e.g.
+     `.hero-lead { --reveal-delay: 2; }`. Default 0. Because this is a plain descendant selector,
+     it reaches into slotted sub-components' own roots (HeroInstall's `.hero-install`, Stat's
+     `.stat`, GlyphItem's `.glyph-item`) exactly as easily as a band's own markup — each element
+     declares its own delay locally, so nothing needs `is:global` to reach across a component
+     boundary.
+   - `data-reveal-stagger` (existing) marks a container whose DIRECT children stagger by list
+     position. The bundled script in index.astro stamps every such child with a 0-based
+     `--reveal-index` and a `data-reveal-item` marker before observing anything — see that script
+     for the assignment side. A container can raise the whole group's base delay with
+     `--reveal-stagger-offset` (inherits down to its children, added to each one's own index)
+     when the group itself sits one or more steps into a band, e.g.
+     `.list-wrapper { --reveal-stagger-offset: 2; }`.
+   - `data-reveal-root` marks a wrapper whose children are arbitrary, author-supplied content
+     (MDX prose, unknown element types) that can't be tagged individually — every direct child
+     fades in together, at the same instant the ancestor band reveals, with no per-child delay.
+     Used sparingly; most bands know their own children and mark each one `data-reveal` instead.
 
    Motion story: the band frame itself — hairline borders, zebra panel background — never moves.
    Only a band's CONTENT settles into that already-static frame once the band's own `.is-revealed`
@@ -230,5 +241,28 @@
 	[data-landing-reveal] .landing-band.is-revealed > .landing-grid > * {
 		animation: landing-reveal var(--reveal-duration) var(--reveal-ease) both;
 		animation-delay: calc(var(--reveal-stagger) * var(--reveal-index, 0));
+	}
+
+	/* Single reveal items and stagger-group items, per the attribute contract above. */
+	[data-landing-reveal] .landing-band:not(.is-revealed) [data-reveal],
+	[data-landing-reveal] .landing-band:not(.is-revealed) [data-reveal-item] {
+		opacity: 0;
+	}
+
+	[data-landing-reveal] .landing-band.is-revealed [data-reveal] {
+		animation: landing-reveal var(--reveal-duration) var(--reveal-ease) both;
+		animation-delay: calc(var(--reveal-stagger) * var(--reveal-delay, 0));
+	}
+
+	[data-landing-reveal] .landing-band.is-revealed [data-reveal-item] {
+		animation: landing-reveal var(--reveal-duration) var(--reveal-ease) both;
+		animation-delay: calc(var(--reveal-stagger) * (var(--reveal-index, 0) + var(--reveal-stagger-offset, 0)));
+	}
+
+	/* Reveal-root passthrough: arbitrary direct children fade in together, unstaggered, the
+	   instant the ancestor band reveals — no per-child delay, since these elements aren't known
+	   ahead of time and can't carry their own `data-reveal`. */
+	[data-landing-reveal] .landing-band.is-revealed [data-reveal-root] > * {
+		animation: landing-reveal var(--reveal-duration) var(--reveal-ease) both;
 	}
 }

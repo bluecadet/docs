@@ -39,14 +39,14 @@ const { lead, quickstartHref = await docsEntryHref() } = Astro.props;
 <div class="hero landing-band landing-band--flush">
 	<slot />
 
-	<h1 class="type-display landing-heading">
+	<h1 class="type-display landing-heading" data-reveal>
 		<slot name="title" />
 	</h1>
 
-	{lead && <p class="hero-lead type-lead">{lead}</p>}
+	{lead && <p class="hero-lead type-lead" data-reveal>{lead}</p>}
 
 	{quickstartHref && (
-		<a class="hero-quickstart type-md" href={quickstartHref}>
+		<a class="hero-quickstart type-md" href={quickstartHref} data-reveal>
 			read the quickstart →
 		</a>
 	)}
@@ -77,6 +77,7 @@ const { lead, quickstartHref = await docsEntryHref() } = Astro.props;
 		max-inline-size: 15ch;
 		color: var(--ink);
 		--heading-accent: var(--accent);
+		--reveal-delay: 1;
 	}
 
 	/* Font size holds constant across breakpoints — it's the hero's reading copy, not display
@@ -87,6 +88,7 @@ const { lead, quickstartHref = await docsEntryHref() } = Astro.props;
 		max-inline-size: 58ch;
 		color: var(--text-muted);
 		text-wrap: balance;
+		--reveal-delay: 2;
 	}
 
 	.hero > :global(.hero-notes) {
@@ -103,6 +105,7 @@ const { lead, quickstartHref = await docsEntryHref() } = Astro.props;
 		grid-row: 6;
 		margin-block-start: 0.625rem;
 		color: var(--accent);
+		--reveal-delay: 5;
 	}
 
 	/* Tablet up: two columns (main content + a fixed-width notes column), and two extra
@@ -226,48 +229,6 @@ const { lead, quickstartHref = await docsEntryHref() } = Astro.props;
 			border: 1px solid var(--hairline-14);
 			border-radius: var(--radius-md);
 			font-size: 0.78125rem;
-		}
-	}
-</style>
-
-<style is:global>
-	/* Enter-motion for Hero: fire-once reveal triggered by the IntersectionObserver in
-	   index.astro; the trigger script, the `--reveal-*` tokens, and `@keyframes landing-reveal`
-	   all live in landing.css. The `[data-landing-reveal]` gate on every rule below means these
-	   are inert everywhere but the landing route, so Hero stays safe to use on doc pages too.
-	   `is:global` (rather than the scoped <style> above) because `.hero`'s children targeted here
-	   include slotted wrapper roots — `.hero-eyebrows`, `.hero-notes`, `.hero-install` — that this
-	   component's own scope attribute can't reach. */
-	@media (prefers-reduced-motion: no-preference) {
-		/* eyebrows → h1 → lead → notes → install → quickstart, in visual (grid) order, one
-		   --reveal-stagger step apart — not DOM order, which interleaves the slotted eyebrows/
-		   install/notes ahead of the h1/lead/quickstart Hero renders itself. */
-		[data-landing-reveal] .hero:not(.is-revealed) > * {
-			opacity: 0;
-		}
-
-		[data-landing-reveal] .hero.is-revealed > * {
-			animation: landing-reveal var(--reveal-duration) var(--reveal-ease) both;
-		}
-
-		[data-landing-reveal] .hero.is-revealed > h1 {
-			animation-delay: var(--reveal-stagger);
-		}
-
-		[data-landing-reveal] .hero.is-revealed > .hero-lead {
-			animation-delay: calc(var(--reveal-stagger) * 2);
-		}
-
-		[data-landing-reveal] .hero.is-revealed > .hero-notes {
-			animation-delay: calc(var(--reveal-stagger) * 3);
-		}
-
-		[data-landing-reveal] .hero.is-revealed > .hero-install {
-			animation-delay: calc(var(--reveal-stagger) * 4);
-		}
-
-		[data-landing-reveal] .hero.is-revealed > .hero-quickstart {
-			animation-delay: calc(var(--reveal-stagger) * 5);
 		}
 	}
 </style>

@@ -44,12 +44,12 @@ if (!hasActions) {
 {
 	shouldRender && (
 		<div class="landing-band closing-cta">
-			<h2 class="closing-cta-title landing-heading">
+			<h2 class="closing-cta-title landing-heading" data-reveal>
 				<slot name="title">
 					{firstSection && `Start with the ${firstSection.label.toLowerCase()}.`}
 				</slot>
 			</h2>
-			<div class="closing-cta-actions">
+			<div class="closing-cta-actions" data-reveal>
 				{hasActions ? (
 					<slot />
 				) : (
@@ -87,6 +87,7 @@ if (!hasActions) {
 		display: flex;
 		gap: 0.875rem;
 		margin-inline-start: auto;
+		--reveal-delay: 1;
 	}
 
 	/* Styles both the default-rendered buttons and any slotted links through the same selectors —
@@ -133,29 +134,6 @@ if (!hasActions) {
 			align-items: center;
 			justify-content: center;
 			min-block-size: 48px;
-		}
-	}
-</style>
-
-<style is:global>
-	/* Enter-motion for ClosingCta: fire-once reveal triggered by the IntersectionObserver in
-	   index.astro; the trigger script, the `--reveal-*` tokens, and `@keyframes landing-reveal`
-	   all live in landing.css. The `[data-landing-reveal]` gate on every rule below means these
-	   are inert everywhere but the landing route, so ClosingCta stays safe to use on doc pages
-	   too. `is:global` for consistency with the rest of the landing components' motion blocks,
-	   all of which key off the same gate attribute and keyframe defined in landing.css. */
-	@media (prefers-reduced-motion: no-preference) {
-		/* headline, then the action buttons one step later. */
-		[data-landing-reveal] .closing-cta:not(.is-revealed) > * {
-			opacity: 0;
-		}
-
-		[data-landing-reveal] .closing-cta.is-revealed > * {
-			animation: landing-reveal var(--reveal-duration) var(--reveal-ease) both;
-		}
-
-		[data-landing-reveal] .closing-cta.is-revealed > .closing-cta-actions {
-			animation-delay: var(--reveal-stagger);
 		}
 	}
 </style>

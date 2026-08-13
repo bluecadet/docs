@@ -8,11 +8,11 @@ const { eyebrow } = Astro.props;
 
 <div class="landing-band general-band">
 	{eyebrow && (
-		<div class="eyebrow type-xs">
+		<div class="eyebrow type-xs" data-reveal>
 			{eyebrow}
 		</div>
 	)}
-	<div class="content">
+	<div class="content" data-reveal data-reveal-root>
 			<slot />
 	</div>
 
@@ -46,6 +46,7 @@ const { eyebrow } = Astro.props;
 		flex-direction: column;
 		gap: 1.5rem;
 		max-width: 60ch;
+		--reveal-delay: 1;
 	}
 
 
@@ -69,33 +70,6 @@ const { eyebrow } = Astro.props;
 
 		.content :global(> h2) {
 			font-size: 2rem;
-		}
-	}
-</style>
-
-<style is:global>
-	/* Enter-motion for GeneralBand: fire-once reveal triggered by the IntersectionObserver in
-	   index.astro; the trigger script, the `--reveal-*` tokens, and `@keyframes landing-reveal`
-	   all live in landing.css. The `[data-landing-reveal]` gate on every rule below means these
-	   are inert everywhere but the landing route, so TerminalBand stays safe to use on doc pages
-	   too. `is:global` for consistency with the rest of the landing components' motion blocks,
-	   all of which key off the same gate attribute and keyframe defined in landing.css. */
-	@media (prefers-reduced-motion: no-preference) {
-		/* caption row, then the terminal window one step later. */
-		[data-landing-reveal] .general-band:not(.is-revealed) > * {
-			opacity: 0;
-		}
-
-		[data-landing-reveal] .general-band.is-revealed > * {
-			animation: landing-reveal var(--reveal-duration) var(--reveal-ease) both;
-		}
-
-		[data-landing-reveal] .general-band.is-revealed .content > * {
-			animation: landing-reveal var(--reveal-duration) var(--reveal-ease) both;
-		}
-
-		[data-landing-reveal] .general-band.is-revealed .content {
-			animation-delay: var(--reveal-stagger);
 		}
 	}
 </style>

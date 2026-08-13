@@ -26,7 +26,7 @@ function unescapeSlotText(html: string): string {
 const command = unescapeSlotText((await Astro.slots.render("default")).trim());
 ---
 
-<div class="hero-install">
+<div class="hero-install" data-reveal>
 	<span class="hero-install-prompt">$</span>
 	<code class="hero-install-command">{command}</code>
 	<button
@@ -74,6 +74,7 @@ const command = unescapeSlotText((await Astro.slots.render("default")).trim());
 		background: var(--accent-tint-05);
 		font: 400 0.84375rem var(--font-mono);
 		color: var(--text-code);
+		--reveal-delay: 4;
 	}
 
 	.hero-install-prompt {

@@ -11,7 +11,7 @@
 // notes column/row, and the individual notes stack inside it with an ordinary flex column.
 ---
 
-<div class="hero-notes">
+<div class="hero-notes" data-reveal>
 	<slot />
 </div>
 
@@ -20,6 +20,7 @@
 		display: flex;
 		flex-direction: column;
 		gap: 1.75rem;
+		--reveal-delay: 3;
 	}
 
 	@media (max-width: 767px) {
