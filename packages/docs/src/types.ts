@@ -97,6 +97,12 @@ export interface DocsConfig {
 	title?: string;
 	/** Repo URL used for social links and for rewriting out-of-tree links to GitHub blob URLs. */
 	repoUrl?: string;
+	/** Character (or short string) rendered before the site title in the header and footer. No glyph by default. */
+	glyph?: string;
+	/** STATE accent color (hex), e.g. what succeeded, where you are. Defaults to the shared sage. */
+	accent?: string;
+	/** ATTENTION accent color (hex), e.g. what changed, what's required. Defaults to the shared amber. */
+	accent2?: string;
 	/** Where the site's pages come from. Required and non-empty — there is no discovery by convention. */
 	content?: ContentEntry[];
 	/**
@@ -138,6 +144,9 @@ export interface ResolvedConfig {
 	out: string;
 	title: string;
 	repoUrl?: string;
+	glyph?: string;
+	accent?: string;
+	accent2?: string;
 	/** Default branch used when building GitHub blob URLs, e.g. "main". */
 	branch: string;
 	content: ContentEntry[];

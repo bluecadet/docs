@@ -52,7 +52,18 @@ describe("validateConfig", () => {
 		expect(warnings[0]).toContain('"typo"');
 	});
 
-	it.each(["title", "repoUrl", "base", "site", "version", "sidebarMeta", "landing"] as const)(
+	it.each([
+		"title",
+		"repoUrl",
+		"glyph",
+		"accent",
+		"accent2",
+		"base",
+		"site",
+		"version",
+		"sidebarMeta",
+		"landing",
+	] as const)(
 		'throws a clear error when "%s" is not a string',
 		(key) => {
 			expect(() => validate({ content: CONTENT, [key]: 5 }, CONFIG_PATH)).toThrowError(
@@ -615,6 +626,35 @@ describe("validateConfig", () => {
 		});
 	});
 
+	describe("glyph", () => {
+		it("accepts a glyph string", () => {
+			const { config, warnings } = validate({ glyph: "»" }, CONFIG_PATH);
+			expect(config.glyph).toBe("»");
+			expect(warnings).toEqual([]);
+		});
+	});
+
+	describe("accent/accent2", () => {
+		it("accepts valid 6-digit hex colors", () => {
+			const { config, warnings } = validate(
+				{ accent: "#9cc3a9", accent2: "#E0A75E" },
+				CONFIG_PATH,
+			);
+			expect(config.accent).toBe("#9cc3a9");
+			expect(config.accent2).toBe("#E0A75E");
+			expect(warnings).toEqual([]);
+		});
+
+		it.each(["accent", "accent2"] as const)(
+			'throws a clear error when "%s" is not a hex color',
+			(key) => {
+				expect(() => validate({ [key]: "sage" }, CONFIG_PATH)).toThrowError(
+					new RegExp(`"${key}" must be a 6-digit hex color`),
+				);
+			},
+		);
+	});
+
 	describe("toc", () => {
 		it("accepts a toc note and editLink", () => {
 			const { config, warnings } = validate(
@@ -700,6 +740,9 @@ describe("resolveConfig (YAML file loading)", () => {
 			[
 				"title: My Project",
 				"repoUrl: https://github.com/acme/proj",
+				"glyph: »",
+				"accent: '#8fb4d6'",
+				"accent2: '#d98a6e'",
 				"site: https://acme.github.io",
 				"base: /proj/",
 				"content:",
@@ -742,6 +785,9 @@ describe("resolveConfig (YAML file loading)", () => {
 		expect(cfg.configDir).toBe(root);
 		expect(cfg.title).toBe("My Project");
 		expect(cfg.repoUrl).toBe("https://github.com/acme/proj");
+		expect(cfg.glyph).toBe("»");
+		expect(cfg.accent).toBe("#8fb4d6");
+		expect(cfg.accent2).toBe("#d98a6e");
 		expect(cfg.site).toBe("https://acme.github.io");
 		expect(cfg.base).toBe("/proj/");
 		expect(cfg.content).toEqual([

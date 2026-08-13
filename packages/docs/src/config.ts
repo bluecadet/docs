@@ -23,12 +23,16 @@ const LANDING_EXT = /\.(md|mdx)$/i;
 const STRING_KEYS = [
 	"title",
 	"repoUrl",
+	"glyph",
+	"accent",
+	"accent2",
 	"base",
 	"site",
 	"version",
 	"sidebarMeta",
 	"landing",
 ] as const;
+const HEX_COLOR = /^#[0-9a-f]{6}$/i;
 const KNOWN_KEYS = new Set<string>([
 	...STRING_KEYS,
 	"content",
@@ -78,6 +82,9 @@ export function resolveConfig(overrides: CliOverrides): ResolvedConfig {
 		out: overrides.out,
 		title,
 		repoUrl: overrides.repoUrl ?? fileConfig.repoUrl ?? getGitRemoteUrl(configDir),
+		glyph: fileConfig.glyph,
+		accent: fileConfig.accent,
+		accent2: fileConfig.accent2,
 		branch: getGitBranch(configDir),
 		content: fileConfig.content ?? [],
 		landing: resolveLanding(fileConfig.landing, configDir, configPath),
@@ -175,6 +182,9 @@ export function validateConfig(
 		if (value === undefined) continue;
 		if (typeof value !== "string") {
 			throw new Error(`${configPath}: "${key}" must be a string (got ${describeType(value)}).`);
+		}
+		if ((key === "accent" || key === "accent2") && !HEX_COLOR.test(value)) {
+			throw new Error(`${configPath}: "${key}" must be a 6-digit hex color, e.g. "#9cc3a9" (got "${value}").`);
 		}
 		config[key] = value;
 	}

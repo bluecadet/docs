@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import matter from "gray-matter";
+import { generateFaviconSvg } from "./favicon.js";
 import type { RewriteContext } from "./links.js";
 import { transformMarkdown } from "./links.js";
 import type { AssetMap, ContentEntry, ResolvedConfig, RouteMap } from "./types.js";
@@ -57,6 +58,15 @@ export function syncContent(cfg: ResolvedConfig, appRoot: string): SyncResult {
 	fs.rmSync(astroPagesDir, { recursive: true, force: true });
 	fs.mkdirSync(astroPagesDir, { recursive: true });
 	resetPublicDir(publicDir);
+	// Sites with a `glyph` get a generated favicon combining it with `accent`; sites without one
+	// keep the shared default document icon that `resetPublicDir` preserved above.
+	if (cfg.glyph) {
+		fs.writeFileSync(
+			path.join(publicDir, "favicon.svg"),
+			generateFaviconSvg(cfg.glyph, cfg.accent),
+			"utf8",
+		);
+	}
 
 	const { pages, routes, assets, notices } = discoverContent(
 		cfg.configDir,

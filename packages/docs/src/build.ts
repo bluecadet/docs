@@ -92,6 +92,9 @@ export function applyEnv(cfg: ResolvedConfig): void {
 		configFileName: path.basename(cfg.configPath),
 	};
 	if (cfg.repoUrl) payload.repoUrl = cfg.repoUrl;
+	if (cfg.glyph) payload.glyph = cfg.glyph;
+	if (cfg.accent) payload.accent = cfg.accent;
+	if (cfg.accent2) payload.accent2 = cfg.accent2;
 	if (cfg.base) payload.base = cfg.base;
 	if (cfg.site) payload.site = cfg.site;
 	if (cfg.header) payload.header = cfg.header;
