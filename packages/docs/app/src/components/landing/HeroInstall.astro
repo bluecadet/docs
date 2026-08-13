@@ -23,10 +23,19 @@ function unescapeSlotText(html: string): string {
 		.replaceAll("&amp;", "&"); // last, so a literal "&lt;" in the source isn't unescaped twice
 }
 
+interface Props {
+	/** Set when this chip is one of several inside <HeroInstalls> (e.g. "Windows", "macOS / Linux").
+	    Rendered as a small tag ahead of the command, and read from `data-label` by HeroInstalls'
+	    script to build its tablist — see that component. Unused for a lone, unwrapped HeroInstall. */
+	label?: string;
+}
+
+const { label } = Astro.props;
 const command = unescapeSlotText((await Astro.slots.render("default")).trim());
 ---
 
-<div class="hero-install" data-reveal>
+<div class="hero-install" data-reveal data-label={label}>
+	{label && <span class="hero-install-label type-2xs">{label}</span>}
 	<span class="hero-install-prompt">$</span>
 	<code class="hero-install-command">{command}</code>
 	<button
@@ -75,6 +84,13 @@ const command = unescapeSlotText((await Astro.slots.render("default")).trim());
 		font: 400 0.84375rem var(--font-mono);
 		color: var(--text-code);
 		--reveal-delay: 4;
+	}
+
+	.hero-install-label {
+		color: var(--text-dim);
+		text-transform: uppercase;
+		letter-spacing: var(--tracking-eyebrow);
+		white-space: nowrap;
 	}
 
 	.hero-install-prompt {

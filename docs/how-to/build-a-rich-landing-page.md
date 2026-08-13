@@ -41,7 +41,7 @@ want from the package — the CLI leaves `.mdx` imports untouched, and it can al
 
 ```mdx
 import {
-  Hero, HeroEyebrows, HeroEyebrow, HeroInstall, HeroNotes, HeroNote,
+  Hero, HeroEyebrows, HeroEyebrow, HeroInstall, HeroInstalls, HeroNotes, HeroNote,
   StatStrip, Stat,
 } from "@bluecadet/docs/components";
 ```
@@ -78,7 +78,8 @@ for `<Hero>` to place, not several it would have to spread out on its own:
 | `<Hero>` | `lead`, `quickstartHref`; a `title` slot (required) | The headline and lead paragraph. `quickstartHref` targets the "read the quickstart" link, which always renders beside the install chip; it defaults to your first sidebar page. |
 | `<HeroEyebrows>` | children | Groups `<HeroEyebrow>` chips into the row above the headline. |
 | `<HeroEyebrow>` | `tone`: `state` \| `attention` \| `neutral` (default), label as children | Uppercase mono chips above the headline. `state` is solid (sage by default), `attention` is outlined (amber by default), `neutral` is outlined (default). Up to 3 render; extras are hidden. |
-| `<HeroInstall>` | command as children | A `$ …` chip under the lead with a copy button. |
+| `<HeroInstall>` | `label` (optional), command as children | A `$ …` chip under the lead with a copy button. |
+| `<HeroInstalls>` | children | Groups two-or-more `<HeroInstall>` chips into a tabbed switcher. |
 | `<HeroNotes>` | children | Groups `<HeroNote>` marginalia into the column beside the lead paragraph (tablet width up) or the row below it (mobile). |
 | `<HeroNote>` | note text as children | One marginalia note. The first renders in the attention accent, a second (max) renders neutral; extras are hidden. |
 
@@ -86,6 +87,20 @@ The `title` slot is plain markup, not a prop, so you write exactly what should r
 for a line break, and an `<em>`/`<i>` around the clause you want set in italic attention accent
 (`<Fragment slot="title">Reproducible builds, <br /><em>without the ceremony.</em></Fragment>`) — a
 bare title with no `<em>` renders as a single plain line.
+
+A single `<HeroInstall>` needs no `label`. When a project ships more than one install command —
+a PowerShell one-liner for Windows alongside a POSIX shell one for macOS/Linux, say — wrap them in
+`<HeroInstalls>` and label each one; it becomes a tabbed switcher, first tab selected by default:
+
+```mdx
+<HeroInstalls>
+  <HeroInstall label="Windows">{"irm https://get.acme.build | iex"}</HeroInstall>
+  <HeroInstall label="macOS / Linux">{"curl -fsSL https://get.acme.build | sh"}</HeroInstall>
+</HeroInstalls>
+```
+
+Without JavaScript, tabs never render — all the commands show at once, stacked, each still labelled
+and still individually copyable, so nothing is ever hidden behind a control that doesn't work.
 
 ### StatStrip
 
@@ -216,7 +231,7 @@ Every component is imported from the same barrel:
 
 ```mdx
 import {
-  Hero, HeroEyebrows, HeroEyebrow, HeroInstall, HeroNotes, HeroNote,
+  Hero, HeroEyebrows, HeroEyebrow, HeroInstall, HeroInstalls, HeroNotes, HeroNote,
   StatStrip, Stat,
   TerminalBand, Terminal, Line, Ok, Warn,
   Features, Feature,

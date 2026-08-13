@@ -24,7 +24,10 @@
 // (grid items sharing one area overlap; see those two components' comments) — and the :global()
 // rules below place that single element with CSS Grid, matching the original frontmatter-driven
 // hero's layout exactly: a notes column beside the lead paragraph from tablet width up, stacked
-// with everything else below it.
+// with everything else below it. A lone `<HeroInstall>` is placed the same way; `<HeroInstalls>`
+// (plural — a tabbed switcher for more than one install command) is the same kind of wrapper as
+// HeroEyebrows/HeroNotes, so the `.hero-install`/`.hero-installs` :global() rules below share every
+// grid-area declaration and a bare `<HeroInstall>` keeps working unwrapped.
 import { docsEntryHref } from "../../lib/nav";
 
 interface Props {
@@ -96,7 +99,8 @@ const { lead, quickstartHref = await docsEntryHref() } = Astro.props;
 		margin-block-start: 2.25rem;
 	}
 
-	.hero > :global(.hero-install) {
+	.hero > :global(.hero-install),
+	.hero > :global(.hero-installs) {
 		grid-row: 5;
 		margin-block-start: 3rem;
 	}
@@ -150,7 +154,8 @@ const { lead, quickstartHref = await docsEntryHref() } = Astro.props;
 			align-self: start;
 		}
 
-		.hero > :global(.hero-install) {
+		.hero > :global(.hero-install),
+		.hero > :global(.hero-installs) {
 			grid-column: action-1-start / action-1-end;
 			grid-row: 4;
 			align-self: center;
@@ -186,7 +191,8 @@ const { lead, quickstartHref = await docsEntryHref() } = Astro.props;
 			max-inline-size: none;
 		}
 
-		.hero > :global(.hero-install) {
+		.hero > :global(.hero-install),
+		.hero > :global(.hero-installs) {
 			margin-block-start: 2.5rem;
 		}
 
@@ -216,7 +222,8 @@ const { lead, quickstartHref = await docsEntryHref() } = Astro.props;
 			margin-block-start: 1.375rem;
 		}
 
-		.hero > :global(.hero-install) {
+		.hero > :global(.hero-install),
+		.hero > :global(.hero-installs) {
 			margin-block-start: 1.875rem;
 		}
 

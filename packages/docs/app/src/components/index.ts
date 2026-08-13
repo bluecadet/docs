@@ -11,6 +11,7 @@ export { default as Hero } from "./landing/Hero.astro";
 export { default as HeroEyebrow } from "./landing/HeroEyebrow.astro";
 export { default as HeroEyebrows } from "./landing/HeroEyebrows.astro";
 export { default as HeroInstall } from "./landing/HeroInstall.astro";
+export { default as HeroInstalls } from "./landing/HeroInstalls.astro";
 export { default as HeroNote } from "./landing/HeroNote.astro";
 export { default as HeroNotes } from "./landing/HeroNotes.astro";
 export { default as LandingBlockQuote } from "./landing/LandingBlockQuote.astro";

@@ -1,0 +1,142 @@
+---
+// Groups two-or-more <HeroInstall> chips into a tabbed switcher — e.g. one line for Windows,
+// another for macOS/Linux:
+//
+//   <HeroInstalls>
+//     <HeroInstall label="Windows">irm https://example.com/install.ps1 | iex</HeroInstall>
+//     <HeroInstall label="macOS / Linux">curl -fsSL https://example.com/install.sh | sh</HeroInstall>
+//   </HeroInstalls>
+//
+// Same reasoning as HeroEyebrows/HeroNotes: Hero.astro places this wrapper as the single grid
+// item where a lone <HeroInstall> would otherwise sit — see the `.hero-install, .hero-installs`
+// :global() rules in Hero.astro, which the two classes share so a bare, unwrapped <HeroInstall>
+// keeps working exactly as before.
+//
+// Astro has no way to read a slotted <HeroInstall>'s `label` prop from out here, so each
+// <HeroInstall> already writes its own label onto its own root element — both a `data-label`
+// attribute and a small visible tag (see HeroInstall.astro) — so the chips read correctly stacked,
+// with no JS at all: every command stays visible and labelled, just not tabbed. The script below
+// is a progressive enhancement on top of that: it reads those `data-label` attributes to build a
+// tablist and turn the stacked chips into panels, hiding the now-redundant per-chip tag once a tab
+// shows the same label.
+---
+
+<div class="hero-installs" data-reveal>
+	<slot />
+</div>
+
+<script>
+	// Turns each .hero-installs group's stacked .hero-install children into a tablist + panel set,
+	// per the WAI-ARIA APG tabs pattern (roving tabindex, arrow/Home/End navigation). A group with
+	// fewer than two children is left alone — the no-JS stacked markup is already correct for one.
+	const groups = Array.from(document.querySelectorAll<HTMLElement>(".hero-installs"));
+	for (const [groupIndex, group] of groups.entries()) {
+		const panels = Array.from(group.querySelectorAll<HTMLElement>(":scope > .hero-install"));
+		if (panels.length < 2) continue;
+
+		const groupId = `hero-installs-${groupIndex}`;
+
+		const tablist = document.createElement("div");
+		tablist.className = "hero-installs-tablist";
+		tablist.setAttribute("role", "tablist");
+		tablist.setAttribute("aria-label", "Install command");
+
+		const tabs: HTMLButtonElement[] = panels.map((panel, index) => {
+			const id = `${groupId}-${index}`;
+			panel.id = `${id}-panel`;
+			panel.setAttribute("role", "tabpanel");
+			panel.setAttribute("aria-labelledby", `${id}-tab`);
+			panel.hidden = index !== 0;
+
+			// The per-chip label tag duplicates the tab it's about to get, once tabs exist to show it.
+			panel.querySelector<HTMLElement>(".hero-install-label")?.toggleAttribute("hidden", true);
+
+			const tab = document.createElement("button");
+			tab.type = "button";
+			tab.id = `${id}-tab`;
+			tab.className = "hero-installs-tab type-eyebrow";
+			tab.setAttribute("role", "tab");
+			tab.setAttribute("aria-controls", `${id}-panel`);
+			tab.setAttribute("aria-selected", String(index === 0));
+			tab.tabIndex = index === 0 ? 0 : -1;
+			tab.textContent = panel.dataset.label || `Option ${index + 1}`;
+			return tab;
+		});
+
+		const select = (index: number) => {
+			tabs.forEach((tab, i) => {
+				const active = i === index;
+				tab.setAttribute("aria-selected", String(active));
+				tab.tabIndex = active ? 0 : -1;
+				panels[i]!.hidden = !active;
+			});
+		};
+
+		tabs.forEach((tab, index) => {
+			tab.addEventListener("click", () => {
+				select(index);
+				tab.focus();
+			});
+		});
+
+		tablist.append(...tabs);
+
+		tablist.addEventListener("keydown", (event) => {
+			const current = tabs.indexOf(document.activeElement as HTMLButtonElement);
+			if (current === -1) return;
+
+			let next: number;
+			if (event.key === "ArrowRight") next = (current + 1) % tabs.length;
+			else if (event.key === "ArrowLeft") next = (current - 1 + tabs.length) % tabs.length;
+			else if (event.key === "Home") next = 0;
+			else if (event.key === "End") next = tabs.length - 1;
+			else return;
+
+			event.preventDefault();
+			select(next);
+			tabs[next]!.focus();
+		});
+
+		group.insertBefore(tablist, panels[0]!);
+	}
+</script>
+
+<style>
+	/* No-JS fallback: every chip visible, stacked with the same rhythm HeroNotes uses for its list.
+	   Once the script above runs, the first .hero-install stays in flow right after the tablist and
+	   the rest pick up the native `hidden` attribute — this rule keeps applying to all of them
+	   harmlessly, since gap only affects elements actually in flow. */
+	.hero-installs {
+		display: flex;
+		flex-direction: column;
+		gap: 0.625rem;
+		--reveal-delay: 4;
+	}
+
+	.hero-installs-tablist {
+		display: flex;
+		gap: 0.375rem;
+	}
+
+	.hero-installs-tab {
+		padding: 0.375rem 0.75rem;
+		border: 1px solid var(--accent-border-30);
+		border-radius: var(--radius-sm);
+		background: none;
+		color: var(--text-dim);
+		cursor: pointer;
+	}
+
+	.hero-installs-tab[aria-selected="true"] {
+		color: var(--bg);
+		background: var(--accent);
+		border-color: var(--accent);
+	}
+
+	@media (max-width: 767px) {
+		.hero-installs-tab {
+			padding: 0.3125rem 0.625rem;
+			font-size: 0.65625rem;
+		}
+	}
+</style>
