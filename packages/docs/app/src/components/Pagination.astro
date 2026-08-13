@@ -16,16 +16,16 @@ const next = index >= 0 && index < flat.length - 1 ? flat[index + 1] : null;
 
 {
 	(prev || next) && (
-		<nav class="pagination" aria-label="Pagination">
+		<nav class="pagination type-md" aria-label="Pagination">
 			{prev ? (
-				<a class="pagination__link pagination__link--prev" href={prev.href}>
+				<a class="pagination__link pagination__link--prev link-muted" href={prev.href}>
 					← {prev.label}
 				</a>
 			) : (
 				<span />
 			)}
 			{next && (
-				<a class="pagination__link pagination__link--next" href={next.href}>
+				<a class="pagination__link pagination__link--next link-muted" href={next.href}>
 					{next.label} →
 				</a>
 			)}
@@ -41,16 +41,6 @@ const next = index >= 0 && index < flat.length - 1 ? flat[index + 1] : null;
 		margin-block-start: 72px;
 		padding-block-start: 24px;
 		border-block-start: 1px solid var(--hairline-08);
-		font: 400 13px var(--font-mono);
-	}
-
-	.pagination__link {
-		color: var(--text-muted);
-		transition: color var(--transition-fast);
-	}
-
-	.pagination__link:hover {
-		color: var(--accent);
 	}
 
 	.pagination__link--next {

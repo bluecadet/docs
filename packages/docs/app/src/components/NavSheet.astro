@@ -54,7 +54,7 @@ if (isRoot) {
 				</button>
 			</div>
 
-			<button type="button" class="nav-sheet__search" data-search-trigger>
+			<button type="button" class="nav-sheet__search type-code" data-search-trigger>
 				<span class="nav-sheet__search-icon">⌕</span>
 				search docs
 				<span class="nav-sheet__search-kbd">/</span>
@@ -65,7 +65,7 @@ if (isRoot) {
 					<Astro.self nodes={items} currentId={currentId} />
 				</nav>
 
-				<div class="nav-sheet__footer">
+				<div class="nav-sheet__footer type-sm">
 					{
 						footerLinks.map((link) => (
 							<a
@@ -90,6 +90,7 @@ if (isRoot) {
 							class="nav-sheet__item"
 							class:list={{
 								"nav-sheet__item--section": isSectionHeading(node),
+								"type-label-plain": isSectionHeading(node),
 								"is-active": node.id === currentId,
 								"active-row": node.id === currentId,
 							}}
@@ -99,7 +100,7 @@ if (isRoot) {
 							{node.label}
 						</a>
 					) : (
-						<div class="nav-sheet__label">{node.label}/</div>
+						<div class="nav-sheet__label type-label-plain">{node.label}/</div>
 					)}
 					{node.children.length > 0 && (
 						<Astro.self
@@ -221,7 +222,6 @@ if (isRoot) {
 		border: none;
 		border-block-end: 1px solid var(--hairline-06);
 		color: var(--text-muted);
-		font: 400 12.5px var(--font-mono);
 		cursor: pointer;
 		text-align: start;
 		flex-shrink: 0;
@@ -266,8 +266,6 @@ if (isRoot) {
 
 	.nav-sheet__label {
 		padding: 16px 26px 4px;
-		font: 400 11px var(--font-mono);
-		letter-spacing: 0.06em;
 		color: var(--text-dim);
 	}
 
@@ -291,8 +289,6 @@ if (isRoot) {
 	   .nav-sheet__item look above. Three-class selector so it reliably wins over the plainer
 	   .nav-sheet__item rules regardless of source order. */
 	.nav-sheet__item.nav-sheet__item--section {
-		font: 400 11px var(--font-mono);
-		letter-spacing: 0.06em;
 		color: var(--text-dim);
 	}
 
@@ -332,7 +328,6 @@ if (isRoot) {
 		border-block-start: 1px solid var(--hairline-08);
 		background: var(--surface-panel-1);
 		padding: 8px 26px;
-		font: 400 12px var(--font-mono);
 		flex-shrink: 0;
 	}
 

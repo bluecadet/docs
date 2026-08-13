@@ -17,7 +17,7 @@ interface Props {
 const { tone = "neutral" } = Astro.props;
 ---
 
-<span class:list={["hero-eyebrow", `hero-eyebrow-${tone}`]}>
+<span class:list={["hero-eyebrow", "type-eyebrow", `hero-eyebrow-${tone}`]}>
 	<slot />
 </span>
 
@@ -25,9 +25,6 @@ const { tone = "neutral" } = Astro.props;
 	.hero-eyebrow {
 		padding: 4px 9px;
 		border-radius: var(--radius-sm);
-		font: 400 11.5px var(--font-mono);
-		letter-spacing: 0.14em;
-		text-transform: uppercase;
 	}
 
 	.hero-eyebrow-state {
@@ -52,8 +49,6 @@ const { tone = "neutral" } = Astro.props;
 	@media (max-width: 767px) {
 		.hero-eyebrow {
 			padding: 3px 7px;
-			font-size: 10.5px;
-			letter-spacing: 0.12em;
 		}
 	}
 </style>

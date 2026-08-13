@@ -9,8 +9,8 @@ const { title } = Astro.props;
 ---
 
 <div class="feature">
-	<div class="feature-title">{title}</div>
-	<div class="feature-body"><slot /></div>
+	<div class="feature-title type-heading">{title}</div>
+	<div class="feature-body type-prose-sm"><slot /></div>
 </div>
 
 <style>
@@ -37,15 +37,12 @@ const { title } = Astro.props;
 
 	.feature-title {
 		margin-block-end: 14px;
-		font: 500 20px/1.4 var(--font-serif);
 		color: var(--ink);
 	}
 
 	.feature-body {
-		font-size: 14px;
-		line-height: 1.8;
 		color: var(--text-muted);
-		text-wrap: pretty;
+		text-wrap: balance;
 	}
 
 	/* 2-up */
@@ -60,7 +57,6 @@ const { title } = Astro.props;
 		}
 
 		.feature-title {
-			font-size: 19px;
 			margin-block-end: 10px;
 		}
 	}

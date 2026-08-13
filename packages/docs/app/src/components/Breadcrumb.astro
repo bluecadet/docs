@@ -23,14 +23,14 @@ const ancestors = trailFor(nodes, id).slice(0, -1);
 const parent = ancestors.at(-1);
 ---
 
-<nav class="breadcrumb" aria-label="Breadcrumb">
-	<a class="breadcrumb__segment" href={base}>docs</a>
+<nav class="breadcrumb type-sm" aria-label="Breadcrumb">
+	<a class="breadcrumb__segment link-muted" href={base}>docs</a>
 	{
 		ancestors.map((node) => (
 			<>
 				<span class="breadcrumb__sep">/</span>
 				{node.href ? (
-					<a class="breadcrumb__segment" href={node.href}>
+					<a class="breadcrumb__segment link-muted" href={node.href}>
 						{node.segment}
 					</a>
 				) : (
@@ -55,21 +55,12 @@ const parent = ancestors.at(-1);
 		align-items: center;
 		flex-wrap: wrap;
 		gap: 8px;
-		font: 400 12px var(--font-mono);
 		color: var(--text-dim);
 		margin-block-end: 30px;
 	}
 
 	.breadcrumb__segment {
 		color: var(--text-muted);
-	}
-
-	a.breadcrumb__segment {
-		transition: color var(--transition-fast);
-	}
-
-	a.breadcrumb__segment:hover {
-		color: var(--accent);
 	}
 
 	.breadcrumb__current {

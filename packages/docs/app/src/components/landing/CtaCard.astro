@@ -20,7 +20,7 @@ const hasDescription = Astro.slots.has("default");
 ---
 
 <a class="cta-card" href={href}>
-	<span class="cta-num">{label.toLowerCase()}</span>
+	<span class="cta-num type-xs">{label.toLowerCase()}</span>
 	<span class="cta-title">{title}</span>
 	{hasDescription && (
 		<span class="cta-desc">
@@ -45,7 +45,6 @@ const hasDescription = Astro.slots.has("default");
 	}
 
 	.cta-num {
-		font: 400 11.5px var(--font-mono);
 		color: var(--accent);
 	}
 
@@ -59,7 +58,7 @@ const hasDescription = Astro.slots.has("default");
 	}
 
 	.cta-title {
-		font: 500 21px var(--font-serif);
+		font: 500 20px var(--font-serif);
 		color: var(--ink);
 		transition: color var(--transition-fast);
 	}
@@ -71,6 +70,8 @@ const hasDescription = Astro.slots.has("default");
 	.cta-desc {
 		font-size: 14px;
 		color: var(--text-muted);
+		text-wrap: balance;
+		max-width: 50ch;
 	}
 
 	/* MDX wraps a slotted description in its own `<p>` — inline so it reads as one run of text

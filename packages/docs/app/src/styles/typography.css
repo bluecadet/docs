@@ -1,0 +1,115 @@
+/*
+ * Shared typography utility classes — the primary API for a component's font declarations going
+ * forward. Naming follows the existing flat-kebab utility convention (`.landing-grid`,
+ * `.scroll-rail`, `.active-row`), not BEM.
+ *
+ * Ownership boundary: this file owns typography for everything EXCEPT rendered markdown content
+ * (`.prose`, owned by article.css — prose markup carries no classes, so it consumes the tokens in
+ * tokens.css directly) and `landing.css` (imported unlayered in pages/index.astro, so it always
+ * outranks this layer — do not add typography utilities there).
+ *
+ * Adoption is REPLACEMENT, not layering. Astro scoped component styles compile to
+ * `.foo[data-astro-cid-xxxx]` (specificity b=2, unlayered); a class from this file is b=1, inside
+ * the `typography` layer besides. An unlayered b=2 rule always beats a layered b=1 rule regardless
+ * of source order, so when a component adopts a `.type-*` class it MUST delete the corresponding
+ * font declarations from its own `<style>` block — leaving them in place means the class silently
+ * loses and becomes dead code.
+ *
+ * Responsive step-downs stay local to the component: a `@media` rule setting `font-size` ONLY —
+ * never the full `font:` shorthand, which would reset family/weight/line-height back to UA
+ * defaults. Being unlayered, a local font-size-only override still correctly beats the base class.
+ *
+ * See styles/tokens.css for the weight/leading/tracking tokens, and the comment there on why the
+ * mono UI ramp below is sized in literal px rather than tokens.
+ *
+ * Failure mode to watch for: adopting a `.type-*` class on an element whose markup is ALSO generated
+ * by client-side JS (an `innerHTML` template string, e.g. search.ts's result rows and kbd hints)
+ * requires updating that JS template's class list too — otherwise the class silently vanishes the
+ * moment the JS rewrites the DOM, while the static source still looks correct. Grep for any selector
+ * duplicated between a component's Astro markup and a JS template before treating a `.type-*` adoption
+ * there as complete.
+ */
+
+/* ---- Mono UI ramp (family + weight + size; no tracking or transform) --- */
+
+.type-micro {
+	font: var(--weight-regular) 10px var(--font-mono);
+}
+
+.type-2xs {
+	font: var(--weight-regular) 11px var(--font-mono);
+}
+
+.type-xs {
+	font: var(--weight-regular) 11.5px var(--font-mono);
+}
+
+.type-sm {
+	font: var(--weight-regular) 12px var(--font-mono);
+}
+
+.type-code {
+	font: var(--weight-regular) 12.5px var(--font-mono);
+}
+
+.type-md {
+	font: var(--weight-regular) 13px var(--font-mono);
+}
+
+/* ---- Label / eyebrow (tracking, optional uppercase) --------------------- */
+
+.type-label-plain {
+	font: var(--weight-regular) 11px var(--font-mono);
+	letter-spacing: var(--tracking-label);
+}
+
+.type-eyebrow {
+	font: var(--weight-regular) 11.5px var(--font-mono);
+	letter-spacing: var(--tracking-eyebrow);
+	text-transform: uppercase;
+}
+
+@media (max-width: 767px) {
+	.type-eyebrow {
+		font-size: 10.5px;
+		letter-spacing: var(--tracking-brand);
+	}
+}
+
+/* ---- Serif display -------------------------------------------------------
+   `.type-display` sets family + weight + tracking ONLY — no size or line-height. Every display
+   heading consumer keeps its own size/line-height, which genuinely differ (Hero 68px/1.08, 404
+   56px/1.05, ClosingCta 38px/1.2). Longhands only here: the `font` shorthand resets any property
+   it omits (line-height -> `normal`), so a shorthand would clobber the consumer's own size. */
+
+.type-display {
+	font-family: var(--font-serif);
+	font-weight: var(--weight-light);
+	letter-spacing: var(--tracking-display);
+}
+
+.type-title {
+	font: var(--weight-regular) 32px/var(--leading-tight) var(--font-serif);
+}
+
+.type-heading {
+	font: var(--weight-medium) 20px/var(--leading-snug) var(--font-serif);
+}
+
+.type-stat {
+	font: var(--weight-light) 34px/var(--leading-none) var(--font-serif);
+}
+
+/* ---- Body / reading -------------------------------------------------------
+   Size + line-height only — these set no family/weight, so they inherit whatever the surrounding
+   context declares (typically --font-sans via global.css's `body` rule). */
+
+.type-lead {
+	font-size: 17px;
+	line-height: var(--leading-relaxed);
+}
+
+.type-prose-sm {
+	font-size: 14px;
+	line-height: var(--leading-relaxed);
+}

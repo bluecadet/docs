@@ -42,7 +42,7 @@ const lastGroupIsWide = groupCount > 1;
 <footer class="site-footer">
 	<div class="site-footer-inner">
 		<div class="site-footer__top">
-			<div class="site-footer__brand site-footer__brand--rail">
+			<div class="site-footer__brand type-sm site-footer__brand--rail">
 				<span class="glyph">▞</span>{config.title}
 			</div>
 			<div
@@ -65,7 +65,7 @@ const lastGroupIsWide = groupCount > 1;
 									]}
 								>
 									{group.links.map((link) => (
-										<a class="site-footer__link" href={link.href} {...externalLinkAttrs(link.href)}>
+										<a class="site-footer__link link-muted" href={link.href} {...externalLinkAttrs(link.href)}>
 											<span class="site-footer__link-label">
 												{link.label}
 												{isExternalLink(link.href) && " ↗"}
@@ -80,8 +80,8 @@ const lastGroupIsWide = groupCount > 1;
 				}
 			</div>
 		</div>
-		<div class="site-footer__bottom">
-			<div class="site-footer__brand site-footer__brand--bottom">
+		<div class="site-footer__bottom type-sm">
+			<div class="site-footer__brand type-sm site-footer__brand--bottom">
 				<span class="glyph">▞</span>{config.title}
 			</div>
 			{meta && <span class="site-footer__meta">{meta}</span>}
@@ -114,7 +114,6 @@ const lastGroupIsWide = groupCount > 1;
 		display: flex;
 		align-items: center;
 		gap: 8px;
-		font: 400 12px var(--font-mono);
 		color: var(--text-faint);
 		text-transform: lowercase;
 		min-inline-size: 0;
@@ -155,7 +154,7 @@ const lastGroupIsWide = groupCount > 1;
 		display: flex;
 		flex-direction: column;
 		gap: 14px;
-		font: 400 12px/1.9 var(--font-mono);
+		font: 400 12px/var(--leading-relaxed) var(--font-mono);
 		min-inline-size: 0;
 	}
 
@@ -180,12 +179,6 @@ const lastGroupIsWide = groupCount > 1;
 		display: flex;
 		align-items: baseline;
 		gap: 8px;
-		color: var(--text-muted);
-		transition: color var(--transition-fast);
-	}
-
-	.site-footer__link:hover {
-		color: var(--accent);
 	}
 
 	.site-footer__note {
@@ -202,7 +195,6 @@ const lastGroupIsWide = groupCount > 1;
 		padding-block: 20px 24px;
 		padding-inline: var(--brand-pad-start) var(--content-pad-x);
 		border-block-start: 1px solid var(--hairline-08);
-		font: 400 12px var(--font-mono);
 		color: var(--text-faint);
 	}
 

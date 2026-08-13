@@ -26,7 +26,7 @@ const routesPayload = {
 	<LandingHeader slot="header" />
 
 	<div class="notfound-main">
-		<div class="notfound-eyebrow">404 — no page here</div>
+		<div class="notfound-eyebrow type-eyebrow">404 — no page here</div>
 		<h1 class="notfound-h1">
 			This page moved,<br />
 			<span class="notfound-h1-accent">or never existed.</span>
@@ -39,7 +39,7 @@ const routesPayload = {
 		<div class="notfound-grid">
 			<div class="notfound-col">
 				<div class="requested-panel">
-					<div class="requested-panel-header">requested</div>
+					<div class="requested-panel-header type-2xs">requested</div>
 					<pre class="requested-panel-body"><span class="requested-line" data-requested-path>…</span><span class="requested-line"><span class="dim">status  </span>404</span><span class="requested-line requested-closest" data-requested-closest hidden><span class="dim">closest </span><span data-closest-path></span> <span class="state" data-closest-pct></span></span></pre>
 				</div>
 
@@ -47,8 +47,8 @@ const routesPayload = {
 				<div class="dym-list" data-dym-list hidden></div>
 
 				<div class="notfound-cta">
-					<a class="btn btn-primary" href={base}>back to docs →</a>
-					<button type="button" class="btn btn-ghost" data-search-trigger>
+					<a class="btn btn-primary type-md" href={base}>back to docs →</a>
+					<button type="button" class="btn btn-ghost type-md" data-search-trigger>
 						search everything <kbd class="kbd">/</kbd>
 					</button>
 				</div>
@@ -82,10 +82,7 @@ const routesPayload = {
 	}
 
 	.notfound-eyebrow {
-		font: 400 11.5px var(--font-mono);
 		color: var(--accent-2);
-		letter-spacing: 0.14em;
-		text-transform: uppercase;
 		margin-block-end: 22px;
 	}
 
@@ -107,7 +104,7 @@ const routesPayload = {
 		max-inline-size: 560px;
 		color: var(--text-muted);
 		font-size: 16px;
-		text-wrap: pretty;
+		text-wrap: balance;
 	}
 
 	.notfound-grid {
@@ -135,7 +132,6 @@ const routesPayload = {
 		align-items: center;
 		padding: 8px 14px;
 		border-block-end: 1px solid var(--hairline-08);
-		font: 400 11px var(--font-mono);
 		color: var(--text-dim);
 	}
 
@@ -233,7 +229,6 @@ const routesPayload = {
 		display: inline-flex;
 		align-items: center;
 		gap: 6px;
-		font: 400 13px var(--font-mono);
 		padding: 11px 18px;
 		border-radius: var(--radius-md);
 		cursor: pointer;

@@ -26,10 +26,10 @@ const { before, accent: highlight, after } = splitAccent(title, accent, true);
 
 <div class="landing-band glyph-list">
 	<div class="glyph-list-head">
-		<h2 class="glyph-list-title">
+		<h2 class="glyph-list-title type-title">
 			{before}{highlight && <span class="glyph-list-accent">{highlight}</span>}{after}
 		</h2>
-		{intro && <p class="glyph-list-intro">{intro}</p>}
+		{intro && <p class="glyph-list-intro type-prose-sm">{intro}</p>}
 	</div>
 	<div class="glyph-list-items" data-reveal-stagger>
 		<slot />
@@ -46,7 +46,6 @@ const { before, accent: highlight, after } = splitAccent(title, accent, true);
 
 	.glyph-list-title {
 		margin: 0 0 18px;
-		font: 400 32px/1.2 var(--font-serif);
 		color: var(--ink);
 	}
 
@@ -57,10 +56,8 @@ const { before, accent: highlight, after } = splitAccent(title, accent, true);
 
 	.glyph-list-intro {
 		margin: 0;
-		font-size: 14px;
-		line-height: 1.8;
 		color: var(--text-dim);
-		text-wrap: pretty;
+		text-wrap: balance;
 	}
 
 	.glyph-list-items {

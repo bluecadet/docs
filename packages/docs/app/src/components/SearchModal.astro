@@ -36,16 +36,22 @@ const startHere = [...new Map([...entryPoints, ...flat].map((page) => [page.id, 
 			autocomplete="off"
 			spellcheck="false"
 		/>
-		<span class="search-modal__status" data-search-status></span>
-		<button type="button" class="search-modal__cancel" data-search-cancel>cancel</button>
+		<span class="search-modal__status type-sm" data-search-status></span>
+		<button type="button" class="search-modal__cancel type-sm" data-search-cancel>cancel</button>
 	</div>
 	<div class="search-modal__body dialog-body" data-search-body>
 	</div>
 	<div class="search-modal__footer">
+		<!-- scripts/search.ts's setHintsIndexing() rewrites this container's innerHTML at runtime
+		     (see the :global() comment in the <style> block below) with its own hardcoded
+		     `<span class="kbd-hint">...` template. That JS-side class list duplicates the one below
+		     and MUST be kept in sync by hand — including any `.type-*` utility class — or the
+		     utility silently stops applying after the first indexing-state toggle even though this
+		     static markup still looks correct in source. -->
 		<div class="search-modal__hints" data-search-hints>
-			<span class="kbd-hint"><kbd>↑↓</kbd> navigate</span>
-			<span class="kbd-hint"><kbd>↵</kbd> open</span>
-			<span class="kbd-hint"><kbd>esc</kbd> close</span>
+			<span class="kbd-hint type-2xs"><kbd>↑↓</kbd> navigate</span>
+			<span class="kbd-hint type-2xs"><kbd>↵</kbd> open</span>
+			<span class="kbd-hint type-2xs"><kbd>esc</kbd> close</span>
 		</div>
 	</div>
 </dialog>
@@ -128,7 +134,6 @@ const startHere = [...new Map([...entryPoints, ...flat].map((page) => [page.id, 
 	}
 
 	.search-modal__status {
-		font: 400 12px var(--font-mono);
 		color: var(--text-dim);
 		white-space: nowrap;
 	}
@@ -142,7 +147,6 @@ const startHere = [...new Map([...entryPoints, ...flat].map((page) => [page.id, 
 		background: none;
 		border: none;
 		color: var(--text-muted);
-		font: 400 12px var(--font-mono);
 		cursor: pointer;
 	}
 
@@ -166,7 +170,9 @@ const startHere = [...new Map([...entryPoints, ...flat].map((page) => [page.id, 
 	/* :global() because scripts/search.ts's setHintsIndexing() rewrites this container's innerHTML
 	   at runtime — that injected markup never carries Astro's scoped-CSS data attribute, so these
 	   three selectors have to match on class name alone (same pattern as the .search-row/
-	   .search-group globals below). */
+	   .search-group globals below). NOTE: as of this comment, that JS template's `.kbd-hint` spans
+	   are missing the `.type-2xs` class the static markup above carries (see the comment on
+	   [data-search-hints] above) — a known regression that needs a fix in scripts/search.ts. */
 	.search-modal__footer :global(.search-modal__hints) {
 		display: flex;
 		gap: 16px;
@@ -181,7 +187,6 @@ const startHere = [...new Map([...entryPoints, ...flat].map((page) => [page.id, 
 		display: flex;
 		align-items: center;
 		gap: 6px;
-		font: 400 11px var(--font-mono);
 		color: var(--text-dim);
 	}
 
@@ -205,7 +210,7 @@ const startHere = [...new Map([...entryPoints, ...flat].map((page) => [page.id, 
 	:global(.search-group__label) {
 		padding: 10px 18px 6px;
 		font: 400 11px var(--font-mono);
-		letter-spacing: 0.08em;
+		letter-spacing: var(--tracking-label);
 		text-transform: uppercase;
 		color: var(--text-dim);
 	}

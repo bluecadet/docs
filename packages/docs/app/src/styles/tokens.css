@@ -97,4 +97,42 @@
 	--font-serif: "Newsreader Variable", serif;
 	--font-mono: "IBM Plex Mono", monospace;
 	--font-sans: system-ui, -apple-system, "Segoe UI", sans-serif;
+
+	/* ---- Typography scale (weight / leading / tracking / serif display) ---
+	   Plain literals, not colors — no color-mix derivation applies here. Grouped with the font
+	   stacks above since it's the same concern (typography), just not the same mechanism.
+
+	   Deliberately NOT tokenized: the dense mono UI ramp (10 / 10.5 / 11 / 11.5 / 12 / 12.5 / 13 /
+	   13.5 / 14.5 / 15 / 15.5 / 17px). That half-pixel granularity is inherent to a dense mono UI,
+	   and a token per step (`--type-115: 11.5px`) would carry no more meaning than the literal it
+	   replaces — it's noise, not abstraction. Those sizes live as classes in typography.css
+	   instead, where the class name states the role (`.type-xs`, `.type-code`, ...). This was a
+	   considered decision, not an oversight — do not "finish the job" by adding size tokens for
+	   every mono step. */
+	--weight-light: 300;
+	--weight-regular: 400;
+	--weight-medium: 500;
+	--weight-strong: 600;
+
+	--leading-none: 1;
+	--leading-tight: 1.2;
+	--leading-snug: 1.4;
+	--leading-normal: 1.6;
+	--leading-relaxed: 1.8;
+	--leading-loose: 2;
+
+	--tracking-heading: -0.01em;
+	--tracking-display: -0.02em;
+	--tracking-label: 0.06em;
+	--tracking-wide: 0.08em;
+	--tracking-brand: 0.12em;
+	--tracking-eyebrow: 0.14em;
+
+	/* Serif display ramp — consumed by article.css prose headings and landing display bands. */
+	--type-h1: 42px;
+	--type-h1-md: 38px; /* <=1023px */
+	--type-h1-sm: 34px; /* <=767px */
+	--type-h2: 26px;
+	--type-h3: 20px;
+	--type-h4: 14px;
 }

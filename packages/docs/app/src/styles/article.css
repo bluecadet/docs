@@ -9,7 +9,7 @@
 .prose {
 	color: var(--text-body);
 	font-size: 15px;
-	line-height: 1.8;
+	line-height: var(--leading-relaxed);
 
 	/* Vertical offset a jumped-to (or anchor-linked) heading scrolls to rest under, so the sticky
 	   header never covers it. Derived from `--header-height` (declared at :root in global.css,
@@ -29,8 +29,8 @@
    scale across two rulesets. */
 .prose h1 {
 	margin: 0 0 16px;
-	font: 400 42px/1.15 var(--font-serif);
-	letter-spacing: -0.01em;
+	font: var(--weight-regular) var(--type-h1)/1.15 var(--font-serif);
+	letter-spacing: var(--tracking-heading);
 	color: var(--ink);
 }
 
@@ -43,14 +43,14 @@
 .prose .lead {
 	margin: 0 0 28px;
 	font-size: 17px;
-	line-height: 1.75;
+	line-height: var(--leading-relaxed);
 	color: var(--text-muted);
 }
 
 @media (max-width: 1023px) {
 	.prose h1 {
 		margin: 0 0 12px;
-		font-size: 38px;
+		font-size: var(--type-h1-md);
 	}
 
 	.prose h1 + p,
@@ -62,7 +62,7 @@
 @media (max-width: 767px) {
 	.prose h1 {
 		margin: 0 0 12px;
-		font-size: 34px;
+		font-size: var(--type-h1-sm);
 	}
 
 	.prose h1 + p,
@@ -74,7 +74,7 @@
 .prose h2 {
 	margin: 64px 0 6px;
 	padding-block-end: 14px;
-	font: 400 26px/1.25 var(--font-serif);
+	font: var(--weight-regular) var(--type-h2)/1.25 var(--font-serif);
 	color: var(--ink);
 	border-block-end: 1px solid var(--hairline-08);
 	scroll-margin-block-start: var(--heading-scroll-offset);
@@ -82,7 +82,7 @@
 
 .prose h3 {
 	margin: 40px 0 10px;
-	font: 500 20px var(--font-serif);
+	font: var(--weight-medium) var(--type-h3) var(--font-serif);
 	color: var(--ink);
 	scroll-margin-block-start: var(--heading-scroll-offset);
 }
@@ -139,8 +139,8 @@
 
 .prose h4 {
 	margin: 30px 0 8px;
-	font: 500 14px var(--font-mono);
-	letter-spacing: 0.04em;
+	font: var(--weight-medium) var(--type-h4) var(--font-mono);
+	letter-spacing: var(--tracking-label);
 	color: var(--text-muted);
 	text-transform: uppercase;
 }
@@ -154,7 +154,7 @@
 
 .prose strong {
 	color: var(--ink);
-	font-weight: 600;
+	font-weight: var(--weight-strong);
 }
 
 .prose ul,
@@ -225,7 +225,7 @@
 /* ---- Inline code, kbd, badges ------------------------------------------ */
 
 .prose code {
-	font: 400 12.5px var(--font-mono);
+	font: var(--weight-regular) 12.5px var(--font-mono);
 	background: var(--white-07);
 	border-radius: var(--radius-sm);
 	padding: 2px 5px;
@@ -240,14 +240,14 @@
 }
 
 .prose kbd {
-	font: 400 11px var(--font-mono);
+	font: var(--weight-regular) 11px var(--font-mono);
 	color: var(--text-muted);
 }
 
 .prose .badge {
 	display: inline-block;
-	font: 500 9.5px var(--font-mono);
-	letter-spacing: 0.06em;
+	font: var(--weight-medium) 9.5px var(--font-mono);
+	letter-spacing: var(--tracking-label);
 	color: var(--accent-2);
 	border: 1px solid var(--accent-2-border-40);
 	border-radius: var(--radius-sm);
@@ -273,7 +273,7 @@
 	gap: 12px;
 	padding: 8px 14px;
 	border-block-end: 1px solid var(--hairline-08);
-	font: 400 11px var(--font-mono);
+	font: var(--weight-regular) 11px var(--font-mono);
 	color: var(--text-dim);
 }
 
@@ -287,7 +287,7 @@
 	border: 1px solid var(--hairline-14);
 	border-radius: var(--radius-sm);
 	color: var(--text-muted);
-	font: 400 10.5px var(--font-mono);
+	font: var(--weight-regular) 10.5px var(--font-mono);
 	padding: 2px 8px;
 	cursor: pointer;
 	transition:
@@ -308,7 +308,7 @@
 .prose .code-block pre {
 	margin: 0;
 	padding-block: 14px;
-	font: 400 13px/1.8 var(--font-mono);
+	font: var(--weight-regular) 13px/var(--leading-relaxed) var(--font-mono);
 }
 
 /* `<code>` is forced to `display: block; inline-size: max-content` so it grows to the width of its
@@ -394,12 +394,13 @@
 
 .prose .callout-label {
 	padding-block-start: 2px;
-	font: 500 11px var(--font-mono);
-	letter-spacing: 0.08em;
+	font: var(--weight-medium) 11px var(--font-mono);
+	letter-spacing: var(--tracking-wide);
+	text-transform: uppercase;
 }
 
 .prose .callout-body {
-	line-height: 1.6;
+	line-height: var(--leading-normal);
 }
 
 .prose .callout-body > :first-child {
@@ -461,8 +462,8 @@
 .prose th {
 	padding: 9px 18px;
 	text-align: start;
-	font: 400 11px var(--font-mono);
-	letter-spacing: 0.06em;
+	font: var(--weight-regular) 11px var(--font-mono);
+	letter-spacing: var(--tracking-label);
 	text-transform: uppercase;
 	color: var(--text-dim);
 	border-block-end: 1px solid var(--hairline-08);
@@ -481,7 +482,7 @@
 }
 
 .prose td:first-child {
-	font: 400 12.5px var(--font-mono);
+	font: var(--weight-regular) 12.5px var(--font-mono);
 	color: var(--text-code);
 }
 
@@ -540,10 +541,10 @@
 	.prose td::before {
 		content: attr(data-label);
 		flex: 0 0 auto;
-		font: 400 11px var(--font-mono);
+		font: var(--weight-regular) 11px var(--font-mono);
 		color: var(--text-dim);
 		text-transform: uppercase;
-		letter-spacing: 0.06em;
+		letter-spacing: var(--tracking-label);
 	}
 
 	.prose td:first-child {

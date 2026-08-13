@@ -37,11 +37,11 @@ const note = getDocsConfig().toc?.note;
 		(variant === "aside" ? (
 			<div class="toc-rail">
 				<aside class="toc-aside scroll-rail" aria-label="Table of contents">
-					<div class="toc-aside__label">on this page</div>
+					<div class="toc-aside__label type-sm">on this page</div>
 					<nav class="toc-aside__links">
 						{sections.map((section, index) => (
 							<a
-								class="toc-aside__link"
+								class="toc-aside__link link-muted"
 								class:list={{ "is-active": index === 0 }}
 								href={`#${section.slug}`}
 							>
@@ -50,7 +50,7 @@ const note = getDocsConfig().toc?.note;
 						))}
 					</nav>
 					{(note || editHref) && (
-						<div class="toc-aside__meta">
+						<div class="toc-aside__meta type-xs">
 							{note && <span class="toc-aside__note">{note}</span>}
 							{note && editHref && <br />}
 							{editHref && (
@@ -69,9 +69,9 @@ const note = getDocsConfig().toc?.note;
 			</div>
 		) : (
 			<details class="toc-disclosure">
-				<summary class="toc-disclosure__summary">
+				<summary class="toc-disclosure__summary type-xs">
 					on this page
-					<span class="toc-disclosure__caret" aria-hidden="true">
+					<span class="toc-disclosure__caret type-micro" aria-hidden="true">
 						▾
 					</span>
 				</summary>
@@ -100,7 +100,6 @@ const note = getDocsConfig().toc?.note;
 	}
 
 	.toc-aside__label {
-		font: 400 12px var(--font-mono);
 		color: var(--text-dim);
 		margin-block-end: 14px;
 	}
@@ -114,12 +113,6 @@ const note = getDocsConfig().toc?.note;
 
 	.toc-aside__link {
 		padding-inline-start: 14px;
-		color: var(--text-muted);
-		transition: color var(--transition-fast);
-	}
-
-	.toc-aside__link:hover {
-		color: var(--accent);
 	}
 
 	.toc-aside__link.is-active {
@@ -135,7 +128,7 @@ const note = getDocsConfig().toc?.note;
 		margin-block-start: 32px;
 		padding-block-start: 24px;
 		border-block-start: 1px solid var(--hairline-08);
-		font: 400 11.5px/2 var(--font-mono);
+		line-height: var(--leading-loose);
 		color: var(--text-dim);
 	}
 
@@ -168,7 +161,6 @@ const note = getDocsConfig().toc?.note;
 		gap: 10px;
 		min-block-size: 44px;
 		padding: 0 14px;
-		font: 400 11.5px var(--font-mono);
 		color: var(--text-muted);
 		cursor: pointer;
 		list-style: none;
@@ -181,7 +173,6 @@ const note = getDocsConfig().toc?.note;
 	.toc-disclosure__caret {
 		margin-inline-start: auto;
 		color: var(--text-dim);
-		font-size: 10px;
 	}
 
 	.toc-disclosure__links {

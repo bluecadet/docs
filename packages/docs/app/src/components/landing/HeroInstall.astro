@@ -30,7 +30,7 @@ const command = unescapeSlotText((await Astro.slots.render("default")).trim());
 	<span class="hero-install-prompt">$</span>
 	<code class="hero-install-command">{command}</code>
 	<button
-		class="hero-install-copy"
+		class="hero-install-copy type-md"
 		type="button"
 		aria-label="Copy install command"
 		data-install-copy={command}
@@ -90,7 +90,6 @@ const command = unescapeSlotText((await Astro.slots.render("default")).trim());
 		border: none;
 		color: var(--accent);
 		cursor: pointer;
-		font: 400 13px var(--font-mono);
 		padding-block: 0 0;
 		padding-inline: 8px 0;
 	}

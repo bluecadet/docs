@@ -44,7 +44,7 @@ const { cwd, cast, rows, cols, poster, loop } = Astro.props;
 ---
 
 <div class="terminal">
-	<div class="terminal-bar">
+	<div class="terminal-bar type-2xs">
 		<span class="terminal-dots" aria-hidden="true">
 			<span class="terminal-dot terminal-dot-1"></span>
 			<span class="terminal-dot terminal-dot-2"></span>
@@ -106,7 +106,6 @@ const { cwd, cast, rows, cols, poster, loop } = Astro.props;
 		gap: 10px;
 		padding: 11px 16px;
 		border-block-end: 1px solid var(--hairline-08);
-		font: 400 11px var(--font-mono);
 		color: var(--text-dim);
 	}
 
@@ -236,7 +235,6 @@ const { cwd, cast, rows, cols, poster, loop } = Astro.props;
 		.terminal-bar {
 			gap: 10px;
 			padding: 10px 14px;
-			font-size: 11px;
 		}
 
 		.terminal-dot {

@@ -37,7 +37,7 @@ const { caption, duration, ...terminalProps } = Astro.props;
 <div class="landing-band terminal-band">
 	{
 		(caption || duration) && (
-			<div class="terminal-caption">
+			<div class="terminal-caption type-xs">
 				{caption && <span>{caption}</span>}
 				{duration && <span class="terminal-duration">{duration}</span>}
 			</div>
@@ -60,7 +60,6 @@ const { caption, duration, ...terminalProps } = Astro.props;
 		align-items: baseline;
 		gap: 16px;
 		margin-block-end: 24px;
-		font: 400 11.5px var(--font-mono);
 		color: var(--text-dim);
 	}
 
@@ -91,7 +90,6 @@ const { caption, duration, ...terminalProps } = Astro.props;
 		.terminal-caption {
 			gap: 15px;
 			margin-block-end: 18px;
-			font-size: 11.5px;
 		}
 	}
 </style>

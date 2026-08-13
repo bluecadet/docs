@@ -146,9 +146,13 @@ export function initSearchModal(): void {
 		hints.classList.toggle("is-indexing", indexing);
 		hints.innerHTML = indexing
 			? "<span>▞ indexing…</span>"
-			: `<span class="kbd-hint"><kbd>↑↓</kbd> navigate</span>` +
-				`<span class="kbd-hint"><kbd>↵</kbd> open</span>` +
-				`<span class="kbd-hint"><kbd>esc</kbd> close</span>`;
+			// Class lists here duplicate SearchModal.astro's static markup and must stay in sync —
+			// including the `.type-*` utility. This markup replaces the static spans wholesale, and
+			// the component no longer declares `.kbd-hint`'s font itself, so a missing utility class
+			// silently drops the styling at runtime while the source still looks correct.
+			: `<span class="kbd-hint type-2xs"><kbd>↑↓</kbd> navigate</span>` +
+				`<span class="kbd-hint type-2xs"><kbd>↵</kbd> open</span>` +
+				`<span class="kbd-hint type-2xs"><kbd>esc</kbd> close</span>`;
 	}
 
 	// `description` is plain text (escaped here) — curated copy from nav frontmatter or a recent

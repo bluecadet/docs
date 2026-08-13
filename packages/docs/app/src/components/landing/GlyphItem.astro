@@ -18,7 +18,7 @@ const { lead, glyph = "✕", color = "var(--text-faint)" } = Astro.props;
 ---
 
 <div class="glyph-item" style={`--glyph-color: ${color}`}>
-	<span class="glyph-item-icon" aria-hidden="true">{glyph}</span>
+	<span class="glyph-item-icon type-sm" aria-hidden="true">{glyph}</span>
 	<span class="glyph-item-text"><span class="glyph-item-lead">{lead}</span> <slot /></span>
 </div>
 
@@ -30,7 +30,7 @@ const { lead, glyph = "✕", color = "var(--text-faint)" } = Astro.props;
 		padding: 20px 0;
 		font-size: 15px;
 		color: var(--text-muted);
-		text-wrap: pretty;
+		text-wrap: balance;
 	}
 
 	.glyph-item + .glyph-item {
@@ -38,12 +38,15 @@ const { lead, glyph = "✕", color = "var(--text-faint)" } = Astro.props;
 	}
 
 	.glyph-item-icon {
-		font: 400 12px var(--font-mono);
 		color: var(--glyph-color);
 	}
 
 	.glyph-item-lead {
 		color: var(--ink);
+	}
+
+	.glyph-item-text {
+		max-width: 70ch;
 	}
 
 	/* MDX wraps the slotted row text in its own `<p>` — inline so it reads as one run of text

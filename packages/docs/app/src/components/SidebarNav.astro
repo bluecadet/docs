@@ -47,7 +47,7 @@ const metaLines = [
 				<nav id="sidebar-nav" class="sidebar-nav scroll-rail" aria-label="Docs navigation">
 					{items.length > 0 && <Astro.self nodes={items} currentId={currentId} />}
 					{metaLines.length > 0 && (
-						<div class="sidebar-meta">
+						<div class="sidebar-meta type-xs">
 							{metaLines.map((line, i) => (
 								<>
 									{i > 0 && <br />}
@@ -80,9 +80,10 @@ const metaLines = [
 				<>
 					{node.href ? (
 						<a
-							class="sidebar-item"
+							class="sidebar-item link-muted"
 							class:list={{
 								"sidebar-item--section": isSectionHeading(node),
+								"type-sm": isSectionHeading(node),
 								"is-active": node.id === currentId,
 								"active-row": node.id === currentId,
 							}}
@@ -92,7 +93,7 @@ const metaLines = [
 							{node.label}
 						</a>
 					) : (
-						<div class="sidebar-label">{node.label}/</div>
+						<div class="sidebar-label type-sm">{node.label}/</div>
 					)}
 					{node.children.length > 0 && (
 						<Astro.self
@@ -137,13 +138,12 @@ const metaLines = [
 		margin: 34px 34px 0;
 		padding-block-start: 24px;
 		border-block-start: 1px solid var(--hairline-08);
-		font: 400 11.5px/2 var(--font-mono);
+		line-height: var(--leading-loose);
 		color: var(--text-faint);
 	}
 
 	.sidebar-label {
 		padding: 20px 34px 8px;
-		font: 400 12px var(--font-mono);
 		color: var(--text-dim);
 	}
 
@@ -154,12 +154,6 @@ const metaLines = [
 
 	.sidebar-item {
 		padding: 6px 34px;
-		color: var(--text-muted);
-		transition: color var(--transition-fast);
-	}
-
-	.sidebar-item:hover {
-		color: var(--accent);
 	}
 
 	/* Exactly one node in the whole tree — the current page — carries the "you are here" mark
@@ -178,7 +172,6 @@ const metaLines = [
 	   .sidebar-item rules regardless of source order. */
 	.sidebar-item.sidebar-item--section {
 		padding: 20px 34px 8px;
-		font: 400 12px var(--font-mono);
 		color: var(--text-dim);
 	}
 

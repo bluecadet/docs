@@ -14,8 +14,8 @@ interface Props {
 const { value, label } = Astro.props;
 ---
 
-<div class="stat">
-	<span class="stat-value">{value}</span>
+<div class="stat type-sm">
+	<span class="stat-value type-stat">{value}</span>
 	<span class="stat-label">{label ? label : <slot />}</span>
 </div>
 
@@ -24,13 +24,11 @@ const { value, label } = Astro.props;
 		display: flex;
 		flex-direction: column;
 		gap: 8px;
-		font: 400 12px var(--font-mono);
 		color: var(--text-dim);
-		text-wrap: pretty;
+		text-wrap: balance;
 	}
 
 	.stat-value {
-		font: 300 34px/1 var(--font-serif);
 		color: var(--ink);
 	}
 
@@ -51,7 +49,7 @@ const { value, label } = Astro.props;
 		}
 
 		.stat-value {
-			font-size: 27px;
+			font-size: 28px;
 		}
 	}
 </style>

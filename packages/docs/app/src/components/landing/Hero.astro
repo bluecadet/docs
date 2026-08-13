@@ -43,7 +43,7 @@ const { before: firstClause, accent: secondClause } = splitAccent(title, ", ");
 <div class="hero landing-band landing-band--flush">
 	<slot />
 
-	<h1>
+	<h1 class="type-display">
 		{firstClause}
 		{secondClause && (
 			<>
@@ -53,10 +53,10 @@ const { before: firstClause, accent: secondClause } = splitAccent(title, ", ");
 		)}
 	</h1>
 
-	{lead && <p class="hero-lead">{lead}</p>}
+	{lead && <p class="hero-lead type-lead">{lead}</p>}
 
 	{quickstartHref && (
-		<a class="hero-quickstart" href={quickstartHref}>
+		<a class="hero-quickstart type-md" href={quickstartHref}>
 			read the quickstart →
 		</a>
 	)}
@@ -82,9 +82,9 @@ const { before: firstClause, accent: secondClause } = splitAccent(title, ", ");
 	h1 {
 		grid-row: 2;
 		margin: 0;
-		font: 300 68px/1.08 var(--font-serif);
+		font-size: 68px;
+		line-height: 1.08;
 		max-inline-size: 15ch;
-		letter-spacing: -0.02em;
 		color: var(--ink);
 	}
 
@@ -100,9 +100,7 @@ const { before: firstClause, accent: secondClause } = splitAccent(title, ", ");
 		margin: 36px 0 0;
 		max-inline-size: 58ch;
 		color: var(--text-muted);
-		font-size: 17px;
-		line-height: 1.8;
-		text-wrap: pretty;
+		text-wrap: balance;
 	}
 
 	.hero > :global(.hero-notes) {
@@ -118,7 +116,6 @@ const { before: firstClause, accent: secondClause } = splitAccent(title, ", ");
 	.hero-quickstart {
 		grid-row: 6;
 		margin-block-start: 10px;
-		font: 400 13px var(--font-mono);
 		color: var(--accent);
 	}
 

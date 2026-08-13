@@ -55,6 +55,20 @@
 	box-shadow: inset 2px 0 var(--accent);
 }
 
+/* Muted-to-accent link treatment — the site's one hover idiom, shared verbatim by the header nav
+   links, breadcrumb segments, footer links, pagination links, sidebar nav rows and the TOC link
+   list. Adoption is by replacement: a consumer must delete its own color/transition/:hover
+   declarations, since this file's `base` layer always loses to a component's unlayered scoped
+   styles — leaving them in place would silently keep this class dead. */
+.link-muted {
+	color: var(--text-muted);
+	transition: color var(--transition-fast);
+}
+
+.link-muted:hover {
+	color: var(--accent);
+}
+
 *,
 *::before,
 *::after {
