@@ -132,15 +132,35 @@ describe("validateConfig", () => {
 			);
 		});
 
-		it("throws when an entry has no files", () => {
+		it("throws when an entry has neither files nor assets", () => {
 			expect(() => validateConfig({ content: [{ base: "docs" }] }, CONFIG_PATH)).toThrowError(
-				/"content\[0\]\.files" is required/,
+				/"content\[0\]" must have "files", "assets", or both \(got neither\)/,
 			);
+		});
+
+		it("accepts an assets-only entry (no files)", () => {
+			const { config } = validateConfig(
+				{ content: [{ base: "..", assets: ["install.sh", "install.ps1"] }] },
+				CONFIG_PATH,
+			);
+			expect(config.content).toEqual([
+				{ base: "..", files: [], route: "", assets: ["install.sh", "install.ps1"] },
+			]);
+		});
+
+		it("accepts an entry with both files and assets", () => {
+			const { config } = validateConfig(
+				{ content: [{ files: "docs/**/*.md", assets: "docs/img/**/*.png" }] },
+				CONFIG_PATH,
+			);
+			expect(config.content).toEqual([
+				{ base: ".", files: ["docs/**/*.md"], route: "", assets: ["docs/img/**/*.png"] },
+			]);
 		});
 
 		it("throws naming the index when an entry is neither a string nor an object", () => {
 			expect(() => validateConfig({ content: ["a/*.md", 5] }, CONFIG_PATH)).toThrowError(
-				/"content\[1\]" must be a glob string or an object with a "files" key \(got number\)/,
+				/"content\[1\]" must be a glob string or an object with a "files" and\/or "assets" key \(got number\)/,
 			);
 		});
 

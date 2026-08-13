@@ -76,7 +76,11 @@ export interface ContentEntry {
 	 * directory outside the docs tree is a first-class use case.
 	 */
 	base: string;
-	/** Glob patterns relative to `base` matching the `.md`/`.mdx`/`.astro` files to publish. Non-empty. */
+	/**
+	 * Glob patterns relative to `base` matching the `.md`/`.mdx`/`.astro` files to publish. Optional
+	 * when `assets` is non-empty — an assets-only entry publishes no pages. An entry with neither
+	 * `files` nor `assets` is a config error.
+	 */
 	files: string[];
 	/**
 	 * Route prefix for every page this entry publishes, e.g. `"packages"` puts `foo/README.md` at

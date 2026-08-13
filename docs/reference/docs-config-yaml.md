@@ -109,12 +109,21 @@ content:
   - base: packages
     files: "*/README.md"
     route: packages
+
+  # Assets-only: no `files`, so no pages come from this entry. Useful for publishing a static
+  # file that lives outside the docs tree, e.g. an install script at the repo root.
+  - base: ..
+    assets: ["install.sh", "install.ps1"]
 ```
+
+`files` is optional when `assets` is set — an entry can publish only static assets, with no pages
+of its own. An entry with neither `files` nor `assets` has nothing to publish and is a config
+error.
 
 | Key | Type | Default | Description |
 | --- | --- | --- | --- |
 | `base` | `string` | `"."` | Directory the entry's globs are relative to, itself relative to the config file. May climb out with `..` — pointing at a sibling checkout or a package directory outside a docs tree is a first-class use case. Must not be absolute. |
-| `files` | `string \| string[]` | *required* | Glob(s), relative to `base`, matching the `.md`/`.mdx`/`.astro` files to publish. A single glob can be a bare string. Non-content matches (any other extension) are ignored. |
+| `files` | `string \| string[]` | *required unless `assets` is set* | Glob(s), relative to `base`, matching the `.md`/`.mdx`/`.astro` files to publish. A single glob can be a bare string. Non-content matches (any other extension) are ignored. An entry with neither `files` nor `assets` is a config error. |
 | `route` | `string` | `""` | Route prefix for every page and asset the entry publishes. `""` means the site root. No leading/trailing `/`, no `.`/`..` segments. |
 | `assets` | `string \| string[]` | `[]` | Glob(s), relative to `base`, matching non-content files to publish (images, casts, downloads). **Nothing is published implicitly** — an entry with no `assets` publishes no files, which is what makes it safe to point `base` at a directory that also holds source code. `.md`/`.mdx`/`.astro` matches are filtered out automatically, so `assets: "**/*"` is safe. |
 

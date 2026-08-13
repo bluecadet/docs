@@ -315,6 +315,18 @@ describe("discoverContent - assets", () => {
 		expect(thrown?.message).toContain("img/logo.png");
 	});
 
+	it("supports an assets-only entry (no files) alongside a pages entry", () => {
+		const index = write("docs/index.md");
+		const script = write("install.sh", "#!/bin/sh\n");
+		const { pages, assets } = discoverContent(
+			root,
+			[entry({ base: "docs" }), entry({ base: ".", files: [], assets: ["install.sh"] })],
+			undefined,
+		);
+		expect(pages).toEqual([index]);
+		expect(assets.get(script)).toBe("install.sh");
+	});
+
 	it("notices (does not error) when a second entry's assets glob matches an already-claimed file", () => {
 		write("docs/index.md");
 		const png = write("docs/img/logo.png", "png");

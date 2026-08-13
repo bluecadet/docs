@@ -523,7 +523,9 @@ function validateSidebarItem(
 /**
  * Validates the required `content` array. Each element is either a bare glob string — sugar for
  * `{ base: ".", files: "<string>", route: "" }` — or an object entry, and both normalize to the
- * same fully-populated `ContentEntry` so nothing downstream has to re-handle the sugar.
+ * same fully-populated `ContentEntry` so nothing downstream has to re-handle the sugar. An object
+ * entry needs `files`, `assets`, or both — an assets-only entry (e.g. publishing a static file
+ * with no pages) is valid; one with neither is not.
  */
 function validateContent(value: unknown, configPath: string, warnings: string[]): ContentEntry[] {
 	if (value === undefined) {
@@ -554,7 +556,7 @@ function validateContentEntry(
 	}
 	if (typeof value !== "object" || value === null || Array.isArray(value)) {
 		throw new Error(
-			`${configPath}: "${label}" must be a glob string or an object with a "files" key (got ${describeType(value)}).`,
+			`${configPath}: "${label}" must be a glob string or an object with a "files" and/or "assets" key (got ${describeType(value)}).`,
 		);
 	}
 	const obj = value as Record<string, unknown>;
@@ -565,11 +567,22 @@ function validateContentEntry(
 		}
 	}
 
+	// `files` is required unless `assets` is set: an entry publishing only static assets (e.g. an
+	// install script served from a repo root) has no pages to declare, so `files` is the one that
+	// becomes optional. An entry with neither has nothing to publish and is a config error.
+	const files = validateGlobList(obj.files, `${label}.files`, configPath, false);
+	const assets = validateGlobList(obj.assets, `${label}.assets`, configPath, false);
+	if (files.length === 0 && assets.length === 0) {
+		throw new Error(
+			`${configPath}: "${label}" must have "files", "assets", or both (got neither).`,
+		);
+	}
+
 	return {
 		base: validateBase(obj.base, label, configPath),
-		files: validateGlobList(obj.files, `${label}.files`, configPath, true),
+		files,
 		route: validateRoute(obj.route, label, configPath),
-		assets: validateGlobList(obj.assets, `${label}.assets`, configPath, false),
+		assets,
 	};
 }
 
