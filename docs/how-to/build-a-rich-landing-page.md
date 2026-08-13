@@ -226,8 +226,10 @@ import {
 } from "@bluecadet/docs/components";
 ```
 
-These are the only components the package exports. Layout, colour and type are fixed — there is no
-theming hook, deliberately, so every site built with this tool reads the same way.
+These are the only components the package exports. Layout and type are fixed, and colour has
+exactly one hook — `accent`/`accent2` in `docs.config.yaml` (see
+[docs.config.yaml schema](/reference/docs-config-yaml/#accent-colors)) — deliberately narrow so
+every site built with this tool still reads the same way.
 
 ## Keep it true
 

@@ -11,6 +11,9 @@ every relative path below resolves against.
 ```yaml
 title: My Project
 repoUrl: https://github.com/org/my-project
+glyph: "»"
+accent: "#9cc3a9"
+accent2: "#e0a75e"
 landing: docs/index.mdx
 
 content:
@@ -74,6 +77,9 @@ toc:
 | `content` | `ContentEntry[]` | *required, non-empty* | Where the site's pages and assets come from — see [Content entries](#content). |
 | `landing` | `string` | — | Path (relative to the config file) of the `.md`/`.mdx` file published at `/`. See [Landing page](#landing-page). |
 | `repoUrl` | `string` | `git remote get-url origin`, normalized to `https://host/org/repo` | Used to rewrite links pointing outside the published set to GitHub blob URLs, and for the header's default GitHub link. |
+| `glyph` | `string` | — (no glyph) | Character (or short string) rendered before the site title in the header and footer. Also used, together with `accent`, to generate the site's favicon — see [Accent colors](#accent-colors). |
+| `accent` | `string` (6-digit hex) | `#9cc3a9` (sage) | The STATE accent — where you are, what succeeded. See [Accent colors](#accent-colors). |
+| `accent2` | `string` (6-digit hex) | `#e0a75e` (amber) | The ATTENTION accent — what changed, what's required, what will break. See [Accent colors](#accent-colors). |
 | `base` | `string` | `/` | Base path for the deployed site. |
 | `site` | `string` | — | Absolute site origin. Also drives canonical URLs, Open Graph meta tags, and sitemap generation — set once every page gets a `<link rel="canonical">`, `og:*` tags, and a `sitemap-index.xml`; left unset, all three are skipped. |
 | `header.links` | `{ label, href }[]` | — | Extra links rendered in the header after its fixed "docs" link, replacing the default GitHub link entirely when set — see [Notes](#notes). |
@@ -229,12 +235,26 @@ sit in the nav, so referencing one in `sidebar` is a build error naming the page
   `{ label: Config, link: reference/config, items: [...] }`. A group with a `link` behaves like any
   other page for active-state highlighting and pagination.
 
+## Accent colors
+
+Every other color in the site is derived from two source tokens — `accent` (STATE: where you are,
+what succeeded) and `accent2` (ATTENTION: what changed, is required, or will break). Layout,
+type, and every other color are fixed; `accent`/`accent2` are the one theming hook this package
+exposes, so each consumer site can carry its own two-color identity without forking the design.
+
+Leave both unset to use the shared default (sage/amber). Set one or both to a 6-digit hex string
+to override — an invalid value (not `#rrggbb`) is a build error naming the field.
+
+When `glyph` is set, it's also rendered on the generated favicon in the site's `accent` color
+(falling back to the default sage if `accent` itself is unset). A site with no `glyph` keeps the
+package's default generic document-icon favicon instead.
+
 ## Notes
 
 - Every scalar field (`title`/`repoUrl`/`base`/`site`) can also be set (or overridden) via a CLI
   flag; flags win over the file — see [CLI](/reference/cli/). `content`/`landing`/`header`/
-  `footer`/`sidebar`/`version`/`sidebarMeta`/`toc` have no CLI flag equivalent; they're config-file
-  only.
+  `footer`/`sidebar`/`version`/`sidebarMeta`/`toc`/`glyph`/`accent`/`accent2` have no CLI flag
+  equivalent; they're config-file only.
 - A missing config file is a hard build error naming the path the CLI looked at.
 - An invalid or malformed `docs.config.yaml` (not valid YAML, not a YAML mapping at the top level, a
   known field with the wrong type, a required field missing, or an empty `content`) is a hard build
