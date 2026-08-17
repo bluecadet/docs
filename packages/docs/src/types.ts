@@ -101,8 +101,6 @@ export interface DocsConfig {
 	title?: string;
 	/** Repo URL used for social links and for rewriting out-of-tree links to GitHub blob URLs. */
 	repoUrl?: string;
-	/** Character (or short string) rendered before the site title in the header and footer. No glyph by default. */
-	glyph?: string;
 	/**
 	 * Path (relative to the config file) of an `.svg`/`.png`/`.ico` file published as the site's
 	 * favicon. No favicon is shipped by default: with this unset, nothing is written to `public/` and
@@ -154,7 +152,6 @@ export interface ResolvedConfig {
 	out: string;
 	title: string;
 	repoUrl?: string;
-	glyph?: string;
 	/** Absolute path to the favicon source file, when one is configured. */
 	favicon?: string;
 	accent?: string;

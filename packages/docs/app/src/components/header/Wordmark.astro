@@ -5,14 +5,17 @@
 interface Props {
 	title: string;
 	href: string;
-	glyph: string;
 }
 
-const { title, href, glyph } = Astro.props;
+const { title, href } = Astro.props;
 ---
 
 <div class="wordmark">
-	<a href={href}>{glyph && <span class="glyph">{glyph}</span>}{title}</a>
+	<a href={href}>
+		<span class="prefix">bluecadet</span>
+		<span class="slash">/</span>
+		<span class="title">{title}</span>
+	</a>
 </div>
 
 <style>
@@ -27,18 +30,18 @@ const { title, href, glyph } = Astro.props;
 
 	.wordmark a {
 		display: flex;
-		align-items: center;
-		gap: 0.625rem; /* 10px */
+		align-items: baseline;
+		gap: 0.5em;
 		font: 500 0.96875rem var(--font-mono); /* 15.5px */
 		text-transform: lowercase;
-		color: var(--ink);
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
+		color: var(--text-dim);
 	}
 
-	.glyph {
-		color: var(--accent);
+	.title {
+		color: var(--ink);
 	}
 
 	@media (max-width: 1023px) {

@@ -5,15 +5,13 @@ interface Props {
   url: string;
   description: string;
   accentOverride?: string;
-  glyph?: string;
 }
 
-const { title, subtitle, url, description, accentOverride, glyph } = Astro.props;
+const { title, subtitle, url, description, accentOverride } = Astro.props;
 ---
 
 <a class="other-tool-item" href={url} style={accentOverride ? `--accent-override: ${accentOverride}` : ""}>
   <h2 class="type-heading title">
-    {glyph && <span class="glyph">{glyph}</span>}
     <span>{title}</span>
   </h2>
   <p class="type-sm subtitle">{subtitle}</p>

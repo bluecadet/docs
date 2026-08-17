@@ -77,8 +77,6 @@ export interface SidebarItemObject {
 /** The parsed shape of `DOCS_CONFIG`, with fallbacks already applied. */
 export interface DocsAppConfig {
 	title: string;
-	/** Character (or short string) rendered before the site title in the header and footer. Empty by default — no glyph. */
-	glyph: string;
 	/**
 	 * Filename of the favicon the sync step published into `public/`, e.g. `favicon.svg`. Unset when
 	 * `docs.config.yaml` has no `favicon:` — no icon is shipped by default, and the page shell then
@@ -115,9 +113,8 @@ export interface DocsAppConfig {
 	toc?: TocConfig;
 }
 
-const DEFAULTS: Pick<DocsAppConfig, "title" | "glyph" | "configFileName"> = {
+const DEFAULTS: Pick<DocsAppConfig, "title" | "configFileName"> = {
 	title: "docs",
-	glyph: "",
 	configFileName: "docs.config.yaml",
 };
 

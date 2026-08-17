@@ -11,7 +11,6 @@ every relative path below resolves against.
 ```yaml
 title: My Project
 repoUrl: https://github.com/org/my-project
-glyph: "»"
 favicon: docs/img/favicon.svg
 accent: "#9cc3a9"
 accent2: "#e0a75e"
@@ -78,7 +77,6 @@ toc:
 | `content` | `ContentEntry[]` | *required, non-empty* | Where the site's pages and assets come from — see [Content entries](#content). |
 | `landing` | `string` | — | Path (relative to the config file) of the `.md`/`.mdx` file published at `/`. See [Landing page](#landing-page). |
 | `repoUrl` | `string` | `git remote get-url origin`, normalized to `https://host/org/repo` | Used to rewrite links pointing outside the published set to GitHub blob URLs, and for the header's default GitHub link. |
-| `glyph` | `string` | — (no glyph) | Character (or short string) rendered before the site title in the header and footer. |
 | `favicon` | `string` | — (no favicon) | Path (relative to the config file) of an `.svg`/`.png`/`.ico` file published as the site's favicon. See [Favicon](#favicon). |
 | `accent` | `string` (6-digit hex) | `#9cc3a9` (sage) | The STATE accent — where you are, what succeeded. See [Accent colors](#accent-colors). |
 | `accent2` | `string` (6-digit hex) | `#e0a75e` (amber) | The ATTENTION accent — what changed, what's required, what will break. See [Accent colors](#accent-colors). |
@@ -278,7 +276,7 @@ An explicit `favicon` wins over an `assets` glob that happens to publish to the 
 
 - Every scalar field (`title`/`repoUrl`/`base`/`site`) can also be set (or overridden) via a CLI
   flag; flags win over the file — see [CLI](/reference/cli/). `content`/`landing`/`header`/
-  `footer`/`sidebar`/`version`/`sidebarMeta`/`toc`/`glyph`/`favicon`/`accent`/`accent2` have no CLI flag
+  `footer`/`sidebar`/`version`/`sidebarMeta`/`toc`/`favicon`/`accent`/`accent2` have no CLI flag
   equivalent; they're config-file only.
 - A missing config file is a hard build error naming the path the CLI looked at.
 - An invalid or malformed `docs.config.yaml` (not valid YAML, not a YAML mapping at the top level, a

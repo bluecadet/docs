@@ -97,7 +97,6 @@ export function applyEnv(cfg: ResolvedConfig): void {
 		configFileName: path.basename(cfg.configPath),
 	};
 	if (cfg.repoUrl) payload.repoUrl = cfg.repoUrl;
-	if (cfg.glyph) payload.glyph = cfg.glyph;
 	// The published filename, not the source path — the app only needs to know what landed in
 	// `public/`, and its absence is what tells the layout to render no `<link rel="icon">`.
 	if (cfg.favicon) payload.favicon = faviconFileName(cfg.favicon);

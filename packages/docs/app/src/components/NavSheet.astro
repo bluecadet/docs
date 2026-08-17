@@ -43,7 +43,7 @@ if (isRoot) {
 	isRoot ? (
 		<dialog id="nav-sheet" class="nav-sheet" aria-label="Site navigation">
 			<div class="nav-sheet__header">
-				<Wordmark title={config.title} href={base} glyph={config.glyph} />
+				<Wordmark title={config.title} href={base} />
 				<button
 					type="button"
 					class="nav-sheet__close"
@@ -179,14 +179,6 @@ if (isRoot) {
 		flex-shrink: 0;
 	}
 
-	/* Close button's visible glyph right-flushes to the header's content edge, exactly like
-	   NavToggle's hamburger bars (`.nav-toggle` is `align-items: flex-end`, zero padding, inside
-	   `.site-header__right`'s `margin-inline-start: auto`) — the sheet's close and the header's hamburger
-	   must occupy the same pixel so opening/closing the sheet doesn't shift that glyph sideways.
-	   The 44x44 tap target is preserved without widening the visible box: min-height covers the
-	   vertical half, and `::after` below extends the horizontal hit area with an absolutely
-	   positioned transparent layer instead of box padding (which would push the glyph left of the
-	   hamburger's position). */
 	.nav-sheet__close {
 		position: relative;
 		margin-inline-start: auto;

@@ -25,7 +25,6 @@ const FAVICON_EXT = /\.(svg|png|ico)$/i;
 const STRING_KEYS = [
 	"title",
 	"repoUrl",
-	"glyph",
 	"favicon",
 	"accent",
 	"accent2",
@@ -85,7 +84,6 @@ export function resolveConfig(overrides: CliOverrides): ResolvedConfig {
 		out: overrides.out,
 		title,
 		repoUrl: overrides.repoUrl ?? fileConfig.repoUrl ?? getGitRemoteUrl(configDir),
-		glyph: fileConfig.glyph,
 		favicon: resolveFavicon(fileConfig.favicon, configDir, configPath),
 		accent: fileConfig.accent,
 		accent2: fileConfig.accent2,

@@ -55,7 +55,6 @@ describe("validateConfig", () => {
 	it.each([
 		"title",
 		"repoUrl",
-		"glyph",
 		"accent",
 		"accent2",
 		"base",
@@ -644,14 +643,6 @@ describe("validateConfig", () => {
 		});
 	});
 
-	describe("glyph", () => {
-		it("accepts a glyph string", () => {
-			const { config, warnings } = validate({ glyph: "»" }, CONFIG_PATH);
-			expect(config.glyph).toBe("»");
-			expect(warnings).toEqual([]);
-		});
-	});
-
 	describe("accent/accent2", () => {
 		it("accepts valid 6-digit hex colors", () => {
 			const { config, warnings } = validate({ accent: "#9cc3a9", accent2: "#E0A75E" }, CONFIG_PATH);
@@ -755,7 +746,6 @@ describe("resolveConfig (YAML file loading)", () => {
 			[
 				"title: My Project",
 				"repoUrl: https://github.com/acme/proj",
-				"glyph: »",
 				"accent: '#8fb4d6'",
 				"accent2: '#d98a6e'",
 				"site: https://acme.github.io",
@@ -800,7 +790,6 @@ describe("resolveConfig (YAML file loading)", () => {
 		expect(cfg.configDir).toBe(root);
 		expect(cfg.title).toBe("My Project");
 		expect(cfg.repoUrl).toBe("https://github.com/acme/proj");
-		expect(cfg.glyph).toBe("»");
 		expect(cfg.accent).toBe("#8fb4d6");
 		expect(cfg.accent2).toBe("#d98a6e");
 		expect(cfg.site).toBe("https://acme.github.io");
