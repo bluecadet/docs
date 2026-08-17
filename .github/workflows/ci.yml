@@ -277,22 +277,22 @@ jobs:
       # meta-refresh to the first page in the sidebar, so the site has no dead entry point.
       - name: Build the same fixture with no landing page
         run: |
-          # Same docs entry as above, with `landing:` removed — that key is the only difference.
-          # The config also moves into a subdirectory, since that is where consumers keep it, and
-          # every relative path in it and every route resolves against *its* directory, not cwd.
-          mkdir -p "$RUNNER_TEMP/fixture/docs"
-          rm "$RUNNER_TEMP/fixture/docs.config.yaml" "$RUNNER_TEMP/fixture/docs/index.md"
-          cat > "$RUNNER_TEMP/fixture/docs/docs.config.yaml" <<'EOF'
-          title: Fixture Repo
-          content:
-            - files: "**/*.{md,mdx,astro}"
-              assets: "img/**/*"
-          EOF
-          find "$RUNNER_TEMP/fixture" | sort > "$RUNNER_TEMP/fixture-tree-before.txt"
-          cd "$RUNNER_TEMP/fixture"
+          # A copy of the whole fixture repo, nested one level down, so the config sits in a
+          # subdirectory of the directory the build is invoked from — where consumers keep it.
+          # The tree moves as a unit because *everything* anchored on the config anchors on its own
+          # directory, not cwd: the paths inside it, the routes it produces, and the `@docs-src/`
+          # alias its pages import through. Removing `landing:` is then the only difference from
+          # the build above.
+          mkdir -p "$RUNNER_TEMP/no-landing"
+          cp -r "$RUNNER_TEMP/fixture" "$RUNNER_TEMP/no-landing/site"
+          sed -i '/^landing:/d' "$RUNNER_TEMP/no-landing/site/docs.config.yaml"
+          # "/" belongs to the redirect stub now, so the page that used to claim that route goes.
+          rm "$RUNNER_TEMP/no-landing/site/docs/index.md"
+          find "$RUNNER_TEMP/no-landing" | sort > "$RUNNER_TEMP/fixture-tree-before.txt"
+          cd "$RUNNER_TEMP/no-landing"
           "$RUNNER_TEMP/install/node_modules/.bin/docs" build \
-            --config docs/docs.config.yaml --out "$RUNNER_TEMP/no-landing-dist"
-          find "$RUNNER_TEMP/fixture" | sort > "$RUNNER_TEMP/fixture-tree-after.txt"
+            --config site/docs.config.yaml --out "$RUNNER_TEMP/no-landing-dist"
+          find "$RUNNER_TEMP/no-landing" | sort > "$RUNNER_TEMP/fixture-tree-after.txt"
           diff -u "$RUNNER_TEMP/fixture-tree-before.txt" "$RUNNER_TEMP/fixture-tree-after.txt" \
             || { echo "the build wrote into the consumer repo" >&2; exit 1; }
 
@@ -301,5 +301,10 @@ jobs:
           test -f "$RUNNER_TEMP/no-landing-dist/index.html"
           grep -q 'http-equiv="refresh"' "$RUNNER_TEMP/no-landing-dist/index.html"
           # The target is the first sidebar page (alphabetical in auto mode), not a hardcoded route.
-          grep -q 'url=/component-demo/' "$RUNNER_TEMP/no-landing-dist/index.html"
+          grep -q 'url=/changelog/' "$RUNNER_TEMP/no-landing-dist/index.html"
           test -f "$RUNNER_TEMP/no-landing-dist/getting-started/index.html"
+
+          # The `@docs-src/` alias follows the config into its subdirectory: same import specifier
+          # in the same page, resolved against a different anchor than the build above.
+          grep -q '<strong data-widget-name>Widget Package</strong>' \
+            "$RUNNER_TEMP/no-landing-dist/component-demo/index.html"
