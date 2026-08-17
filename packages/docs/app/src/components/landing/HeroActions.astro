@@ -4,19 +4,17 @@
 //   <HeroActions>
 //     <Button variant="ghost" href="/tutorials/add-docs-to-your-repo/">read the quickstart →</Button>
 //   </HeroActions>
-//
-// Same reasoning as HeroEyebrows/HeroNotes: Hero.astro places this wrapper as the single grid item
-// for the actions column, and the buttons lay themselves out inside it — several bare buttons
-// would each be a grid item and overlap in that one area. `.btn-row` (styles/buttons.css) supplies
-// the row's flex/gap, and gives any button left without a `variant` its by-position default.
+
 ---
 
-<div class="hero-actions btn-row" data-reveal>
+<div class="hero-actions" data-reveal>
 	<slot />
 </div>
 
 <style>
 	.hero-actions {
+		display: flex;
+		gap: 0.875rem; /* 14px */
 		--reveal-delay: 5;
 	}
 

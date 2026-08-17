@@ -47,7 +47,7 @@ const routesPayload = {
 				<div class="dym-label type-xs" data-dym-label hidden>DID YOU MEAN</div>
 				<div class="dym-list" data-dym-list hidden></div>
 
-				<div class="notfound-cta btn-row">
+				<div class="notfound-cta">
 					<Button href={base}>back to docs →</Button>
 					<Button variant="ghost" data-search-trigger>
 						search everything <kbd class="kbd">/</kbd>
@@ -223,10 +223,10 @@ const routesPayload = {
 		color: var(--ink);
 	}
 
-	/* -- CTA row --
-	   Button look comes from `.btn-row` in styles/buttons.css (first child primary, the rest
-	   secondary, by DOM order); only where the row sits is this page's business. */
+	/* -- CTA row -- */
 	.notfound-cta {
+		display: flex;
+		gap: 0.875rem; /* 14px */
 		margin-block-start: 1.875rem; /* 30px */
 	}
 

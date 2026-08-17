@@ -114,9 +114,7 @@ const { lead } = Astro.props;
 	@media (min-width: 768px) {
 		.hero {
 			grid-template-columns:
-				[main-start action-1-start] auto
-				[action-1-end action-2-start] auto
-				[action-2-end] minmax(0, 1fr)
+				[main-start] auto
 				[main-end notes-start] 12.5rem
 				[notes-end];
 			align-items: start;
@@ -146,19 +144,11 @@ const { lead } = Astro.props;
 			align-self: start;
 		}
 
-		.hero > :global(.hero-install),
-		.hero > :global(.hero-installs) {
-			grid-column: action-1-start / action-1-end;
-			grid-row: 4;
-			align-self: center;
-		}
-
 		.hero > :global(.hero-actions) {
-			grid-column: action-2-start / action-2-end;
+			grid-column: main-start / main-end;
 			grid-row: 4;
 			align-self: center;
 			margin-block-start: 3rem;
-			margin-inline-start: 1.5rem;
 		}
 	}
 
@@ -181,11 +171,6 @@ const { lead } = Astro.props;
 		h1 {
 			font-size: 3.5rem;
 			max-inline-size: none;
-		}
-
-		.hero > :global(.hero-install),
-		.hero > :global(.hero-installs) {
-			margin-block-start: 2.5rem;
 		}
 
 		.hero > :global(.hero-actions) {
@@ -213,11 +198,6 @@ const { lead } = Astro.props;
 
 		.hero > :global(.hero-notes) {
 			margin-block-start: 1.375rem;
-		}
-
-		.hero > :global(.hero-install),
-		.hero > :global(.hero-installs) {
-			margin-block-start: 1.875rem;
 		}
 
 		.hero > :global(.hero-actions) {

@@ -7,8 +7,7 @@
 //
 // A `title` slot replaces the derived "Start with the …" headline, with the author writing any
 // <em>/<i> accent clause directly into it (see landing.css's `.landing-heading`); a default slot
-// of plain <a> links replaces the two default buttons (first one styled primary, the rest
-// secondary — see `.btn-row` in styles/buttons.css, which is what styles them by DOM order):
+// of plain <a> links replaces the two default buttons
 //
 //   <ClosingCta>
 //     <Fragment slot="title">Ready when you are. <em>It really is one command.</em></Fragment>
@@ -18,6 +17,7 @@
 //
 import { getDocsConfig } from "../../lib/config";
 import { firstPageOf, getNavTree, type NavNode } from "../../lib/nav";
+import Button from "../Button.astro";
 
 const hasTitle = Astro.slots.has("title");
 const hasActions = Astro.slots.has("default");
@@ -49,16 +49,16 @@ if (!hasActions) {
 					{firstSection && `Start with the ${firstSection.label.toLowerCase()}.`}
 				</slot>
 			</h2>
-			<div class="closing-cta-actions btn-row" data-reveal>
+			<div class="closing-cta-actions" data-reveal>
 				{hasActions ? (
 					<slot />
 				) : (
 					<>
-						<a href={firstHref}>read the docs →</a>
+						<Button href={firstHref}>read the docs →</Button>
 						{repoUrl && (
-							<a href={repoUrl} rel="noopener noreferrer" target="_blank">
+							<Button variant="secondary" href={repoUrl} rel="noopener noreferrer" target="_blank">
 								github ↗
-							</a>
+							</Button>
 						)}
 					</>
 				)}
@@ -83,12 +83,11 @@ if (!hasActions) {
 		color: var(--ink);
 	}
 
-	/* The button look itself — including the mobile touch target — comes from `.btn-row` in
-	   styles/buttons.css, which keys primary/secondary off DOM order so slotted <a> tags stay
-	   plain. Only this band's own placement of the row lives here. */
 	.closing-cta-actions {
 		margin-inline-start: auto;
 		--reveal-delay: 1;
+		display: flex;
+		gap: 0.875rem; /* 14px */
 	}
 
 	/* Tablet keeps the flex row (it already wraps via flex-wrap above, just with less padding);
