@@ -5,5 +5,4 @@ app/src/astro-pages/*
 !app/src/astro-pages/.gitkeep
 app/public/*
 !app/public/.gitkeep
-!app/public/favicon.svg
 app/.cache/

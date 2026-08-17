@@ -20,10 +20,13 @@ import type {
 export const CONFIG_FILENAME = "docs.config.yaml";
 
 const LANDING_EXT = /\.(md|mdx)$/i;
+/** Keep in sync with `faviconType()` in app/src/lib/config.ts, which maps these to MIME types. */
+const FAVICON_EXT = /\.(svg|png|ico)$/i;
 const STRING_KEYS = [
 	"title",
 	"repoUrl",
 	"glyph",
+	"favicon",
 	"accent",
 	"accent2",
 	"base",
@@ -83,6 +86,7 @@ export function resolveConfig(overrides: CliOverrides): ResolvedConfig {
 		title,
 		repoUrl: overrides.repoUrl ?? fileConfig.repoUrl ?? getGitRemoteUrl(configDir),
 		glyph: fileConfig.glyph,
+		favicon: resolveFavicon(fileConfig.favicon, configDir, configPath),
 		accent: fileConfig.accent,
 		accent2: fileConfig.accent2,
 		branch: getGitBranch(configDir),
@@ -118,6 +122,30 @@ function resolveLanding(
 	const abs = path.resolve(configDir, landing);
 	if (!fs.existsSync(abs)) {
 		throw new Error(`${configPath}: "landing" points at ${abs}, which does not exist.`);
+	}
+	return abs;
+}
+
+/**
+ * Resolves `favicon` to an absolute path, checked up front like `landing` — a typo'd icon should
+ * name itself at config-load time rather than turning into a silently missing tab icon. The
+ * extension is what the published filename and its `type` attribute are derived from, so it has to
+ * be one this package knows a MIME type for.
+ */
+function resolveFavicon(
+	favicon: string | undefined,
+	configDir: string,
+	configPath: string,
+): string | undefined {
+	if (favicon === undefined) return undefined;
+	if (!FAVICON_EXT.test(favicon)) {
+		throw new Error(
+			`${configPath}: "favicon" must point at a .svg, .png or .ico file (got "${favicon}").`,
+		);
+	}
+	const abs = path.resolve(configDir, favicon);
+	if (!fs.existsSync(abs)) {
+		throw new Error(`${configPath}: "favicon" points at ${abs}, which does not exist.`);
 	}
 	return abs;
 }

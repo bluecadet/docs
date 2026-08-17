@@ -63,6 +63,7 @@ describe("validateConfig", () => {
 		"version",
 		"sidebarMeta",
 		"landing",
+		"favicon",
 	] as const)('throws a clear error when "%s" is not a string', (key) => {
 		expect(() => validate({ content: CONTENT, [key]: 5 }, CONFIG_PATH)).toThrowError(
 			new RegExp(`"${key}" must be a string \\(got number\\)`),
@@ -892,6 +893,34 @@ describe("resolveConfig (YAML file loading)", () => {
 		const root = makeRoot();
 		writeConfig(root, ["title: T", "content:", "  - docs/**/*.md", "landing: docs/home.astro"]);
 		expect(() => resolveConfig(overrides(root))).toThrowError(/must point at a \.md or \.mdx file/);
+	});
+
+	it("resolves favicon to an absolute path", () => {
+		const root = makeRoot();
+		fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+		fs.writeFileSync(path.join(root, "docs", "icon.svg"), "<svg/>");
+		writeConfig(root, ["title: T", "content:", "  - docs/**/*.md", "favicon: docs/icon.svg"]);
+		expect(resolveConfig(overrides(root)).favicon).toBe(path.join(root, "docs", "icon.svg"));
+	});
+
+	it("leaves favicon undefined when the key is absent", () => {
+		const root = makeRoot();
+		writeConfig(root, ["title: T", "content:", "  - docs/**/*.md"]);
+		expect(resolveConfig(overrides(root)).favicon).toBeUndefined();
+	});
+
+	it("throws naming the missing file when favicon does not exist", () => {
+		const root = makeRoot();
+		writeConfig(root, ["title: T", "content:", "  - docs/**/*.md", "favicon: docs/nope.svg"]);
+		expect(() => resolveConfig(overrides(root))).toThrowError(/does not exist/);
+	});
+
+	it("throws when favicon is not an .svg/.png/.ico file", () => {
+		const root = makeRoot();
+		writeConfig(root, ["title: T", "content:", "  - docs/**/*.md", "favicon: docs/icon.webp"]);
+		expect(() => resolveConfig(overrides(root))).toThrowError(
+			/must point at a \.svg, \.png or \.ico file/,
+		);
 	});
 
 	it("resolves relative to the config file's directory, not cwd", () => {

@@ -40,7 +40,6 @@
     "app/src/lib",
     "app/src/styles",
     "app/src/scripts",
-    "app/public/favicon.svg",
     "app/public/.gitkeep"
   ],
   "scripts": {

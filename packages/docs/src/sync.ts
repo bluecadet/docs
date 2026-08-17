@@ -1,7 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
 import matter from "gray-matter";
-import { generateFaviconSvg } from "./favicon.js";
 import type { RewriteContext } from "./links.js";
 import { transformMarkdown } from "./links.js";
 import type { AssetMap, ContentEntry, ResolvedConfig, RouteMap } from "./types.js";
@@ -58,15 +57,6 @@ export function syncContent(cfg: ResolvedConfig, appRoot: string): SyncResult {
 	fs.rmSync(astroPagesDir, { recursive: true, force: true });
 	fs.mkdirSync(astroPagesDir, { recursive: true });
 	resetPublicDir(publicDir);
-	// Sites with a `glyph` get a generated favicon combining it with `accent`; sites without one
-	// keep the shared default document icon that `resetPublicDir` preserved above.
-	if (cfg.glyph) {
-		fs.writeFileSync(
-			path.join(publicDir, "favicon.svg"),
-			generateFaviconSvg(cfg.glyph, cfg.accent),
-			"utf8",
-		);
-	}
 
 	const { pages, routes, assets, notices } = discoverContent(
 		cfg.configDir,
@@ -89,6 +79,12 @@ export function syncContent(cfg: ResolvedConfig, appRoot: string): SyncResult {
 	}
 
 	const assetCount = publishAssets(assets, publicDir);
+	// After the assets, so an explicit `favicon` wins over an `assets` glob that happens to publish
+	// to the same name. No favicon is shipped with the package: with `favicon` unset, `public/` gets
+	// no icon and the app renders no `<link rel="icon">` at all.
+	if (cfg.favicon) {
+		copyInto(cfg.favicon, path.join(publicDir, faviconFileName(cfg.favicon)));
+	}
 
 	return { pageCount, assetCount, warnings, notices };
 }
@@ -353,18 +349,19 @@ function publishAssets(assets: AssetMap, publicDir: string): number {
 	return count;
 }
 
-/** Static files the app ships with (e.g. a default favicon) that must survive re-syncs. */
-const STATIC_PUBLIC_FILES = new Set(["favicon.svg"]);
+/**
+ * The published filename for a configured `favicon` source: always `favicon` plus the source's
+ * (lowercased) extension, so the app can derive both the href and the `type` attribute from the one
+ * string `applyEnv` passes it. See `faviconType()` in app/src/lib/config.ts.
+ */
+export function faviconFileName(faviconPath: string): string {
+	return `favicon${path.extname(faviconPath).toLowerCase()}`;
+}
 
+/** Everything under `public/` is sync output — the package itself ships no static files there. */
 function resetPublicDir(publicDir: string): void {
-	if (!fs.existsSync(publicDir)) {
-		fs.mkdirSync(publicDir, { recursive: true });
-		return;
-	}
-	for (const name of fs.readdirSync(publicDir)) {
-		if (STATIC_PUBLIC_FILES.has(name)) continue;
-		fs.rmSync(path.join(publicDir, name), { recursive: true, force: true });
-	}
+	fs.rmSync(publicDir, { recursive: true, force: true });
+	fs.mkdirSync(publicDir, { recursive: true });
 }
 
 function copyInto(from: string, to: string): void {

@@ -1,5 +1,6 @@
 title: bluecadet docs
 repoUrl: https://github.com/bluecadet/docs
+favicon: docs/favicon.svg
 
 landing: docs/index.mdx
 

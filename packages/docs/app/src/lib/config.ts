@@ -79,6 +79,12 @@ export interface DocsAppConfig {
 	title: string;
 	/** Character (or short string) rendered before the site title in the header and footer. Empty by default — no glyph. */
 	glyph: string;
+	/**
+	 * Filename of the favicon the sync step published into `public/`, e.g. `favicon.svg`. Unset when
+	 * `docs.config.yaml` has no `favicon:` — no icon is shipped by default, and the page shell then
+	 * renders no `<link rel="icon">` at all.
+	 */
+	favicon?: string;
 	/** STATE accent color (hex), e.g. what succeeded, where you are. Falls back to tokens.css's sage default when unset. */
 	accent?: string;
 	/** ATTENTION accent color (hex), e.g. what changed, what's required. Falls back to tokens.css's amber default when unset. */
@@ -133,6 +139,18 @@ const docsConfig = parseDocsConfig();
 /** The CLI-provided config for this build, with a `title: "docs"` fallback. */
 export function getDocsConfig(): DocsAppConfig {
 	return docsConfig;
+}
+
+/** Keep in sync with `FAVICON_EXT` in packages/docs/src/config.ts, which gates the allowed sources. */
+const FAVICON_TYPES: Record<string, string> = {
+	svg: "image/svg+xml",
+	png: "image/png",
+	ico: "image/x-icon",
+};
+
+/** `type` for the favicon `<link>`, e.g. `favicon.svg` -> `image/svg+xml`. */
+export function faviconType(fileName: string): string | undefined {
+	return FAVICON_TYPES[fileName.split(".").pop()?.toLowerCase() ?? ""];
 }
 
 /**

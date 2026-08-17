@@ -103,6 +103,12 @@ export interface DocsConfig {
 	repoUrl?: string;
 	/** Character (or short string) rendered before the site title in the header and footer. No glyph by default. */
 	glyph?: string;
+	/**
+	 * Path (relative to the config file) of an `.svg`/`.png`/`.ico` file published as the site's
+	 * favicon. No favicon is shipped by default: with this unset, nothing is written to `public/` and
+	 * no `<link rel="icon">` is rendered.
+	 */
+	favicon?: string;
 	/** STATE accent color (hex), e.g. what succeeded, where you are. Defaults to the shared sage. */
 	accent?: string;
 	/** ATTENTION accent color (hex), e.g. what changed, what's required. Defaults to the shared amber. */
@@ -149,6 +155,8 @@ export interface ResolvedConfig {
 	title: string;
 	repoUrl?: string;
 	glyph?: string;
+	/** Absolute path to the favicon source file, when one is configured. */
+	favicon?: string;
 	accent?: string;
 	accent2?: string;
 	/** Default branch used when building GitHub blob URLs, e.g. "main". */

@@ -429,6 +429,25 @@ describe("syncContent", () => {
 		});
 	});
 
+	it("publishes a configured favicon to public/ under its extension", () => {
+		write("docs/index.md");
+		const icon = write("brand/mark.png", "png");
+
+		withAppRoot((appRoot) => {
+			syncContent(makeCfg({ favicon: icon }), appRoot);
+			expect(fs.existsSync(path.join(appRoot, "public", "favicon.png"))).toBe(true);
+		});
+	});
+
+	it("ships no favicon when the config has none", () => {
+		write("docs/index.md");
+
+		withAppRoot((appRoot) => {
+			syncContent(makeCfg(), appRoot);
+			expect(fs.readdirSync(path.join(appRoot, "public"))).toEqual([]);
+		});
+	});
+
 	it("does not ship .astro source to public/, even under a catch-all assets glob", () => {
 		write("docs/index.md");
 		write("docs/how-to/demo.astro", "<h1>Demo</h1>\n");

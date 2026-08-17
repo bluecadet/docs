@@ -1,7 +1,7 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { build as astroBuild } from "astro";
-import { syncContent } from "./sync.js";
+import { faviconFileName, syncContent } from "./sync.js";
 import type { ResolvedConfig } from "./types.js";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -93,6 +93,9 @@ export function applyEnv(cfg: ResolvedConfig): void {
 	};
 	if (cfg.repoUrl) payload.repoUrl = cfg.repoUrl;
 	if (cfg.glyph) payload.glyph = cfg.glyph;
+	// The published filename, not the source path — the app only needs to know what landed in
+	// `public/`, and its absence is what tells the layout to render no `<link rel="icon">`.
+	if (cfg.favicon) payload.favicon = faviconFileName(cfg.favicon);
 	if (cfg.accent) payload.accent = cfg.accent;
 	if (cfg.accent2) payload.accent2 = cfg.accent2;
 	if (cfg.base) payload.base = cfg.base;
