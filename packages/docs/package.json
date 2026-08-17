@@ -47,7 +47,7 @@
     "build": "tsc -p tsconfig.json",
     "dev": "tsc -p tsconfig.json --watch",
     "test": "vitest",
-    "prepack": "npm run build"
+    "prepack": "rm -rf dist && npm run build"
   },
   "dependencies": {
     "@astrojs/mdx": "^7.0.5",
