@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Turn any repo's colocated markdown docs into a branded static Astro site with near-zero config.",
   "type": "module",
-  "license": "ISC",
+  "license": "SEE LICENSE IN LICENSE",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/bluecadet/docs.git",
