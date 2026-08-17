@@ -1,8 +1,9 @@
-@layer fonts, tokens, base, article, typography, terminal;
+@layer fonts, tokens, base, article, typography, components, terminal;
 
 @import "./fonts.css" layer(fonts);
 @import "./tokens.css" layer(tokens);
 @import "./global.css" layer(base);
 @import "./article.css" layer(article);
 @import "./typography.css" layer(typography);
+@import "./buttons.css" layer(components);
 @import "./asciinema-theme.css" layer(terminal);

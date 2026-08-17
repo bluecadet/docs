@@ -1,0 +1,57 @@
+/*
+ * Shared button look — one primary/secondary pair, used by the landing page's closing CTA and the
+ * 404 page's action row.
+ *
+ * Two ways in, both landing on the same declarations:
+ *
+ *   - `.btn` plus `.btn-primary`/`.btn-secondary` on the element itself, for a one-off button
+ *     that isn't part of a row.
+ *   - `.btn-row` on a container, which styles its direct <a>/<button> children by DOM order —
+ *     first child primary, the rest secondary. This is what keeps ClosingCta's slot contract
+ *     working: authors write plain, class-free <a> tags in MDX and still get the button look,
+ *     since there's no markup of ours to hang a class on.
+ *
+ * Because the row is keyed off DOM order, a `.btn-primary` class on a non-first child of a
+ * `.btn-row` loses to the order rule — mix the two mechanisms on one element and order wins.
+ *
+ * Scope: the button look itself, plus the row's own inline rhythm (flex + gap). Where the row
+ * sits on the page, what reveals it, and how it stacks are the owning component's business.
+ */
+
+.btn-row {
+	display: flex;
+	gap: 0.875rem; /* 14px */
+}
+
+.btn,
+.btn-row > :is(a, button) {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.375rem; /* 6px — separates a trailing <kbd> or glyph from the label */
+	padding: 0.75rem 1.25rem; /* 12px 20px */
+	border-radius: var(--radius-md);
+	font: var(--weight-regular) 0.8125rem var(--font-mono); /* 13px, same as .type-md */
+	cursor: pointer;
+}
+
+.btn-primary,
+.btn-row > :is(a, button):first-child {
+	color: var(--bg);
+	background: var(--accent);
+}
+
+.btn-secondary,
+.btn-row > :is(a, button):not(:first-child) {
+	color: var(--accent-2);
+	border: 1px solid var(--accent-2-border-40);
+	background: transparent;
+}
+
+/* Mobile: every button clears the 48px touch target, with its label centered in the taller box. */
+@media (max-width: 767px) {
+	.btn,
+	.btn-row > :is(a, button) {
+		justify-content: center;
+		min-block-size: 48px;
+	}
+}

@@ -8,7 +8,7 @@
 // A `title` slot replaces the derived "Start with the …" headline, with the author writing any
 // <em>/<i> accent clause directly into it (see landing.css's `.landing-heading`); a default slot
 // of plain <a> links replaces the two default buttons (first one styled primary, the rest
-// secondary):
+// secondary — see `.btn-row` in styles/buttons.css, which is what styles them by DOM order):
 //
 //   <ClosingCta>
 //     <Fragment slot="title">Ready when you are. <em>It really is one command.</em></Fragment>
@@ -49,7 +49,7 @@ if (!hasActions) {
 					{firstSection && `Start with the ${firstSection.label.toLowerCase()}.`}
 				</slot>
 			</h2>
-			<div class="closing-cta-actions" data-reveal>
+			<div class="closing-cta-actions btn-row" data-reveal>
 				{hasActions ? (
 					<slot />
 				) : (
@@ -83,30 +83,12 @@ if (!hasActions) {
 		color: var(--ink);
 	}
 
+	/* The button look itself — including the mobile touch target — comes from `.btn-row` in
+	   styles/buttons.css, which keys primary/secondary off DOM order so slotted <a> tags stay
+	   plain. Only this band's own placement of the row lives here. */
 	.closing-cta-actions {
-		display: flex;
-		gap: 0.875rem;
 		margin-inline-start: auto;
 		--reveal-delay: 1;
-	}
-
-	/* Styles both the default-rendered buttons and any slotted links through the same selectors —
-	   one source of truth for the primary/secondary button look, keyed off DOM order rather than
-	   a class, since slotted <a> tags are authored plain. */
-	.closing-cta-actions :global(a) {
-		font: 400 0.8125rem var(--font-mono);
-		padding: 0.75rem 1.25rem;
-		border-radius: var(--radius-md);
-	}
-
-	.closing-cta-actions :global(a:first-child) {
-		color: var(--bg);
-		background: var(--accent);
-	}
-
-	.closing-cta-actions :global(a:not(:first-child)) {
-		color: var(--accent-2);
-		border: 1px solid var(--accent-2-border-40);
 	}
 
 	/* Tablet keeps the flex row (it already wraps via flex-wrap above, just with less padding);
@@ -127,13 +109,6 @@ if (!hasActions) {
 
 		.closing-cta-actions {
 			margin-inline-start: 0;
-		}
-
-		.closing-cta-actions :global(a) {
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			min-block-size: 48px;
 		}
 	}
 </style>

@@ -46,9 +46,9 @@ const routesPayload = {
 				<div class="dym-label type-xs" data-dym-label hidden>DID YOU MEAN</div>
 				<div class="dym-list" data-dym-list hidden></div>
 
-				<div class="notfound-cta">
-					<a class="btn btn-primary type-md" href={base}>back to docs →</a>
-					<button type="button" class="btn btn-ghost type-md" data-search-trigger>
+				<div class="notfound-cta btn-row">
+					<a href={base}>back to docs →</a>
+					<button type="button" data-search-trigger>
 						search everything <kbd class="kbd">/</kbd>
 					</button>
 				</div>
@@ -222,31 +222,11 @@ const routesPayload = {
 		color: var(--ink);
 	}
 
-	/* -- CTA row -- */
+	/* -- CTA row --
+	   Button look comes from `.btn-row` in styles/buttons.css (first child primary, the rest
+	   secondary, by DOM order); only where the row sits is this page's business. */
 	.notfound-cta {
-		display: flex;
-		gap: 0.875rem; /* 14px */
 		margin-block-start: 1.875rem; /* 30px */
-	}
-
-	.btn {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.375rem; /* 6px */
-		padding: 0.6875rem 1.125rem; /* 11px 18px */
-		border-radius: var(--radius-md);
-		cursor: pointer;
-	}
-
-	.btn-primary {
-		color: var(--bg);
-		background: var(--accent);
-	}
-
-	.btn-ghost {
-		color: var(--text-muted);
-		border: 1px solid var(--hairline-14);
-		background: transparent;
 	}
 
 	.kbd {
@@ -291,11 +271,13 @@ const routesPayload = {
 			gap: 2rem; /* 32px */
 		}
 
+		/* Stacks a breakpoint earlier than buttons.css's mobile touch-target rule, so the tablet
+		   column repeats the centering/height here. */
 		.notfound-cta {
 			flex-direction: column;
 		}
 
-		.btn {
+		.notfound-cta > :is(a, button) {
 			justify-content: center;
 			min-block-size: 48px;
 		}
