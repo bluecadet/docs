@@ -7,6 +7,7 @@
 // (GitHub Pages serves this same static file for every miss), so we serialize every real doc route
 // into an inline JSON payload and let not-found-client.ts fuzzy-match against `location.pathname`.
 import BaseLayout from "../layouts/BaseLayout.astro";
+import Button from "../components/Button.astro";
 import LandingHeader from "../components/landing/LandingHeader.astro";
 import { getNavTree } from "../lib/nav";
 import { getDocsConfig } from "../lib/config";
@@ -47,10 +48,10 @@ const routesPayload = {
 				<div class="dym-list" data-dym-list hidden></div>
 
 				<div class="notfound-cta btn-row">
-					<a href={base}>back to docs →</a>
-					<button type="button" data-search-trigger>
+					<Button href={base}>back to docs →</Button>
+					<Button variant="ghost" data-search-trigger>
 						search everything <kbd class="kbd">/</kbd>
-					</button>
+					</Button>
 				</div>
 			</div>
 

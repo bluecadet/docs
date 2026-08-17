@@ -1,0 +1,36 @@
+---
+// Button in one of three variants — primary (accent fill), secondary (attention outline) or
+// ghost (neutral outline):
+//
+//   <Button href="/tutorials/add-docs-to-your-repo/">read the docs →</Button>
+//   <Button variant="ghost" href="https://github.com/acme/acme" target="_blank">github ↗</Button>
+//   <Button variant="secondary" data-search-trigger>search everything</Button>
+//
+// `href` picks the element: with one this renders an <a>, without one a <button> (type="button"
+// unless you pass another type). Every other attribute — target/rel, data-*, aria-*, disabled —
+// passes straight through, and a `class` of your own is merged rather than dropped, so a caller
+// can hang its own positioning on the same element.
+//
+// The look lives in styles/buttons.css, not here, because ClosingCta styles author-written plain
+// <a> tags it never gets to put a class on: both paths have to share one set of declarations.
+import type { HTMLAttributes } from "astro/types";
+
+type Props = Omit<HTMLAttributes<"a">, "type"> &
+	HTMLAttributes<"button"> & {
+		/** Defaults to primary. */
+		variant?: "primary" | "secondary" | "ghost";
+	};
+
+const { variant = "primary", href, type, class: className, ...rest } = Astro.props;
+
+const Tag = href ? "a" : "button";
+---
+
+<Tag
+	class:list={["btn", `btn-${variant}`, className]}
+	href={href}
+	type={href ? undefined : (type ?? "button")}
+	{...rest}
+>
+	<slot />
+</Tag>

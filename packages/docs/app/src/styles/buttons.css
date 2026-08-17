@@ -1,18 +1,19 @@
 /*
- * Shared button look — one primary/secondary pair, used by the landing page's closing CTA and the
- * 404 page's action row.
+ * Shared button look — three variants (primary, secondary, ghost), used by the <Button> component,
+ * the hero's actions row, the landing page's closing CTA and the 404 page.
  *
  * Two ways in, both landing on the same declarations:
  *
- *   - `.btn` plus `.btn-primary`/`.btn-secondary` on the element itself, for a one-off button
- *     that isn't part of a row.
+ *   - `.btn` plus `.btn-primary`/`.btn-secondary`/`.btn-ghost` on the element itself. This is what
+ *     components/Button.astro emits, and the way to pick a variant deliberately.
  *   - `.btn-row` on a container, which styles its direct <a>/<button> children by DOM order —
  *     first child primary, the rest secondary. This is what keeps ClosingCta's slot contract
  *     working: authors write plain, class-free <a> tags in MDX and still get the button look,
  *     since there's no markup of ours to hang a class on.
  *
- * Because the row is keyed off DOM order, a `.btn-primary` class on a non-first child of a
- * `.btn-row` loses to the order rule — mix the two mechanisms on one element and order wins.
+ * The order rules are wrapped in `:where()`, so they carry zero specificity and any explicit
+ * `.btn-*` class beats them. Mixing the two inside one row is therefore fine: unclassed children
+ * take their variant from their position, classed ones keep the variant they asked for.
  *
  * Scope: the button look itself, plus the row's own inline rhythm (flex + gap). Where the row
  * sits on the page, what reveals it, and how it stacks are the owning component's business.
@@ -34,14 +35,34 @@
 	cursor: pointer;
 }
 
-.btn-primary,
-.btn-row > :is(a, button):first-child {
+/* ---- Variants -----------------------------------------------------------
+   Primary carries the brand accent as a fill; secondary and ghost are both outlines, differing
+   only in how loud they are — secondary in the attention accent, ghost in the neutral hairline
+   the rest of the chrome uses. */
+.btn-primary {
 	color: var(--bg);
 	background: var(--accent);
 }
 
-.btn-secondary,
-.btn-row > :is(a, button):not(:first-child) {
+.btn-secondary {
+	color: var(--accent-2);
+	border: 1px solid var(--accent-2-border-40);
+	background: transparent;
+}
+
+.btn-ghost {
+	color: var(--text-muted);
+	border: 1px solid var(--hairline-14);
+	background: transparent;
+}
+
+/* ---- Order fallback (see the `:where()` note up top) --------------------- */
+:where(.btn-row > :is(a, button):first-child) {
+	color: var(--bg);
+	background: var(--accent);
+}
+
+:where(.btn-row > :is(a, button):not(:first-child)) {
 	color: var(--accent-2);
 	border: 1px solid var(--accent-2-border-40);
 	background: transparent;

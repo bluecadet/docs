@@ -1,3 +1,4 @@
+export { default as Button } from "./Button.astro";
 export { default as Line } from "./Line.astro";
 export { default as ClosingCta } from "./landing/ClosingCta.astro";
 export { default as CtaCard } from "./landing/CtaCard.astro";
