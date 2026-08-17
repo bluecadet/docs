@@ -1,6 +1,6 @@
 {
   "name": "@bluecadet/docs",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "Turn any repo's colocated markdown docs into a branded static Astro site with near-zero config.",
   "type": "module",
   "license": "ISC",
