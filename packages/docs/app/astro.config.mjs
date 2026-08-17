@@ -5,6 +5,7 @@ import { rehypeHeadingIds } from "@astrojs/markdown-remark";
 import { createIndex } from "pagefind";
 import { transformerMetaHighlight } from "@shikijs/transformers";
 import { defineConfig } from "astro/config";
+import { searchForWorkspaceRoot } from "vite";
 import { remarkAlerts } from "./src/lib/remark-alerts";
 import { rehypeCodeBlocks } from "./src/lib/rehype-code-blocks";
 import { rehypeHeadingAnchors } from "./src/lib/rehype-heading-anchors";
@@ -18,6 +19,8 @@ const site = process.env.DOCS_SITE;
 // alias below; unset only when this app is run directly (`astro dev` in this repo), which no
 // consumer content is synced into, so nothing can reference the alias either.
 const configDir = process.env.DOCS_CONFIG_DIR?.replace(/\\/g, "/");
+/** This app's own directory — the Astro `root` the CLI passes (see ../src/build.ts). */
+const APP_ROOT = fileURLToPath(new URL(".", import.meta.url));
 
 // Same `DOCS_CONFIG` payload app/src/lib/config.ts parses at runtime — read again here, config-
 // build-side, only for the one field this file needs: whether "/" is a real landing page or the
@@ -147,10 +150,16 @@ export default defineConfig({
 			 */
 			alias: configDir ? [{ find: /^@docs-src\//, replacement: `${configDir}/` }] : [],
 		},
-		// The alias gets Vite to *find* the file; dev additionally refuses to serve anything outside
-		// the project root without this. Astro's own `fs.allow` entries survive — Vite merges array
-		// options by concatenating them.
-		server: configDir ? { fs: { allow: [configDir] } } : {},
+		// The alias gets Vite to *find* the file; dev additionally refuses to *serve* anything outside
+		// the project root without this. Declaring `fs.allow` REPLACES Vite's default entry rather
+		// than adding to it, so the workspace root has to be restated here — without it the dev
+		// server 403s on the app's own stylesheets and bundled fonts. `searchForWorkspaceRoot` is the
+		// same function Vite computes that default with, and it resolves both install layouts: the
+		// docs monorepo for a workspace/`file:` link, the consumer's project root (i.e. the
+		// node_modules holding this package) for a published install.
+		server: configDir
+			? { fs: { allow: [searchForWorkspaceRoot(APP_ROOT), configDir] } }
+			: {},
 	},
 	markdown: {
 		remarkPlugins: [remarkAlerts],
