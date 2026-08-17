@@ -1,10 +1,15 @@
 # Changesets version/publish flow for @bluecadet/docs.
 #
-# Publishes to the GitHub Packages npm registry (npm.pkg.github.com), not public npmjs.com.
-# GitHub Packages doesn't support npm trusted publishing/OIDC or provenance, so auth is the
-# job's own GITHUB_TOKEN (needs `packages: write`) instead of an OIDC exchange. setup-node's
-# registry-url + scope config points `@bluecadet` installs/publishes at GitHub Packages while
-# leaving unscoped transitive deps resolving from the default npm registry.
+# Publishes to the public npm registry (registry.npmjs.org) using npm trusted
+# publishing: the job exchanges its GitHub OIDC token for a short-lived npm
+# credential, so there is no NPM_TOKEN secret to store or rotate. This requires
+# `id-token: write` and a trusted publisher configured on npmjs.com for the
+# package (Settings -> Trusted publishing -> this repo + workflow file).
+#
+# NPM_CONFIG_PROVENANCE makes npm attach a signed provenance attestation linking
+# each published tarball to this workflow and commit. Note that attestations are
+# public even though this repo is private: they expose the repo URL, workflow
+# path, and commit SHA. Drop the env var if that is unwanted.
 
 on:
   workflow_dispatch:
@@ -23,7 +28,7 @@ jobs:
 
     permissions:
       contents: write # to create release (changesets/action)
-      packages: write # to publish @bluecadet/docs to GitHub Packages
+      id-token: write # to mint the OIDC token for npm trusted publishing
       pull-requests: write # to create pull request (changesets/action)
 
     name: Release
@@ -38,21 +43,20 @@ jobs:
 
       - uses: actions/setup-node@v6
         with:
+          # trusted publishing needs npm >= 11.5.1; node 24 bundles npm 11.x
           node-version: 24
           cache: "npm"
-          registry-url: "https://npm.pkg.github.com"
+          registry-url: "https://registry.npmjs.org"
           scope: "@bluecadet"
           package-manager-cache: false # never use caching in release builds
 
       - name: Install Dependencies
         run: npm ci
 
-      - name: Create Release Pull Request or Publish to GitHub Packages
+      - name: Create Release Pull Request or Publish to npm
         id: changesets
         uses: changesets/action@v1
         with:
           publish: npm run release
         env:
-          # setup-node's registry-url config reads this at publish time to auth against
-          # npm.pkg.github.com for the @bluecadet scope.
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_CONFIG_PROVENANCE: true
