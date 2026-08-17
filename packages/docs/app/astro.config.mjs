@@ -1,3 +1,5 @@
+import { writeFile } from "node:fs/promises";
+import path from "node:path";
 import { fileURLToPath } from "node:url";
 import mdx from "@astrojs/mdx";
 import sitemap from "@astrojs/sitemap";
@@ -35,7 +37,20 @@ try {
 
 // The root URL sitemap() would otherwise list for "/" — used below to drop it when there's no real
 // landing page, since that route is just a noindex meta-refresh to the first sidebar page.
-const rootUrl = site ? new URL(base || "/", site).href : undefined;
+//
+// Forced to a trailing slash before it's used for either job: `base` reaches this file as the raw
+// `base:` string from the consumer's config (the CLI passes it through unvalidated), so "/proj" is
+// as likely as "/proj/". Astro normalizes it internally and emits "<site>/proj/" in the sitemap,
+// which the filter below has to match exactly — and `new URL("sitemap-index.xml", ...)` resolves
+// against the last path *segment*, so an unslashed base would silently hoist the sitemap URL in
+// robotsTxt() up to the origin root.
+const rootUrl = site ? new URL(base || "/", site).href.replace(/\/?$/, "/") : undefined;
+
+/**
+ * Absolute URL of the sitemap index — only when `site` is set, since that's the same condition
+ * sitemap() itself is registered under, and an absolute URL is the only form `Sitemap:` accepts.
+ */
+const sitemapUrl = rootUrl ? new URL("sitemap-index.xml", rootUrl).href : undefined;
 
 /**
  * Builds a Pagefind search index over the static build output once Astro finishes writing it,
@@ -95,6 +110,42 @@ function pagefindIndex() {
 }
 
 /**
+ * Writes a permissive robots.txt to the output root, pointing crawlers at the sitemap index when
+ * there is one.
+ *
+ * Unconditional, unlike sitemap(): the crawl directives are the same with or without `site`, and a
+ * site missing robots.txt entirely gets a 404 in every crawler's logs. Only the `Sitemap:` line is
+ * gated, since it has nothing to name without an origin to build an absolute URL from.
+ *
+ * Written from `astro:build:done` rather than shipped as a `public/` file because sync.ts owns
+ * `public/` outright — `resetPublicDir()` wipes and rebuilds it on every sync, so nothing static
+ * survives there — and because the `Sitemap:` line is derived from the same `site`/`base` pair
+ * that decides whether sitemap() runs at all. Consequence: `docs dev` serves no robots.txt. That
+ * is fine; nothing crawls a dev server.
+ *
+ * Known limitation: crawlers only ever fetch `<origin>/robots.txt`. With `base` set (a project
+ * site at `<origin>/<base>/`), this file lands at `<origin>/<base>/robots.txt` and is ignored —
+ * the origin root is not ours to write to. The `Sitemap:` line stays correct either way, and a
+ * root-hosted site (the common case) is unaffected.
+ */
+function robotsTxt() {
+	return {
+		name: "robots-txt",
+		hooks: {
+			"astro:build:done": async ({ dir, logger }) => {
+				const lines = ["User-agent: *", "Allow: /"];
+				if (sitemapUrl) lines.push("", `Sitemap: ${sitemapUrl}`);
+
+				const outPath = path.join(fileURLToPath(dir), "robots.txt");
+				await writeFile(outPath, `${lines.join("\n")}\n`, "utf8");
+
+				logger.info(sitemapUrl ? `wrote robots.txt (Sitemap: ${sitemapUrl})` : "wrote robots.txt");
+			},
+		},
+	};
+}
+
+/**
  * Loads the copy-button client script (app/src/scripts/code-copy.ts) on every page. There's no
  * layout component in this package to hang a <script> tag off directly, so this is done via the
  * integration API instead: `injectScript("page", ...)` bundles the given module through Vite and
@@ -119,6 +170,7 @@ export default defineConfig({
 		mdx(),
 		pagefindIndex(),
 		codeCopyScript(),
+		robotsTxt(),
 		// Requires `site` (it warns and no-ops without one — see its own astro:build:done hook), so
 		// only registered when the CLI's `site` config option is set. It already excludes /404 (and
 		// /500) on its own; the extra `filter` below additionally drops "/" when there's no real

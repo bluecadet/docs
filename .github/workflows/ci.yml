@@ -224,6 +224,12 @@ jobs:
           grep -q '<link rel="canonical" href="https://example.com/getting-started/">' \
             "$RUNNER_TEMP/fixture-dist/getting-started/index.html"
 
+          # robots.txt is written on every build, but its `Sitemap:` line only exists when there is
+          # a sitemap to name — i.e. only with `--site`. The no-landing build below has no `--site`
+          # and asserts the other half of that pair.
+          grep -q '^Sitemap: https://example.com/sitemap-index.xml$' \
+            "$RUNNER_TEMP/fixture-dist/robots.txt"
+
           # `landing:` owns "/", and its relative image resolves to the single path the packages
           # entry's `assets` glob published it at — under that entry's `route` prefix.
           grep -q 'src="/packages/widget/diagram.svg"' "$RUNNER_TEMP/fixture-dist/index.html"
@@ -303,6 +309,10 @@ jobs:
           # The target is the first sidebar page (alphabetical in auto mode), not a hardcoded route.
           grep -q 'url=/changelog/' "$RUNNER_TEMP/no-landing-dist/index.html"
           test -f "$RUNNER_TEMP/no-landing-dist/getting-started/index.html"
+
+          # No `--site` on this build: robots.txt still ships, without a `Sitemap:` line.
+          grep -q '^Allow: /$' "$RUNNER_TEMP/no-landing-dist/robots.txt"
+          ! grep -q '^Sitemap:' "$RUNNER_TEMP/no-landing-dist/robots.txt"
 
           # The `@docs-src/` alias follows the config into its subdirectory: same import specifier
           # in the same page, resolved against a different anchor than the build above.

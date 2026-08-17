@@ -81,7 +81,7 @@ toc:
 | `accent` | `string` (6-digit hex) | `#9cc3a9` (sage) | The STATE accent — where you are, what succeeded. See [Accent colors](#accent-colors). |
 | `accent2` | `string` (6-digit hex) | `#e0a75e` (amber) | The ATTENTION accent — what changed, what's required, what will break. See [Accent colors](#accent-colors). |
 | `base` | `string` | `/` | Base path for the deployed site. |
-| `site` | `string` | — | Absolute site origin. Also drives canonical URLs, Open Graph meta tags, and sitemap generation — set once every page gets a `<link rel="canonical">`, `og:*` tags, and a `sitemap-index.xml`; left unset, all three are skipped. |
+| `site` | `string` | — | Absolute site origin. Also drives canonical URLs, Open Graph meta tags, and sitemap generation — set once every page gets a `<link rel="canonical">`, `og:*` tags, and a `sitemap-index.xml`; left unset, all three are skipped. A `robots.txt` is written either way, and names the sitemap when this is set — see [Crawling](#crawling). |
 | `header.links` | `{ label, href }[]` | — | Extra links rendered in the header after its fixed "docs" link, replacing the default GitHub link entirely when set — see [Notes](#notes). |
 | `footer.groups` | `{ title, links: { label, href, note? }[] }[]` | — | Titled groups of links rendered in the footer, replacing the default "docs"/"github" pair entirely when set — see [Notes](#notes). |
 | `footer.meta` | `string` | — | Right-aligned meta string in the footer (e.g. `MIT licensed · no telemetry`), rendered on every page. |
@@ -272,6 +272,26 @@ browsers then request `/favicon.ico` and get a 404, which is the same as any sit
 
 An explicit `favicon` wins over an `assets` glob that happens to publish to the same name.
 
+## Crawling
+
+Every build writes a permissive `robots.txt` to the output root:
+
+```
+User-agent: *
+Allow: /
+```
+
+When `site` is set, a `Sitemap:` line naming the generated sitemap index is appended:
+
+```
+Sitemap: https://docs.example.com/sitemap-index.xml
+```
+
+That's the whole of it — there is no config for crawl rules. The sitemap it points at is generated
+by `site` alone and lists every published page except `404` and, when there's no `landing`, the `/`
+redirect stub (neither is content worth indexing). Pages that shouldn't be indexed carry
+`<meta name="robots" content="noindex">` on their own.
+
 ## Notes
 
 - Every scalar field (`title`/`repoUrl`/`base`/`site`) can also be set (or overridden) via a CLI
@@ -305,3 +325,7 @@ An explicit `favicon` wins over an `assets` glob that happens to publish to the 
   the same source file.
 - **With no `landing` configured, `/` is a meta-refresh redirect to the first sidebar page, not a
   real page.** It carries no content and isn't indexed by search.
+- **With `base` set, the generated `robots.txt` is ignored by crawlers.** They only ever fetch
+  `<origin>/robots.txt`, and a build writes to `<origin>/<base>/robots.txt` — the origin root
+  belongs to whatever else is deployed there, not to this build. The `Sitemap:` line stays correct;
+  submit the sitemap URL directly, or serve a `robots.txt` at the origin root yourself.
