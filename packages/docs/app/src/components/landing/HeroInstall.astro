@@ -4,9 +4,9 @@
 //   <HeroInstall>npm i @bluecadet/docs</HeroInstall>
 //
 // The command is plain text taken from this component's own slot (not a prop) so the source reads
-// like a shell line. Hero.astro positions the rendered chip in its actions row, beside the "read
-// the quickstart" link Hero renders itself; the copy-to-clipboard behavior lives here since it's
-// this component's own concern, not Hero's.
+// like a shell line. Hero.astro positions the rendered chip in its actions row, beside whatever
+// <HeroActions> holds; the copy-to-clipboard behavior lives here since it's this component's own
+// concern, not Hero's.
 //
 // Astro.slots.render() returns already-HTML-escaped markup (it's meant to be written straight into
 // the page) — for slot content that's just text, that's the text with `&<>'"` turned into entities.

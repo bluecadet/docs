@@ -41,7 +41,8 @@ want from the package — the CLI leaves `.mdx` imports untouched, and it can al
 
 ```mdx
 import {
-  Hero, HeroEyebrows, HeroEyebrow, HeroInstall, HeroInstalls, HeroNotes, HeroNote,
+  Hero, HeroEyebrows, HeroEyebrow, HeroInstall, HeroInstalls, HeroActions, HeroNotes, HeroNote,
+  Button,
   StatStrip, Stat,
 } from "@bluecadet/docs/components";
 ```
@@ -51,11 +52,11 @@ edge to edge.
 
 ### Hero
 
-Six components, composed together — `<Hero>` renders the headline, lead and "read the
-quickstart" link itself; everything inside it is its own component. `<HeroEyebrows>` and
-`<HeroNotes>` group their chips/notes into a single region each — Astro gives `<Hero>` no way to
-tell several flat `<HeroEyebrow>`/`<HeroNote>` children apart from one, so each group is one child
-for `<Hero>` to place, not several it would have to spread out on its own:
+`<Hero>` renders the headline and lead itself; everything inside it is its own component.
+`<HeroEyebrows>`, `<HeroActions>` and `<HeroNotes>` group their chips/buttons/notes into a single
+region each — Astro gives `<Hero>` no way to tell several flat `<HeroEyebrow>`/`<Button>`/
+`<HeroNote>` children apart from one, so each group is one child for `<Hero>` to place, not several
+it would have to spread out on its own:
 
 ```mdx
 <Hero lead="A build tool for people who would rather not think about build tools.">
@@ -66,6 +67,9 @@ for `<Hero>` to place, not several it would have to spread out on its own:
     <HeroEyebrow>any repo</HeroEyebrow>
   </HeroEyebrows>
   <HeroInstall>npx acme-build</HeroInstall>
+  <HeroActions>
+    <Button variant="ghost" href="/tutorials/install/">read the quickstart →</Button>
+  </HeroActions>
   <HeroNotes>
     <HeroNote>↖ the config file is optional. it has four keys.</HeroNote>
     <HeroNote>nothing here phones home.</HeroNote>
@@ -75,11 +79,12 @@ for `<Hero>` to place, not several it would have to spread out on its own:
 
 | Component | Props | Renders as |
 | --- | --- | --- |
-| `<Hero>` | `lead`, `quickstartHref`; a `title` slot (required) | The headline and lead paragraph. `quickstartHref` targets the "read the quickstart" link, which always renders beside the install chip; it defaults to your first sidebar page. |
+| `<Hero>` | `lead`; a `title` slot (required) | The headline and lead paragraph. |
 | `<HeroEyebrows>` | children | Groups `<HeroEyebrow>` chips into the row above the headline. |
 | `<HeroEyebrow>` | `tone`: `state` \| `attention` \| `neutral` (default), label as children | Uppercase mono chips above the headline. `state` is solid (sage by default), `attention` is outlined (amber by default), `neutral` is outlined (default). Up to 3 render; extras are hidden. |
 | `<HeroInstall>` | `label` (optional), command as children | A `$ …` chip under the lead with a copy button. |
 | `<HeroInstalls>` | children | Groups two-or-more `<HeroInstall>` chips into a tabbed switcher. |
+| `<HeroActions>` | children | Groups `<Button>`s into the row beside the install chip (stacked below it on mobile). |
 | `<HeroNotes>` | children | Groups `<HeroNote>` marginalia into the column beside the lead paragraph (tablet width up) or the row below it (mobile). |
 | `<HeroNote>` | note text as children | One marginalia note. The first renders in the attention accent, a second (max) renders neutral; extras are hidden. |
 
@@ -101,6 +106,26 @@ a PowerShell one-liner for Windows alongside a POSIX shell one for macOS/Linux, 
 
 Without JavaScript, tabs never render — all the commands show at once, stacked, each still labelled
 and still individually copyable, so nothing is ever hidden behind a control that doesn't work.
+
+### Button
+
+One button in three variants, used inside `<HeroActions>` and `<ClosingCta>`:
+
+```mdx
+<Button href="/tutorials/install/">read the docs →</Button>
+<Button variant="secondary" href="https://github.com/acme/acme">github ↗</Button>
+<Button variant="ghost" href="/reference/cli/">every flag →</Button>
+```
+
+| Prop | Value | Renders as |
+| --- | --- | --- |
+| `variant` | `primary` (default) | Solid accent fill. One per row, at most. |
+| `variant` | `secondary` | Outlined in the attention accent. |
+| `variant` | `ghost` | Outlined in a neutral hairline, muted label. |
+| `href` | a URL | Makes it an `<a>`. Without one you get a `<button type="button">`. |
+
+Anything else you pass — `target`, `rel`, `aria-*`, `data-*`, `disabled` — lands on the rendered
+element unchanged.
 
 ### StatStrip
 
@@ -225,13 +250,24 @@ button, the rest as secondary:
 </ClosingCta>
 ```
 
+Use `<Button>` instead of a plain `<a>` when you want to pick the variants yourself — the two mix
+freely, and a `<Button>`'s own `variant` wins over the by-position default:
+
+```mdx
+<ClosingCta>
+  <Button href="/tutorials/add-docs-to-your-repo/">get started →</Button>
+  <Button variant="ghost" href="https://github.com/acme/acme">github ↗</Button>
+</ClosingCta>
+```
+
 ## Import paths
 
 Every component is imported from the same barrel:
 
 ```mdx
 import {
-  Hero, HeroEyebrows, HeroEyebrow, HeroInstall, HeroInstalls, HeroNotes, HeroNote,
+  Hero, HeroEyebrows, HeroEyebrow, HeroInstall, HeroInstalls, HeroActions, HeroNotes, HeroNote,
+  Button,
   StatStrip, Stat,
   TerminalBand, Terminal, Line, Ok, Warn,
   Features, Feature,

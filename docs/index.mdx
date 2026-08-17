@@ -4,6 +4,7 @@ description: A CLI that turns a docs.config.yaml and the files it names into a s
 ---
 
 import {
+  Button,
   ClosingCta,
   CtaCard,
   CtaCards,
@@ -12,6 +13,7 @@ import {
   GlyphItem,
   GlyphList,
   Hero,
+  HeroActions,
   HeroEyebrows,
   HeroEyebrow,
   HeroInstall,
@@ -39,6 +41,9 @@ import {
     <HeroEyebrow>any repo</HeroEyebrow>
   </HeroEyebrows>
   <HeroInstall>npx @bluecadet/docs build</HeroInstall>
+  <HeroActions>
+    <Button variant="ghost" href="/tutorials/add-docs-to-your-repo/">read the quickstart →</Button>
+  </HeroActions>
   <HeroNotes>
     <HeroNote>↖ one required input: a docs.config.yaml naming a title and where your content lives.</HeroNote>
     <HeroNote>the repo you point it at needs no package.json, no dependencies and no astro config.</HeroNote>

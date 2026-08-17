@@ -9,6 +9,7 @@ export { default as GeneralBand } from "./landing/GeneralBand.astro";
 export { default as GlyphItem } from "./landing/GlyphItem.astro";
 export { default as GlyphList } from "./landing/GlyphList.astro";
 export { default as Hero } from "./landing/Hero.astro";
+export { default as HeroActions } from "./landing/HeroActions.astro";
 export { default as HeroEyebrow } from "./landing/HeroEyebrow.astro";
 export { default as HeroEyebrows } from "./landing/HeroEyebrows.astro";
 export { default as HeroInstall } from "./landing/HeroInstall.astro";

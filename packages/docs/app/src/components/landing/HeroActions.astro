@@ -1,0 +1,32 @@
+---
+// Groups <Button>s into the hero's actions row, beside the install chip:
+//
+//   <HeroActions>
+//     <Button variant="ghost" href="/tutorials/add-docs-to-your-repo/">read the quickstart →</Button>
+//   </HeroActions>
+//
+// Same reasoning as HeroEyebrows/HeroNotes: Hero.astro places this wrapper as the single grid item
+// for the actions column, and the buttons lay themselves out inside it — several bare buttons
+// would each be a grid item and overlap in that one area. `.btn-row` (styles/buttons.css) supplies
+// the row's flex/gap, and gives any button left without a `variant` its by-position default.
+---
+
+<div class="hero-actions btn-row" data-reveal>
+	<slot />
+</div>
+
+<style>
+	.hero-actions {
+		--reveal-delay: 5;
+	}
+
+	/* Mobile: full-width buttons stacked under the install chip, matching the chip's own 48px tap
+	   target rather than sitting beside it in a cramped row. */
+	@media (max-width: 767px) {
+		.hero-actions {
+			flex-direction: column;
+			align-items: stretch;
+			gap: 0.625rem;
+		}
+	}
+</style>
