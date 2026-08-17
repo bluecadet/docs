@@ -79,7 +79,8 @@ jobs:
 
       - name: Write a minimal fixture repo
         run: |
-          mkdir -p "$RUNNER_TEMP/fixture/docs/img" "$RUNNER_TEMP/fixture/packages/widget"
+          mkdir -p "$RUNNER_TEMP/fixture/docs/img" "$RUNNER_TEMP/fixture/packages/widget" \
+            "$RUNNER_TEMP/fixture/components"
           # The config is the whole content contract — nothing is discovered by convention — so this
           # exercises both entry forms: a bare glob string (base "." , so its directory stays in the
           # route) and object entries with base/route/assets, one of them pointing outside the docs
@@ -128,12 +129,14 @@ jobs:
           cat > "$RUNNER_TEMP/fixture/docs/component-demo.astro" <<'EOF'
           ---
           import { Ok } from "@bluecadet/docs/components";
+          import WidgetName from "@docs-src/components/WidgetName.astro";
 
           export const layout = "docs";
           export const title = "Component Demo";
           ---
 
           <p>Fixture <code>.astro</code> page in the docs layout. <Ok>this word</Ok> comes from the barrel.</p>
+          <p>And <WidgetName /> comes from the fixture repo itself.</p>
           EOF
           cat > "$RUNNER_TEMP/fixture/docs/component-demo-raw.astro" <<'EOF'
           ---
@@ -156,8 +159,31 @@ jobs:
           ---
 
           import { Ok } from "@bluecadet/docs/components";
+          import WidgetName from "@docs-src/components/WidgetName.astro";
 
           Fixture MDX page importing a component from the barrel: <Ok>this word</Ok>.
+
+          And one from the fixture repo itself: <WidgetName />
+          EOF
+          # A component belonging to the consumer, deliberately outside every `content` glob — it is
+          # not a page. Reachable only through the `@docs-src/` alias, and it reads a file of its own
+          # repo at build time, anchored on DOCS_CONFIG_DIR (the directory holding docs.config.yaml).
+          # `import.meta.url` would point at the bundled chunk inside the app instead.
+          cat > "$RUNNER_TEMP/fixture/components/WidgetName.astro" <<'EOF'
+          ---
+          import fs from "node:fs";
+          import path from "node:path";
+
+          const configDir = process.env.DOCS_CONFIG_DIR;
+          if (!configDir) throw new Error("DOCS_CONFIG_DIR is unset");
+          const readme = fs.readFileSync(
+            path.join(configDir, "packages", "widget", "README.md"),
+            "utf8",
+          );
+          const heading = readme.match(/^#\s+(.+)$/m)[1];
+          ---
+
+          <strong data-widget-name>{heading}</strong>
           EOF
 
       - name: Install the packed tarball into a scratch project
@@ -220,6 +246,15 @@ jobs:
             echo "README.md shipped as a raw asset — pages are published as pages, not downloads" >&2
             exit 1
           fi
+
+          # Both page kinds importing a component from the consumer's own repo through `@docs-src/`,
+          # which read that repo's files at build time to produce this text. The component sits
+          # outside every content glob and is never copied into the app, so this is also the check
+          # that the alias survives packaging.
+          grep -q '<strong data-widget-name>Widget Package</strong>' \
+            "$RUNNER_TEMP/fixture-dist/mdx-demo/index.html"
+          grep -q '<strong data-widget-name>Widget Package</strong>' \
+            "$RUNNER_TEMP/fixture-dist/component-demo/index.html"
 
           # .astro page via a content glob, layout "docs": renders in the normal chrome with its title.
           test -f "$RUNNER_TEMP/fixture-dist/component-demo/index.html"

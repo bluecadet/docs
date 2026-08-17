@@ -76,12 +76,17 @@ export function logSyncResult(result: {
 }
 
 /**
- * Sets `DOCS_BASE`/`DOCS_SITE` (still read directly by astro.config.mjs) and the consolidated
- * `DOCS_CONFIG` JSON payload that app code reads via `app/src/lib/config.ts`'s `getDocsConfig()`.
+ * Sets `DOCS_BASE`/`DOCS_SITE`/`DOCS_CONFIG_DIR` (all three read directly by astro.config.mjs) and
+ * the consolidated `DOCS_CONFIG` JSON payload that app code reads via `app/src/lib/config.ts`'s
+ * `getDocsConfig()`.
  */
 export function applyEnv(cfg: ResolvedConfig): void {
 	if (cfg.base) process.env.DOCS_BASE = cfg.base;
 	if (cfg.site) process.env.DOCS_SITE = cfg.site;
+	// Backs the `@docs-src/` import alias, which is how a synced page reaches a component in the
+	// consumer's own repo (see app/astro.config.mjs — synced pages are copies, so relative
+	// specifiers resolve inside the app, where the consumer's files have never existed).
+	process.env.DOCS_CONFIG_DIR = cfg.configDir;
 
 	// `hasLanding` tells the app whether route "/" is a real page or has to become a redirect to the
 	// first sidebar page (see app/src/pages/index.astro). The redirect *target* is resolved app-side

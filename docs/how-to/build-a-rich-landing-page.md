@@ -282,6 +282,17 @@ exactly one hook — `accent`/`accent2` in `docs.config.yaml` (see
 [docs.config.yaml schema](/reference/docs-config-yaml/#accent-colors)) — deliberately narrow so
 every site built with this tool still reads the same way.
 
+Your own components live in your repo and are imported through `@docs-src/`, which points at the
+directory holding `docs.config.yaml`:
+
+```mdx
+import Table from "@docs-src/Table.astro";
+```
+
+Relative imports (`./Table.astro`) do **not** work — see
+[consumer components](/reference/content-conventions/#consumer-components) for why, and for the one
+rule such a component has to follow if it reads files at build time.
+
 ## Keep it true
 
 The blocks are shaped for concrete claims: a real command, a real transcript, a real number. A stat

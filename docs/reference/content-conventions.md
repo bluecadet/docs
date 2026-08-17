@@ -190,13 +190,56 @@ Known limitations:
 - No TOC extraction — `.astro` pages render no on-disk headings, so there's no "on this page"
   column (matches a markdown page with no `##` headings).
 - No edit link — there's no single source file to point a `toc.editLink` template at.
-- No relative imports between consumer `.astro` files. Each page is synced standalone into the
-  app's own source tree; import shared UI only from `@bluecadet/docs/components` (see
-  [Import paths](/how-to/build-a-rich-landing-page/#import-paths) — the same barrel MDX pages use).
+- No relative imports between consumer files. Each page is synced standalone into the app's own
+  source tree; import shared UI from `@bluecadet/docs/components` (see
+  [Import paths](/how-to/build-a-rich-landing-page/#import-paths) — the same barrel MDX pages use)
+  and your own components through `@docs-src/` ([below](#consumer-components)).
 - Assets referenced from an `.astro` page use the same published-path lookup as any other asset
   (see [Link and asset rewriting](#link-and-asset-rewriting)) — `.astro` files themselves aren't
   rewritten, so reference assets by their published path, not a relative import, and make sure an
   `assets` glob on that entry actually covers them.
+
+## Consumer components
+
+Pages can import components from your own repo — a landing-page table built from data only your
+repo has, a diagram assembled from a manifest — through the `@docs-src/` prefix. It resolves
+against the directory holding `docs.config.yaml`:
+
+```mdx
+import Table from "@docs-src/Table.astro";
+
+<Table />
+```
+
+The file does not have to be part of your `content` globs, and should not be: `content` publishes
+pages, and a component is not a page. Anything under the config file's directory is importable,
+including paths above it (`@docs-src/../Packages/widget/Chart.astro`).
+
+Relative specifiers (`./Table.astro`) cannot work here. Sync *copies* every page into the app —
+markdown and MDX into its content collection, `.astro` pages under route-normalized paths — so a
+relative import resolves next to the copy, in a directory your file has never been in. (`docs dev`
+may appear to resolve one anyway: Vite's dev server falls back to the process's working directory,
+which is your repo only because that's where you happened to run the CLI. `docs build` runs from the
+app and fails with `Could not resolve './Table.astro'`.)
+
+The component itself is *not* copied — it compiles where it lives, so bare imports inside it
+(`@bluecadet/docs/components`) resolve against your own install of this package, exactly as they do
+in your MDX. One rule applies if the component reads files at build time:
+
+```astro
+---
+// Not `new URL("..", import.meta.url)`: the build bundles this component into a chunk inside the
+// app, so import.meta.url points at the chunk, not at this file.
+const configDir = process.env.DOCS_CONFIG_DIR;
+const manifests = fs.globSync("*/package.json", { cwd: path.join(configDir, "..", "packages") });
+---
+```
+
+`DOCS_CONFIG_DIR` is the absolute path of the directory holding `docs.config.yaml`, set by both
+`docs dev` and `docs build`. Anchor every path on it — build-time reads, `execFileSync` `cwd`,
+anything else that has to find your repo — and the component behaves identically in dev and in the
+build. Read-only, and the same caution as any other build-time read applies: nothing outside `--out`
+may be written.
 
 ## Terminal transcripts and asciinema playback
 

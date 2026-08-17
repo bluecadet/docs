@@ -14,6 +14,10 @@ import { rehypeTables } from "./src/lib/rehype-tables";
 // layouts read DOCS_TITLE/DOCS_REPO_URL directly from process.env server-side.
 const base = process.env.DOCS_BASE;
 const site = process.env.DOCS_SITE;
+// Absolute path of the directory holding the consumer's docs.config.yaml. Backs the `@docs-src/`
+// alias below; unset only when this app is run directly (`astro dev` in this repo), which no
+// consumer content is synced into, so nothing can reference the alias either.
+const configDir = process.env.DOCS_CONFIG_DIR?.replace(/\\/g, "/");
 
 // Same `DOCS_CONFIG` payload app/src/lib/config.ts parses at runtime — read again here, config-
 // build-side, only for the one field this file needs: whether "/" is a real landing page or the
@@ -118,6 +122,36 @@ export default defineConfig({
 		// landing page, since that route is a noindex redirect stub, not content worth indexing.
 		...(site ? [sitemap({ filter: hasLanding ? undefined : (page) => page !== rootUrl })] : []),
 	],
+	vite: {
+		resolve: {
+			/**
+			 * `@docs-src/<path>` resolves against the directory holding the consumer's
+			 * docs.config.yaml — the one import specifier a synced page can use to reach a component
+			 * in the consumer's own repo.
+			 *
+			 * Relative specifiers can't do this job: sync *copies* markdown/MDX into
+			 * src/content/docs/ and `.astro` pages into src/astro-pages/ under route-normalized
+			 * paths, so `./Table.astro` resolves next to the copy, where that file has never existed
+			 * (`docs dev` only appears to work — Vite's dev resolver falls back to cwd, which is the
+			 * consumer's directory only because that's where the CLI happened to be invoked).
+			 *
+			 * Aliasing rather than copying the component is the point: it stays in the consumer's
+			 * tree, so bare specifiers inside it (`@bluecadet/docs/components`) resolve from its own
+			 * location, which reaches the consumer's install of this package, and nothing about its
+			 * own repo layout has to be restated. A component reading files at build time must anchor
+			 * on `process.env.DOCS_CONFIG_DIR` (set by the CLI, see ../src/build.ts) rather than
+			 * `import.meta.url`: the build bundles it into a chunk under this app, so `import.meta.url`
+			 * points at the chunk, not at the source file.
+			 *
+			 * Regex `find` so the alias only ever matches as a path prefix.
+			 */
+			alias: configDir ? [{ find: /^@docs-src\//, replacement: `${configDir}/` }] : [],
+		},
+		// The alias gets Vite to *find* the file; dev additionally refuses to serve anything outside
+		// the project root without this. Astro's own `fs.allow` entries survive — Vite merges array
+		// options by concatenating them.
+		server: configDir ? { fs: { allow: [configDir] } } : {},
+	},
 	markdown: {
 		remarkPlugins: [remarkAlerts],
 		// `rehypeHeadingIds` is Astro's own built-in slugger — it's listed here *again*, ahead of
