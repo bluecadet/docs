@@ -19,6 +19,8 @@ export { default as HeroNotes } from "./landing/HeroNotes.astro";
 export { default as LandingBlockQuote } from "./landing/LandingBlockQuote.astro";
 export { default as OtherToolItem } from "./landing/OtherToolItem.astro";
 export { default as OtherTools } from "./landing/OtherTools.astro";
+export { default as RegistryRow } from "./landing/RegistryRow.astro";
+export { default as RegistryTable } from "./landing/RegistryTable.astro";
 export { default as Stat } from "./landing/Stat.astro";
 export { default as StatStrip } from "./landing/StatStrip.astro";
 export { default as TerminalBand } from "./landing/TerminalBand.astro";

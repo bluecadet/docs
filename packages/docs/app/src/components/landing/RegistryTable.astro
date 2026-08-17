@@ -1,0 +1,98 @@
+---
+// Registry table for the landing page's MDX body: a desktop grid table that reflows into stacked
+// cards on mobile. Compose it from <RegistryRow> children:
+//
+//   <RegistryTable>
+//     <RegistryRow name="inspector" id="dev.spindle.inspector" version="3.1.0" kind="editor"
+//       updated="3 weeks ago" href="/reference/inspector/">
+//       Live scene graph inspector with time-travel debugging.
+//     </RegistryRow>
+//   </RegistryTable>
+//
+// A childless <RegistryTable /> renders nothing. `title`/`subtitle` are optional, following
+// GeneralBand's precedent for an optional heading (OtherTools requires both).
+//
+// The column template lives here, on the container, as the --registry-cols custom property —
+// scoped styles can't select slotted children directly, but a custom property inherits through
+// the slot boundary fine, so <RegistryRow>'s own scoped `.registry-row` rule can consume it via
+// `grid-template-columns: var(--registry-cols)` without either component reaching into the
+// other's shadow (:global()).
+interface Props {
+	/** Optional band heading. */
+	title?: string;
+	/** Optional band subheading, rendered under the title. */
+	subtitle?: string;
+}
+
+const { title, subtitle } = Astro.props;
+const hasRows = Astro.slots.has("default");
+---
+
+{
+	hasRows && (
+		<div class="landing-band landing-band--flush registry-table">
+			<div class="registry-panel" data-reveal>
+				<div class="registry-header" aria-hidden="true">
+					<span class="type-eyebrow head-cell">package</span>
+					<span class="type-eyebrow head-cell">what it does</span>
+					<span class="type-eyebrow head-cell">kind</span>
+					<span class="type-eyebrow head-cell">version</span>
+					<span class="type-eyebrow head-cell head-cell--end">updated</span>
+				</div>
+				<div class="registry-rows" data-reveal-stagger>
+					<slot />
+				</div>
+			</div>
+		</div>
+	)
+}
+
+<style>
+	.registry-table {
+		--registry-cols: minmax(0, 1.1fr) minmax(0, 1.5fr) 6.875rem 6rem 7.5rem;
+	}
+
+	/* The bordered/rounded panel wraps both the (desktop-only) header and the rows so its
+	   overflow-hidden clipping still rounds off the whole block's corners, while `.registry-rows`
+	   underneath stays a `data-reveal-stagger` container of ONLY real rows — the header used to be
+	   its first direct child and consumed stagger index 0, shifting every row's reveal delay by one
+	   step. `--reveal-delay` (the panel's own single-element reveal delay) lives here since this is
+	   now the element carrying `data-reveal`; `--reveal-stagger-offset` stays down on `.registry-rows`
+	   since that's what its children read to offset their own stagger index. */
+	.registry-panel {
+		background: var(--surface-panel-2);
+		border-radius: var(--radius-md);
+		overflow: hidden;
+		--reveal-delay: 1;
+	}
+
+	.registry-rows {
+		--reveal-stagger-offset: 2;
+	}
+
+	.registry-table-head + .registry-panel {
+		margin-block-start: 2.5rem;
+	}
+
+	.registry-header {
+		display: none;
+	}
+
+	@media (min-width: 1024px) {
+		.registry-header {
+			display: grid;
+			grid-template-columns: var(--registry-cols);
+			gap: 2rem;
+			padding: 0.875rem var(--content-pad-x);
+			border-block-end: 1px solid var(--hairline-08);
+		}
+
+		.head-cell {
+			color: var(--text-dim);
+		}
+
+		.head-cell--end {
+			text-align: right;
+		}
+	}
+</style>

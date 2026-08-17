@@ -1,0 +1,224 @@
+---
+// One row inside <RegistryTable> — a package in the registry. Renders from a single set of
+// elements that CSS re-lays-out per breakpoint (desktop grid table row / mobile stacked card);
+// no duplicate markup, no client JS.
+//
+//   <RegistryRow name="inspector" id="dev.spindle.inspector" version="3.1.0" kind="editor"
+//     updated="3 weeks ago" href="/reference/inspector/">
+//     Live scene graph inspector with time-travel debugging.
+//   </RegistryRow>
+//
+// Structure: the two `.registry-row-line` wrappers ARE the mobile card's first and last lines
+// (name/kind/version, then id/updated), with the description between them. On mobile each line is
+// its own flex row, so a line's tracks are private to that line — the id's length cannot influence
+// where the version sits, which is what the earlier shared-grid version got wrong (see the layout
+// note above the mobile styles). At the desktop breakpoint both wrappers go `display: contents` so
+// the six leaf cells become direct grid children of `.registry-row` and land in the five table
+// columns via `grid-template-areas`, driven by the `--registry-cols` custom property <RegistryTable>
+// sets on its container (inherits through the slot boundary, so no :global() reach-through needed).
+interface Props {
+	/** Short package name, e.g. "inspector". The prominent label. */
+	name: string;
+	/** Full reverse-DNS package id, e.g. "dev.spindle.inspector". Truncated with an ellipsis. */
+	id: string;
+	/** Package version, e.g. "3.1.0". */
+	version: string;
+	/** Free-form package category, e.g. "editor" / "runtime" / "pipeline". */
+	kind?: string;
+	/** Human-readable relative update time, e.g. "3 weeks ago". */
+	updated?: string;
+	/** Link target — the whole row is a link. */
+	href: string;
+}
+
+const { name, id, version, kind, updated, href } = Astro.props;
+const hasDescription = Astro.slots.has("default");
+---
+
+<a class="registry-row" href={href}>
+	<div class="registry-row-line">
+		<span class="registry-name">{name}</span>
+		{kind && <span class="registry-kind type-eyebrow" aria-hidden="true">{kind}</span>}
+		<span class="registry-version type-sm" aria-hidden="true">{version}</span>
+	</div>
+	{hasDescription && (
+		<span class="registry-desc">
+			<slot />
+		</span>
+	)}
+	<div class="registry-row-line">
+		<span class="registry-id type-xs" aria-hidden="true">{id}</span>
+		{updated && <span class="registry-updated type-xs" aria-hidden="true">{updated}</span>}
+	</div>
+</a>
+
+<style>
+	/* Mobile (base): three stacked lines — name/kind/version, description, id/updated — as a flex
+	   column of independent flex rows, NOT one grid.
+
+	   Why not a grid: with shared column tracks every line's content sizes every other line's cells.
+	   `minmax(0, auto)` tracks can't sum past the row (the track algorithm freezes each at its growth
+	   limit while distributing the row's width), so the failure shows up one level down instead — a
+	   cell gets a share too narrow for its own text, and any text that can't wrap (`3.1.0`, a long
+	   version string) spills out of the row and is clipped by `.registry-panel`'s `overflow: hidden`.
+	   `min-width: 0` on the items does nothing about this; the item is already at the track's width.
+
+	   With one flex row per line, the only sizing coupling is between cells that genuinely share a
+	   line, and shrinkage is ranked rather than emergent: `name` and `id` absorb it first, so the
+	   metadata keeps its full intrinsic width in every realistic case. Every cell can still shrink
+	   to a one-character floor (`overflow-wrap: anywhere`) or to nothing (`id`, which
+	   ellipsis-truncates), so a line's minimum demand is a few dozen px — it can never outgrow the
+	   row, at any viewport width, for any content. */
+	.registry-row {
+		display: flex;
+		flex-direction: column;
+		gap: 0.625rem; /* 10px */
+		padding: 1.25rem var(--content-pad-x) 1.375rem; /* 20px 20px 22px */
+		border-block-end: 1px solid var(--hairline-06);
+		text-decoration: none;
+		color: inherit;
+		transition: background-color var(--transition-fast);
+	}
+
+	.registry-row:last-child {
+		border-block-end: none;
+	}
+
+	.registry-row:hover,
+	.registry-row:focus-visible {
+		/* ~2.5% white lift requested; nearest existing token is --white-03 (3%). */
+		background-color: var(--white-03);
+	}
+
+	.registry-row:focus-visible {
+		outline: 1px solid var(--accent);
+		outline-offset: -1px;
+	}
+
+	.registry-row-line {
+		display: flex;
+		align-items: baseline;
+		gap: 0.625rem; /* 10px */
+		min-width: 0;
+	}
+
+	/* The shrink factors rank the line's cells: `name` and `id` give up width first (999), the
+	   metadata only once those two are down to their floor — one character for `name`, nothing at
+	   all for the ellipsis-truncating `id`. Every cell can reach a one-character floor, so a line's
+	   minimum demand is a couple of dozen px and it can never outgrow the row. */
+	.registry-name {
+		flex: 0 999 auto;
+		overflow-wrap: anywhere; /* also floors the shrink limit at one character — see the note above */
+		font: var(--weight-medium) 1rem var(--font-mono); /* 16px — no .type-* class at this size */
+		color: var(--ink); /* brightest tier: --ink is the literal source token for #e8e9ea */
+	}
+
+	.registry-id {
+		flex: 0 999 auto;
+		min-width: 0;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		color: var(--text-faint);
+	}
+
+	.registry-desc {
+		min-width: 0;
+		overflow-wrap: anywhere; /* a single long token (a type name, a package id) would otherwise
+			overrun the line box and be clipped by the panel instead of wrapping */
+		font-size: 0.84375rem; /* 13.5px — no .type-* class at this size */
+		line-height: 1.7; /* no leading token lands exactly on 1.7 (nearest: 1.6 / 1.8) */
+		color: var(--text-body);
+		text-wrap: pretty;
+	}
+
+	/* MDX wraps a slotted description in its own <p> — inline so it reads as one run of text with
+	   `.registry-desc` rather than dropping to its own block (same fix as CtaCard's `.cta-desc`). */
+	.registry-desc :global(p) {
+		display: inline;
+	}
+
+	.registry-kind {
+		flex: 0 1 auto;
+		overflow-wrap: anywhere;
+		color: var(--text-muted);
+		border: 1px solid var(--hairline-08);
+		border-radius: var(--radius-sm);
+		padding: 0.125rem 0.4375rem; /* 2px 7px */
+	}
+
+	/* `margin-inline-start: auto` is the flex-native "push to the far right of the line" (auto margins
+	   eat the line's free space, and collapse to 0 when there is none, so they never cause overflow).
+	   Neither is ever truncated: a version string too long for the line wraps to a second line
+	   (`overflow-wrap: anywhere`) with every character still rendered. */
+	.registry-version {
+		flex: 0 1 auto;
+		margin-inline-start: auto;
+		overflow-wrap: anywhere;
+		color: var(--text-muted);
+	}
+
+	.registry-updated {
+		flex: 0 1 auto;
+		margin-inline-start: auto;
+		overflow-wrap: anywhere;
+		color: var(--text-faint);
+	}
+
+	@media (min-width: 1024px) {
+		/* Desktop: the line wrappers dissolve and all six cells place themselves in the shared table
+		   columns. Two rows, because `name` and `id` stack in the `package` column: `desc` spans both
+		   so a tall description can't be constrained by the ident stack, and row 2's `1fr` max sizing
+		   function keeps that overflow off row 1 — extra space from an item spanning a flexible track
+		   goes to the flexible track only, so row 1 stays exactly as tall as `name` and `id` stays
+		   tucked under it no matter how long the description runs. */
+		.registry-row {
+			display: grid;
+			grid-template-columns: var(--registry-cols);
+			grid-template-rows: auto 1fr;
+			grid-template-areas:
+				"name desc kind version updated"
+				"id   desc .    .       .";
+			align-items: baseline;
+			column-gap: 2rem;
+			row-gap: 0.25rem;
+			padding: 1.25rem var(--content-pad-x);
+		}
+
+		.registry-row-line {
+			display: contents;
+		}
+
+		.registry-name {
+			grid-area: name;
+		}
+
+		.registry-id {
+			grid-area: id;
+			align-self: start;
+		}
+
+		.registry-desc {
+			grid-area: desc;
+		}
+
+		.registry-kind {
+			/* Desktop kind is plain uppercase label text, not the mobile badge chrome. */
+			grid-area: kind;
+			border: none;
+			border-radius: 0;
+			padding: 0;
+		}
+
+		.registry-version {
+			grid-area: version;
+			margin-inline-start: 0;
+		}
+
+		.registry-updated {
+			grid-area: updated;
+			justify-self: end;
+			margin-inline-start: 0;
+		}
+	}
+</style>
