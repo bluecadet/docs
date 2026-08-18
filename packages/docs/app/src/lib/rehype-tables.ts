@@ -7,16 +7,7 @@
 // stacked card still shows which value is which without a visible header row.
 import type { Element, Root } from "hast";
 import { visit } from "unist-util-visit";
-
-/** Concatenates all text-node values under `node`, in document order. A lightweight substitute
-    for hast-util-to-text — not worth adding as a dependency for this one call site. */
-function textContent(node: Element): string {
-	let text = "";
-	visit(node, "text", (textNode) => {
-		text += textNode.value;
-	});
-	return text.trim();
-}
+import { textContent } from "./hast-text.js";
 
 export function rehypeTables() {
 	return (tree: Root): void => {
@@ -27,7 +18,7 @@ export function rehypeTables() {
 			// still render fine — they just won't get per-cell `data-label`s on mobile.
 			const headerLabels: string[] = [];
 			visit(node, "element", (el: Element) => {
-				if (el.tagName === "th") headerLabels.push(textContent(el));
+				if (el.tagName === "th") headerLabels.push(textContent(el).trim());
 			});
 
 			if (headerLabels.length > 0) {

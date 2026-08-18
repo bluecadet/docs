@@ -37,6 +37,7 @@ import {
 	type DocsAppConfig,
 	type FooterGroup,
 	getDocsConfig,
+	LANDING_ENTRY_ID,
 	type SidebarItem,
 	type SidebarItemObject,
 } from "./config.js";
@@ -99,6 +100,11 @@ function isPage(node: NavNode): node is NavPage {
 	return node.isPage && typeof node.href === "string";
 }
 
+/** The last `/`-separated path segment of a content id, e.g. `reference/config/base` -> `base`. */
+function lastSegment(id: string): string {
+	return id.slice(id.lastIndexOf("/") + 1);
+}
+
 // Every doc-page render pulls the tree several times over (sidebar, nav sheet, search, footer,
 // breadcrumb, pagination, header), and content is fixed for the lifetime of a build, so PROD
 // caches the in-flight promise after the first call. Dev stays uncached so editing content is
@@ -111,10 +117,18 @@ export function getNavTree(): Promise<NavTree> {
 	return cachedTree;
 }
 
+/**
+ * Every synced markdown doc page, excluding the landing route (`LANDING_ENTRY_ID`) — the one
+ * entry that isn't a sidebar/nav page. Shared by nav-tree building and the `[...slug]` catch-all
+ * route, which both need the same "every real doc page" set.
+ */
+export async function getDocPages() {
+	return getCollection("docs", ({ id }) => id !== LANDING_ENTRY_ID);
+}
+
 async function buildNavTree(): Promise<NavTree> {
 	const base = import.meta.env.BASE_URL;
-	// `index` is the landing route (src/pages/index.astro), not a sidebar entry.
-	const mdEntries = await getCollection("docs", ({ id }) => id !== "index");
+	const mdEntries = await getDocPages();
 	// `layout: "docs"` astro pages (see ./astro-pages.ts) join the tree exactly like a synced
 	// markdown entry, so docs.config.yaml sidebar entries and group `link:`s can reference them by
 	// id, and breadcrumb/pagination/search-modal/footer — which all derive from this tree — pick
@@ -162,7 +176,7 @@ function buildAutoNodes(entries: NavEntry[], base: string): NavNode[] {
 		if (existing) return existing;
 
 		const cut = id.lastIndexOf("/");
-		const segment = id.slice(cut + 1);
+		const segment = lastSegment(id);
 		const node: NavNode = {
 			id,
 			segment,
@@ -254,10 +268,9 @@ function buildGroupNode(
 
 	if (group.link !== undefined) {
 		const entry = requireNavEntry(group.link, byId);
-		const cut = group.link.lastIndexOf("/");
 		return {
 			id: group.link,
-			segment: group.link.slice(cut + 1),
+			segment: lastSegment(group.link),
 			label: group.label ?? entry.title,
 			description: entry.description,
 			href: `${base}${group.link}/`,
@@ -303,10 +316,9 @@ function buildItemNode(
 	const labelOverride = typeof item === "string" ? undefined : item.label;
 
 	const entry = requireNavEntry(id, byId);
-	const cut = id.lastIndexOf("/");
 	return {
 		id,
-		segment: id.slice(cut + 1),
+		segment: lastSegment(id),
 		label: labelOverride ?? entry.title,
 		description: entry.description,
 		href: `${base}${id}/`,

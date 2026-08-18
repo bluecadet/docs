@@ -33,25 +33,15 @@
 // pre-empts "name from content", so whatever the anchor is labelled — now or later — can never
 // bleed into the heading's name again. The anchor stays a completely ordinary, fully
 // keyboard-focusable, properly-labelled link.
-import type { Element, Root, Text } from "hast";
+import type { Element, Root } from "hast";
 import { visit } from "unist-util-visit";
+import { textContent } from "./hast-text.js";
 
 /** H1 is the page title (lifted out of the article body entirely — see article.css) and never
     gets an anchor. H2 is the only level the design draws a "#" prefix on; H3 is included too since
     it's just as valid a deep-link target and gets an `id` from the same slugger, even though it
     doesn't appear in the `Toc`/sidebar "on this page" lists (those only track depth-2 headings). */
 const ANCHORED_HEADINGS = new Set(["h2", "h3"]);
-
-/** Flattens a heading's children to plain text (dropping markup — code spans, emphasis, nested
-    links). Used only to compute the heading's pinned `aria-label` before the anchor is injected;
-    never rendered, so it doesn't need to match `text` metadata byte for byte. */
-function textContent(node: Element | Text): string {
-	if (node.type === "text") return node.value;
-	if ("children" in node) {
-		return node.children.map((child) => textContent(child as Element | Text)).join("");
-	}
-	return "";
-}
 
 export function rehypeHeadingAnchors() {
 	return (tree: Root): void => {
@@ -62,6 +52,9 @@ export function rehypeHeadingAnchors() {
 			if (typeof id !== "string" || id.length === 0) return;
 
 			if (typeof node.properties.ariaLabel !== "string") {
+				// Flattens the heading's children to plain text (dropping markup — code spans, emphasis,
+				// nested links). Only used to compute this pinned `aria-label`; never rendered, so it
+				// doesn't need to match Astro's own `text` heading metadata byte for byte.
 				const headingText = textContent(node).trim();
 				if (headingText.length > 0) node.properties.ariaLabel = headingText;
 			}

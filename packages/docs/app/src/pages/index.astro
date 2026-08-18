@@ -20,13 +20,13 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 import LandingHeader from "../components/landing/LandingHeader.astro";
 import LandingRedirect from "../components/landing/LandingRedirect.astro";
 import { docsEntryHref } from "../lib/nav";
-import { getDocsConfig } from "../lib/config";
+import { getDocsConfig, LANDING_ENTRY_ID } from "../lib/config";
 import "../styles/landing.css";
 
 const { title: siteTitle, hasLanding } = getDocsConfig();
 
 const entries = await getCollection("docs");
-const indexEntry = hasLanding ? entries.find((entry) => entry.id === "index") : undefined;
+const indexEntry = hasLanding ? entries.find((entry) => entry.id === LANDING_ENTRY_ID) : undefined;
 const { Content } = indexEntry ? await render(indexEntry) : { Content: undefined };
 
 const docsHref = await docsEntryHref();

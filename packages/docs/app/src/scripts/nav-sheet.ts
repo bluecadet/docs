@@ -2,24 +2,16 @@
 // drawer. `<dialog>.showModal()` already gives us a focus trap (background content becomes inert),
 // background-scroll locking (see the `html:has(dialog:modal)` rule in styles/global.css), and an
 // `esc`-to-close/`cancel` event for free — same pattern SearchModal.astro's script relies on — so
-// this only has to handle opening and closing on backdrop click.
+// this only has to handle opening and closing on backdrop click (see ../lib/dialog.ts, shared by
+// both scripts).
+import { bindDialogChrome } from "../lib/dialog.js";
+
 export function initNavSheet(): void {
 	const dialog = document.getElementById("nav-sheet") as HTMLDialogElement | null;
 	if (!dialog) return;
 
 	const closeButton = dialog.querySelector<HTMLElement>("[data-nav-sheet-close]");
-	let lastTrigger: HTMLElement | null = null;
-
-	function openSheet(trigger?: HTMLElement | null): void {
-		lastTrigger = trigger ?? (document.activeElement as HTMLElement | null);
-		if (typeof dialog?.showModal === "function") {
-			dialog.showModal();
-		}
-	}
-
-	function closeSheet(): void {
-		if (dialog?.open) dialog.close();
-	}
+	const { open: openSheet, close: closeSheet } = bindDialogChrome(dialog);
 
 	closeButton?.addEventListener("click", closeSheet);
 
@@ -29,14 +21,6 @@ export function initNavSheet(): void {
 	// directly on the button) runs first when the same element has two click listeners.
 	dialog.querySelectorAll<HTMLElement>("[data-search-trigger]").forEach((trigger) => {
 		trigger.addEventListener("click", closeSheet);
-	});
-
-	dialog.addEventListener("click", (event) => {
-		if (event.target === dialog) closeSheet();
-	});
-
-	dialog.addEventListener("close", () => {
-		lastTrigger?.focus();
 	});
 
 	document.querySelectorAll<HTMLElement>("[data-nav-sheet-trigger]").forEach((trigger) => {

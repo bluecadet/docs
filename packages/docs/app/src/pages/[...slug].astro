@@ -1,5 +1,5 @@
 ---
-import { type CollectionEntry, getCollection, render } from "astro:content";
+import { type CollectionEntry, render } from "astro:content";
 import type { AstroComponentFactory } from "astro/runtime/server/index.js";
 import type { MarkdownHeading } from "astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
@@ -8,11 +8,12 @@ import Pagination from "../components/Pagination.astro";
 import Toc from "../components/Toc.astro";
 import { type AstroPage, docsAstroPages, rawAstroPages } from "../lib/astro-pages";
 import { getDocsConfig } from "../lib/config";
+import { getDocPages } from "../lib/nav";
 
 export async function getStaticPaths() {
-	// The `index` entry is the landing route, owned by src/pages/index.astro — exclude it here so
-	// this catch-all doesn't also try to generate `/`.
-	const entries = await getCollection("docs", ({ id }) => id !== "index");
+	// The landing route (LANDING_ENTRY_ID) is owned by src/pages/index.astro — getDocPages()
+	// excludes it so this catch-all doesn't also try to generate `/`.
+	const entries = await getDocPages();
 	const astroPages = [...docsAstroPages, ...rawAstroPages];
 
 	// The CLI's sync step guarantees every astro-pages/ route is collision-free with the markdown

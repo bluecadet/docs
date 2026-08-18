@@ -2,6 +2,8 @@
 // pagefind (index emitted at build time by the astro:build:done hook in astro.config.mjs). In
 // dev, the pagefind module 404s (index only exists in a production build output); that's caught
 // and rendered as a notice rather than crashing.
+import { bindDialogChrome } from "../lib/dialog.js";
+import { escapeHtml } from "../lib/escape-html.js";
 
 interface RecentEntry {
 	href: string;
@@ -33,14 +35,6 @@ const RECENT_KEY = "docs:recent-pages";
 const RECENT_CAP = 5;
 const DEBOUNCE_MS = 120;
 const TRY_INSTEAD_CAP = 3;
-
-function escapeHtml(value: string): string {
-	return value
-		.replace(/&/g, "&amp;")
-		.replace(/</g, "&lt;")
-		.replace(/>/g, "&gt;")
-		.replace(/"/g, "&quot;");
-}
 
 // Escapes regex metacharacters so a raw query term can be dropped into a `RegExp` source without
 // being interpreted as a pattern (avoids both a syntax-error crash on terms like "a(b" and any
@@ -117,7 +111,7 @@ export function initSearchModal(): void {
 	const startHere = readJson<StartHereEntry[]>("search-start-here-data", []);
 	const repoUrl = readJson<string | null>("search-repo-url-data", null);
 
-	let lastTrigger: HTMLElement | null = null;
+	const dialogChrome = bindDialogChrome(dialog);
 	let debounceTimer: ReturnType<typeof setTimeout> | undefined;
 	let searchToken = 0;
 	let pagefindPromise: Promise<PagefindModule> | null = null;
@@ -459,12 +453,9 @@ export function initSearchModal(): void {
 	}
 
 	function openModal(trigger?: HTMLElement | null): void {
-		lastTrigger = trigger ?? (document.activeElement as HTMLElement | null);
 		input.value = "";
 		renderEmptyState();
-		if (typeof dialog.showModal === "function") {
-			dialog.showModal();
-		}
+		dialogChrome.open(trigger);
 		input.focus();
 	}
 
@@ -493,17 +484,9 @@ export function initSearchModal(): void {
 		}
 	});
 
-	dialog.addEventListener("click", (event) => {
-		if (event.target === dialog) dialog.close();
-	});
-
 	// Mobile full-screen variant's "cancel" button — replaces the desktop "esc close" hint, since
 	// the footer's kbd hints are hidden on touch (see SearchModal.astro's mobile media query).
-	cancelButton?.addEventListener("click", () => dialog.close());
-
-	dialog.addEventListener("close", () => {
-		lastTrigger?.focus();
-	});
+	cancelButton?.addEventListener("click", () => dialogChrome.close());
 
 	document.querySelectorAll<HTMLElement>("[data-search-trigger]").forEach((trigger) => {
 		trigger.addEventListener("click", () => openModal(trigger));

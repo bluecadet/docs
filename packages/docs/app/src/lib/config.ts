@@ -8,6 +8,14 @@
 // (see packages/docs/package.json's `files`, which ships `app/src/lib` but not `src/`), so it
 // can't reach across into the CLI package's source at runtime.
 
+/**
+ * Content id of the landing route (src/pages/index.astro), not a sidebar entry. The CLI's
+ * sync.ts is what produces this id — it writes the landing route to `content/docs/index.md`
+ * regardless of the source file's own name — so every app-side site that needs to exclude or
+ * look up the landing entry should reference this constant rather than the bare string `"index"`.
+ */
+export const LANDING_ENTRY_ID = "index";
+
 /** A single labeled link, e.g. in `header.links`. */
 export interface ConfigLink {
 	label: string;
