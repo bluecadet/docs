@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { parse as parseYaml } from "yaml";
 import { getGitBranch, getGitRemoteUrl } from "./git.js";
+import { toPosix } from "./path-utils.js";
 import type {
 	ConfigLink,
 	ConfigLinks,
@@ -204,11 +205,9 @@ export function validateConfig(
 	}
 
 	for (const key of STRING_KEYS) {
-		const value = parsed[key];
-		if (value === undefined) continue;
-		if (typeof value !== "string") {
-			throw new Error(`${configPath}: "${key}" must be a string (got ${describeType(value)}).`);
-		}
+		const raw = parsed[key];
+		if (raw === undefined) continue;
+		const value = requireString(raw, key, configPath);
 		if ((key === "accent" || key === "accent2") && !HEX_COLOR.test(value)) {
 			throw new Error(
 				`${configPath}: "${key}" must be a 6-digit hex color, e.g. "#9cc3a9" (got "${value}").`,
@@ -237,28 +236,15 @@ export function validateConfig(
 
 /** Validates the `footer` object: `{ groups?: { title, links }[], meta?: string }`. */
 function validateFooter(value: unknown, configPath: string, warnings: string[]): FooterConfig {
-	if (typeof value !== "object" || value === null || Array.isArray(value)) {
-		throw new Error(`${configPath}: "footer" must be an object (got ${describeType(value)}).`);
-	}
-	const obj = value as Record<string, unknown>;
-
-	for (const childKey of Object.keys(obj)) {
-		if (!FOOTER_KEYS.has(childKey)) {
-			warnings.push(`${configPath}: unknown key "footer.${childKey}" is ignored.`);
-		}
-	}
+	const obj = requireObject(value, "footer", configPath);
+	warnUnknownKeys(obj, FOOTER_KEYS, "footer", configPath, warnings);
 
 	const result: FooterConfig = {};
 	if (obj.groups !== undefined) {
 		result.groups = validateFooterGroups(obj.groups, configPath, warnings);
 	}
 	if (obj.meta !== undefined) {
-		if (typeof obj.meta !== "string") {
-			throw new Error(
-				`${configPath}: "footer.meta" must be a string (got ${describeType(obj.meta)}).`,
-			);
-		}
-		result.meta = obj.meta;
+		result.meta = requireString(obj.meta, "footer.meta", configPath);
 	}
 	return result;
 }
@@ -285,23 +271,11 @@ function validateFooterGroup(
 	configPath: string,
 	warnings: string[],
 ): FooterGroup {
-	if (typeof value !== "object" || value === null || Array.isArray(value)) {
-		throw new Error(`${configPath}: "${label}" must be an object (got ${describeType(value)}).`);
-	}
-	const obj = value as Record<string, unknown>;
+	const obj = requireObject(value, label, configPath);
+	warnUnknownKeys(obj, FOOTER_GROUP_KEYS, label, configPath, warnings);
 
-	for (const childKey of Object.keys(obj)) {
-		if (!FOOTER_GROUP_KEYS.has(childKey)) {
-			warnings.push(`${configPath}: unknown key "${label}.${childKey}" is ignored.`);
-		}
-	}
-
-	if (typeof obj.title !== "string") {
-		throw new Error(
-			`${configPath}: "${label}.title" must be a string (got ${describeType(obj.title)}).`,
-		);
-	}
-	if (obj.title.length === 0) {
+	const title = requireString(obj.title, `${label}.title`, configPath);
+	if (title.length === 0) {
 		throw new Error(`${configPath}: "${label}.title" must not be empty.`);
 	}
 
@@ -318,7 +292,7 @@ function validateFooterGroup(
 		validateFooterLink(item, `${label}.links[${i}]`, configPath, warnings),
 	);
 
-	return { title: obj.title, links };
+	return { title, links };
 }
 
 function validateFooterLink(
@@ -327,76 +301,37 @@ function validateFooterLink(
 	configPath: string,
 	warnings: string[],
 ): FooterLink {
-	if (typeof value !== "object" || value === null || Array.isArray(value)) {
-		throw new Error(`${configPath}: "${label}" must be an object (got ${describeType(value)}).`);
-	}
-	const obj = value as Record<string, unknown>;
+	const obj = requireObject(value, label, configPath);
+	warnUnknownKeys(obj, FOOTER_LINK_KEYS, label, configPath, warnings);
 
-	for (const childKey of Object.keys(obj)) {
-		if (!FOOTER_LINK_KEYS.has(childKey)) {
-			warnings.push(`${configPath}: unknown key "${label}.${childKey}" is ignored.`);
-		}
-	}
-
-	if (typeof obj.label !== "string") {
-		throw new Error(
-			`${configPath}: "${label}.label" must be a string (got ${describeType(obj.label)}).`,
-		);
-	}
-	if (obj.label.length === 0) {
+	const linkLabel = requireString(obj.label, `${label}.label`, configPath);
+	if (linkLabel.length === 0) {
 		throw new Error(`${configPath}: "${label}.label" must not be empty.`);
 	}
 
-	if (typeof obj.href !== "string") {
-		throw new Error(
-			`${configPath}: "${label}.href" must be a string (got ${describeType(obj.href)}).`,
-		);
-	}
-	if (obj.href.length === 0) {
+	const href = requireString(obj.href, `${label}.href`, configPath);
+	if (href.length === 0) {
 		throw new Error(`${configPath}: "${label}.href" must not be empty.`);
 	}
 
-	const link: FooterLink = { label: obj.label, href: obj.href };
+	const link: FooterLink = { label: linkLabel, href };
 	if (obj.note !== undefined) {
-		if (typeof obj.note !== "string") {
-			throw new Error(
-				`${configPath}: "${label}.note" must be a string (got ${describeType(obj.note)}).`,
-			);
-		}
-		link.note = obj.note;
+		link.note = requireString(obj.note, `${label}.note`, configPath);
 	}
 	return link;
 }
 
 /** Validates the `toc` object: `{ note?: string, editLink?: string }`. */
 function validateToc(value: unknown, configPath: string, warnings: string[]): TocConfig {
-	if (typeof value !== "object" || value === null || Array.isArray(value)) {
-		throw new Error(`${configPath}: "toc" must be an object (got ${describeType(value)}).`);
-	}
-	const obj = value as Record<string, unknown>;
-
-	for (const childKey of Object.keys(obj)) {
-		if (!TOC_KEYS.has(childKey)) {
-			warnings.push(`${configPath}: unknown key "toc.${childKey}" is ignored.`);
-		}
-	}
+	const obj = requireObject(value, "toc", configPath);
+	warnUnknownKeys(obj, TOC_KEYS, "toc", configPath, warnings);
 
 	const result: TocConfig = {};
 	if (obj.note !== undefined) {
-		if (typeof obj.note !== "string") {
-			throw new Error(
-				`${configPath}: "toc.note" must be a string (got ${describeType(obj.note)}).`,
-			);
-		}
-		result.note = obj.note;
+		result.note = requireString(obj.note, "toc.note", configPath);
 	}
 	if (obj.editLink !== undefined) {
-		if (typeof obj.editLink !== "string") {
-			throw new Error(
-				`${configPath}: "toc.editLink" must be a string (got ${describeType(obj.editLink)}).`,
-			);
-		}
-		result.editLink = obj.editLink;
+		result.editLink = requireString(obj.editLink, "toc.editLink", configPath);
 	}
 	return result;
 }
@@ -408,16 +343,8 @@ function validateLinksObject(
 	configPath: string,
 	warnings: string[],
 ): ConfigLinks {
-	if (typeof value !== "object" || value === null || Array.isArray(value)) {
-		throw new Error(`${configPath}: "${key}" must be an object (got ${describeType(value)}).`);
-	}
-	const obj = value as Record<string, unknown>;
-
-	for (const childKey of Object.keys(obj)) {
-		if (!LINKS_OBJECT_KEYS.has(childKey)) {
-			warnings.push(`${configPath}: unknown key "${key}.${childKey}" is ignored.`);
-		}
-	}
+	const obj = requireObject(value, key, configPath);
+	warnUnknownKeys(obj, LINKS_OBJECT_KEYS, key, configPath, warnings);
 
 	const result: ConfigLinks = {};
 	if (obj.links !== undefined) {
@@ -444,28 +371,12 @@ function validateLink(
 	configPath: string,
 	warnings: string[],
 ): ConfigLink {
-	if (typeof value !== "object" || value === null || Array.isArray(value)) {
-		throw new Error(`${configPath}: "${label}" must be an object (got ${describeType(value)}).`);
-	}
-	const obj = value as Record<string, unknown>;
+	const obj = requireObject(value, label, configPath);
+	warnUnknownKeys(obj, LINK_KEYS, label, configPath, warnings);
 
-	for (const childKey of Object.keys(obj)) {
-		if (!LINK_KEYS.has(childKey)) {
-			warnings.push(`${configPath}: unknown key "${label}.${childKey}" is ignored.`);
-		}
-	}
-
-	if (typeof obj.label !== "string") {
-		throw new Error(
-			`${configPath}: "${label}.label" must be a string (got ${describeType(obj.label)}).`,
-		);
-	}
-	if (typeof obj.href !== "string") {
-		throw new Error(
-			`${configPath}: "${label}.href" must be a string (got ${describeType(obj.href)}).`,
-		);
-	}
-	return { label: obj.label, href: obj.href };
+	const linkLabel = requireString(obj.label, `${label}.label`, configPath);
+	const href = requireString(obj.href, `${label}.href`, configPath);
+	return { label: linkLabel, href };
 }
 
 /** Validates the top-level `sidebar` array: a list of `SidebarItem`s. */
@@ -490,37 +401,17 @@ function validateSidebarItem(
 	warnings: string[],
 ): SidebarItem {
 	if (typeof value === "string") return value;
-	if (typeof value !== "object" || value === null || Array.isArray(value)) {
-		throw new Error(
-			`${configPath}: "${label}" must be a string or an object (got ${describeType(value)}).`,
-		);
-	}
-	const obj = value as Record<string, unknown>;
-
-	for (const childKey of Object.keys(obj)) {
-		if (!SIDEBAR_ITEM_KEYS.has(childKey)) {
-			warnings.push(`${configPath}: unknown key "${label}.${childKey}" is ignored.`);
-		}
-	}
+	const obj = requireObject(value, label, configPath, "a string or an object");
+	warnUnknownKeys(obj, SIDEBAR_ITEM_KEYS, label, configPath, warnings);
 
 	const item: SidebarItemObject = {};
 
 	if (obj.label !== undefined) {
-		if (typeof obj.label !== "string") {
-			throw new Error(
-				`${configPath}: "${label}.label" must be a string (got ${describeType(obj.label)}).`,
-			);
-		}
-		item.label = obj.label;
+		item.label = requireString(obj.label, `${label}.label`, configPath);
 	}
 
 	if (obj.link !== undefined) {
-		if (typeof obj.link !== "string") {
-			throw new Error(
-				`${configPath}: "${label}.link" must be a string (got ${describeType(obj.link)}).`,
-			);
-		}
-		item.link = obj.link;
+		item.link = requireString(obj.link, `${label}.link`, configPath);
 	}
 
 	if (obj.items !== undefined) {
@@ -582,18 +473,13 @@ function validateContentEntry(
 			assets: [],
 		};
 	}
-	if (typeof value !== "object" || value === null || Array.isArray(value)) {
-		throw new Error(
-			`${configPath}: "${label}" must be a glob string or an object with a "files" and/or "assets" key (got ${describeType(value)}).`,
-		);
-	}
-	const obj = value as Record<string, unknown>;
-
-	for (const childKey of Object.keys(obj)) {
-		if (!CONTENT_ENTRY_KEYS.has(childKey)) {
-			warnings.push(`${configPath}: unknown key "${label}.${childKey}" is ignored.`);
-		}
-	}
+	const obj = requireObject(
+		value,
+		label,
+		configPath,
+		'a glob string or an object with a "files" and/or "assets" key',
+	);
+	warnUnknownKeys(obj, CONTENT_ENTRY_KEYS, label, configPath, warnings);
 
 	// `files` is required unless `assets` is set: an entry publishing only static assets (e.g. an
 	// install script served from a repo root) has no pages to declare, so `files` is the one that
@@ -645,7 +531,7 @@ function validateRoute(value: unknown, label: string, configPath: string): strin
 		);
 	}
 	if (value === "") return "";
-	const posix = value.split(path.sep).join("/");
+	const posix = toPosix(value);
 	if (posix.startsWith("/") || posix.endsWith("/")) {
 		throw new Error(
 			`${configPath}: "${label}.route" must not start or end with "/" (got "${value}").`,
@@ -696,4 +582,44 @@ function describeType(value: unknown): string {
 	if (value === null) return "null";
 	if (Array.isArray(value)) return "array";
 	return typeof value;
+}
+
+/**
+ * Guards that `value` is a plain object (not `null`, not an array), throwing the standard
+ * `"<label>" must be <expected> (got <type>).` error otherwise. `expected` defaults to
+ * "an object" but can be overridden for call sites whose message names other allowed shapes.
+ */
+function requireObject(
+	value: unknown,
+	label: string,
+	configPath: string,
+	expected = "an object",
+): Record<string, unknown> {
+	if (typeof value !== "object" || value === null || Array.isArray(value)) {
+		throw new Error(`${configPath}: "${label}" must be ${expected} (got ${describeType(value)}).`);
+	}
+	return value as Record<string, unknown>;
+}
+
+/** Guards that `value` is a string, throwing the standard "must be a string" error otherwise. */
+function requireString(value: unknown, label: string, configPath: string): string {
+	if (typeof value !== "string") {
+		throw new Error(`${configPath}: "${label}" must be a string (got ${describeType(value)}).`);
+	}
+	return value;
+}
+
+/** Pushes an "unknown key … is ignored" warning for every key of `obj` not in `knownKeys`. */
+function warnUnknownKeys(
+	obj: Record<string, unknown>,
+	knownKeys: Set<string>,
+	label: string,
+	configPath: string,
+	warnings: string[],
+): void {
+	for (const childKey of Object.keys(obj)) {
+		if (!knownKeys.has(childKey)) {
+			warnings.push(`${configPath}: unknown key "${label}.${childKey}" is ignored.`);
+		}
+	}
 }
