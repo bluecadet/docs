@@ -1,17 +1,17 @@
 import { writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { rehypeHeadingIds } from "@astrojs/markdown-remark";
 import mdx from "@astrojs/mdx";
 import sitemap from "@astrojs/sitemap";
-import { rehypeHeadingIds } from "@astrojs/markdown-remark";
-import { createIndex } from "pagefind";
 import { transformerMetaHighlight } from "@shikijs/transformers";
 import { defineConfig } from "astro/config";
+import { createIndex } from "pagefind";
 import { searchForWorkspaceRoot } from "vite";
-import { remarkAlerts } from "./src/lib/remark-alerts";
 import { rehypeCodeBlocks } from "./src/lib/rehype-code-blocks";
 import { rehypeHeadingAnchors } from "./src/lib/rehype-heading-anchors";
 import { rehypeTables } from "./src/lib/rehype-tables";
+import { remarkAlerts } from "./src/lib/remark-alerts";
 
 // Populated by the CLI (see ../src/build.ts / ../src/dev.ts) before this config loads. Pages and
 // layouts read DOCS_TITLE/DOCS_REPO_URL directly from process.env server-side.
@@ -209,9 +209,7 @@ export default defineConfig({
 		// same function Vite computes that default with, and it resolves both install layouts: the
 		// docs monorepo for a workspace/`file:` link, the consumer's project root (i.e. the
 		// node_modules holding this package) for a published install.
-		server: configDir
-			? { fs: { allow: [searchForWorkspaceRoot(APP_ROOT), configDir] } }
-			: {},
+		server: configDir ? { fs: { allow: [searchForWorkspaceRoot(APP_ROOT), configDir] } } : {},
 	},
 	markdown: {
 		remarkPlugins: [remarkAlerts],
