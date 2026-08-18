@@ -12,11 +12,14 @@
 // on. <Line label> restores the aligned label column with a mono `ch` measure instead.
 //
 // Passing `cast` swaps the transcript slot for a real asciinema recording (asciicast v2) played
-// back through `asciinema-player`, with a custom control bar styled to match the terminal chrome
-// instead of the player's stock one (see `terminal-player.ts` and the `.asciinema-player-theme-docs`
-// theme in `styles/asciinema-theme.css`). The two modes are mutually exclusive — `cast` set means
-// `<Line>` children are ignored. Kept deliberately small: no volume/fullscreen/speed controls, no
-// marker support. Consumers who need those should reach for the player directly.
+// back through `asciinema-player`, with play/pause and restart buttons folded into the title bar
+// instead of the player's stock control bar (see `terminal-player.ts` and the
+// `.asciinema-player-theme-docs` theme in `styles/asciinema-theme.css`, which also hides the stock
+// start overlay). The two modes are mutually exclusive — `cast` set means `<Line>` children are
+// ignored. Playback tracks scroll position — playing while the terminal is in view, pausing once
+// it isn't — unless the visitor prefers reduced motion (see terminal-player.ts). Kept deliberately
+// small: no progress scrubbing, no volume/fullscreen/speed controls, no marker support. Consumers
+// who need those should reach for the player directly.
 //
 // Context-neutral: this is the window only, sized to its container (`inline-size: 100%`, no max
 // width, no outer margins/padding). Landing's full-bleed band chrome — caption/duration row, band
@@ -51,32 +54,39 @@ const { cwd, cast, rows, cols, poster, loop } = Astro.props;
 			<span class="terminal-dot terminal-dot-3"></span>
 		</span>
 		{cwd && <span class="terminal-cwd">{cwd}</span>}
+		{
+			cast && (
+				<span class="terminal-cast-actions">
+					<button
+						type="button"
+						class="terminal-play terminal-button"
+						data-terminal-play
+						aria-label="Play"
+					>
+						▶
+					</button>
+					<button
+						type="button"
+						class="terminal-restart terminal-button"
+						data-terminal-restart
+						aria-label="Restart"
+					>
+						↺
+					</button>
+				</span>
+			)
+		}
 	</div>
 	{
 		cast ? (
-			<div class="terminal-player">
-				<div
-					class="terminal-cast"
-					data-terminal-cast={cast}
-					data-terminal-rows={rows}
-					data-terminal-cols={cols}
-					data-terminal-poster={poster}
-					data-terminal-loop={loop ? "true" : undefined}
-				/>
-				<div class="terminal-controls">
-					<button type="button" class="terminal-play type-2xs" data-terminal-play aria-label="Play">
-						▶
-					</button>
-					<div class="terminal-progress" data-terminal-progress>
-						<span class="terminal-progress-track">
-							<span class="terminal-progress-fill" data-terminal-fill />
-						</span>
-					</div>
-					<span class="terminal-time type-2xs" data-terminal-time>
-						0:00 / 0:00
-					</span>
-				</div>
-			</div>
+			<div
+				class="terminal-cast"
+				data-terminal-cast={cast}
+				data-terminal-rows={rows}
+				data-terminal-cols={cols}
+				data-terminal-poster={poster}
+				data-terminal-loop={loop ? "true" : undefined}
+			/>
 		) : (
 			<pre class="terminal-body type-md"><slot /></pre>
 		)
@@ -104,7 +114,8 @@ const { cwd, cast, rows, cols, poster, loop } = Astro.props;
 		display: flex;
 		align-items: center;
 		gap: 0.625rem;
-		padding: 0.6875rem 1rem;
+		padding-inline-start: 0.875rem;
+		min-block-size: 2.5rem;
 		border-block-end: 1px solid var(--hairline-08);
 		color: var(--text-dim);
 	}
@@ -144,95 +155,63 @@ const { cwd, cast, rows, cols, poster, loop } = Astro.props;
 		overflow-x: auto;
 	}
 
-	/* asciinema mode — the player mounts into `.terminal-cast` (see terminal-player.ts) and paints
-	   its own terminal grid; `.terminal-controls` is a second row below it standing in for the
-	   player's stock control bar (disabled via `controls: false`), matching the transcript's
-	   horizontal rhythm. */
+	/* asciinema mode — the player mounts directly into `.terminal-cast` and paints its own terminal
+	   grid (see terminal-player.ts). It renders at a fixed font size rather than scaling to fit its
+	   container (`fit: "none"` in terminal-player.ts), so a cast wider than the terminal chrome
+	   needs its own scrollbar rather than overflowing the card. */
 	.terminal-cast {
 		line-height: 0;
+		overflow-x: auto;
 	}
 
-	.terminal-controls {
+	/* Play/pause + restart live in the title bar rather than a second control row — `margin-inline-
+	   start: auto` pushes them to the far end whether or not `cwd` is also present. */
+	.terminal-cast-actions {
 		display: flex;
 		align-items: center;
-		gap: 0.875rem;
-		padding-block: 0.625rem;
-		padding-inline: 1.5rem;
-		border-block-start: 1px solid var(--hairline-08);
+		margin-inline-start: auto;
 	}
 
-	.terminal-play {
+	.terminal-button {
 		flex: 0 0 auto;
 		border: none;
 		background: none;
 		padding: 0;
+		font-size: 0.8125rem;
+		line-height: 1;
 		color: var(--text-dim);
 		cursor: pointer;
 		transition: color var(--transition-fast);
+		width: 40px;
+		height: 40px;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		border-inline-start: 1px solid var(--hairline-08);
 	}
 
-	.terminal-play:hover,
-	.terminal-play:focus-visible {
+	.terminal-button:hover,
+	.terminal-button:focus-visible {
 		color: var(--text-code);
 	}
 
-	.terminal-play:disabled {
+	.terminal-button:disabled {
 		color: var(--text-dim);
 		cursor: not-allowed;
 		opacity: 0.5;
 	}
 
-	.terminal-progress {
-		flex: 1 1 auto;
-		padding-block: 0.375rem;
-		cursor: pointer;
-	}
-
-	.terminal-progress-track {
-		display: block;
-		position: relative;
-		block-size: 2px;
-		background: var(--hairline-10);
-		border-radius: var(--radius-sm);
-	}
-
-	.terminal-progress-fill {
-		display: block;
-		position: absolute;
-		inset-block: 0;
-		inset-inline-start: 0;
-		inline-size: 0%;
-		background: var(--accent);
-		border-radius: var(--radius-sm);
-	}
-
-	.terminal-time {
-		flex: 0 0 auto;
-		color: var(--text-dim);
-		font-variant-numeric: tabular-nums;
-	}
-
-	/* Smallest honest failure state for a cast that fails to load (see terminal-player.ts) — amber
-	   is the site's attention accent, reused here rather than introducing a dedicated error token. */
-	.terminal-time-error {
-		color: var(--accent-2);
-	}
-
 	@media (max-width: 1023px) {
 		.terminal-body {
-			padding: 1.375rem 1.5rem;
+			padding: 0rem 1.5rem;
 			font-size: 0.78125rem;
-		}
-
-		.terminal-controls {
-			padding-inline: 1.5rem;
 		}
 	}
 
 	@media (max-width: 767px) {
 		.terminal-bar {
 			gap: 0.625rem;
-			padding: 0.625rem 0.875rem;
+			padding-inline-start: 0.875rem;
 		}
 
 		.terminal-dot {
@@ -244,15 +223,36 @@ const { cwd, cast, rows, cols, poster, loop } = Astro.props;
 			padding: 1.1875rem 1.25rem;
 			font-size: 0.6875rem;
 		}
+	}
+</style>
 
-		.terminal-controls {
-			gap: 0.625rem;
-			padding-block: 0.5625rem;
-			padding-inline: 1.25rem;
-		}
+<style is:global>
+	/* Overrides for the player's stock CSS, which is injected into <head> at runtime as a plain
+	   unlayered stylesheet (see `loadStockPlayerCss` in terminal-player.ts) — unlayered normal-
+	   priority rules always beat this component's own scoped styles regardless of specificity, so
+	   everything here needs `!important` to win back control. */
+	.ap-player {
+		--term-color-background: transparent !important;
+		/* The stock rule also caps `.ap-player` at `max-width: 100%` and clips it with `overflow:
+		   hidden`, cropping a cast wider than its terminal instead of letting it overflow. Lifting
+		   both, plus `flex-shrink: 0` since `.ap-wrapper` is a flex container that would otherwise
+		   squish it to fit, is what makes `.terminal-cast`'s `overflow-x: auto` (scoped styles below)
+		   actually produce a scrollbar rather than cropped or squished content. */
+		flex-shrink: 0 !important;
+		max-width: none !important;
+		overflow: visible !important;
+	}
 
-		.terminal-time {
-			font-size: 0.65625rem;
-		}
+	/* The stock `.ap-wrapper` centers `.ap-player` when the wrapper is wider than the fixed-size
+	   content (see `fit: "none"` in terminal-player.ts) — left-align instead, to match a terminal
+	   prompt's natural alignment. */
+	.ap-wrapper {
+		justify-content: flex-start !important;
+	}
+
+	/* The stock player renders a large centered play button over the terminal grid before playback
+	   starts. Terminal.astro's title-bar play/pause already covers that, so hide it. */
+	.ap-overlay-start {
+		display: none !important;
 	}
 </style>

@@ -12,6 +12,7 @@ content:
   - base: packages
     files: "*/README.md"
     route: packages
+    assets: "**/*.cast"
 
 header:
   links:

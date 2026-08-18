@@ -5,4 +5,3 @@
 @import "./global.css" layer(base);
 @import "./article.css" layer(article);
 @import "./typography.css" layer(typography);
-@import "./asciinema-theme.css" layer(components);
