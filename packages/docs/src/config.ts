@@ -196,7 +196,8 @@ export function validateConfig(
 	configPath: string,
 ): { config: DocsConfig; warnings: string[] } {
 	const warnings: string[] = [];
-	const config: DocsConfig = {};
+	// Built key by key, so it can't satisfy `DocsConfig`'s required fields mid-construction.
+	const config: Partial<DocsConfig> = {};
 
 	for (const key of Object.keys(parsed)) {
 		if (!KNOWN_KEYS.has(key)) {
@@ -224,14 +225,14 @@ export function validateConfig(
 	if (parsed.footer !== undefined) {
 		config.footer = validateFooter(parsed.footer, configPath, warnings);
 	}
-	if (parsed.sidebar !== undefined) {
-		config.sidebar = validateSidebar(parsed.sidebar, configPath, warnings);
-	}
+	config.sidebar = validateSidebar(parsed.sidebar, configPath, warnings);
 	if (parsed.toc !== undefined) {
 		config.toc = validateToc(parsed.toc, configPath, warnings);
 	}
 
-	return { config, warnings };
+	// Safe by construction: `validateContent`/`validateSidebar` above throw rather than return when
+	// their key is missing, so both required fields are set by the time we get here.
+	return { config: config as DocsConfig, warnings };
 }
 
 /** Validates the `footer` object: `{ groups?: { title, links }[], meta?: string }`. */
@@ -381,8 +382,16 @@ function validateLink(
 
 /** Validates the top-level `sidebar` array: a list of `SidebarItem`s. */
 function validateSidebar(value: unknown, configPath: string, warnings: string[]): SidebarItem[] {
+	if (value === undefined) {
+		throw new Error(
+			`${configPath}: "sidebar" is required — list the pages and groups to publish in the sidebar, e.g.\nsidebar:\n  - label: Guides\n    items:\n      - guides/install`,
+		);
+	}
 	if (!Array.isArray(value)) {
 		throw new Error(`${configPath}: "sidebar" must be an array (got ${describeType(value)}).`);
+	}
+	if (value.length === 0) {
+		throw new Error(`${configPath}: "sidebar" must not be empty.`);
 	}
 	return value.map((item, i) => validateSidebarItem(item, `sidebar[${i}]`, configPath, warnings));
 }

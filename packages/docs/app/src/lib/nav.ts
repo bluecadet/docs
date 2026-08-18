@@ -2,25 +2,10 @@
 // 404 route payload all read from here, so sidebar order and prev/next order can never drift
 // apart.
 //
-// Two build modes:
-//
-// - Auto (no `sidebar` in docs.config.yaml): the tree is genuinely recursive over content ids.
-//   `docs/reference/config/base.md` syncs to content id `reference/config/base` and becomes a
-//   depth-2 node under a `config` node under `reference`. An intermediate directory may or may not
-//   have its own page: the CLI collapses `docs/guides/index.md` onto route `/guides/` (content id
-//   `guides`), so a `guides` node can be BOTH a real page and a parent of `guides/*` children.
-//   A root-level directory with no index page is an inert label node (no `href`); a nested one
-//   still gets an `href` (its first descendant page, see `fillDirectoryHrefs`) so it's clickable.
-//   Ordering is alphabetical —
-//   there is no author-controlled ordering mechanism in auto mode. The one display convention
-//   layered on top: at each level, leaf pages sort before nodes that have children, so a section's
-//   own pages read before its subsections.
-//
-// - Config-driven (docs.config.yaml has a `sidebar`): the tree is built directly from the
-//   author-ordered group/item list instead. Group nodes are synthetic — they aren't backed by a
-//   content id, so unlike auto mode, `node.id` for a group is NOT guaranteed to be a real path
-//   prefix of its descendants' ids. `trailFor`/`containsId` below both find ancestors by actually
-//   walking the tree (not by comparing id strings), so this holds in both modes.
+// The tree is built directly from docs.config.yaml's `sidebar`, in the author-ordered group/item
+// list. Group nodes are synthetic — they aren't backed by a content id, so `node.id` for a group
+// is NOT guaranteed to be a real path prefix of its descendants' ids. `trailFor`/`containsId`
+// below both find ancestors by actually walking the tree (not by comparing id strings).
 //
 // A group (a `SidebarItem` object with `items`) may declare its own page via `link` (a content id,
 // exactly like a leaf item) — its node then behaves as a real page (`isPage: true`, `id` set to
@@ -28,9 +13,8 @@
 // Without a `link`, a group nested below the root still needs somewhere to send a click: its
 // `href` becomes its first descendant's href (depth-first, `isPage` stays false so it isn't
 // double-counted as a page). Root-level groups with no `link` keep the inert "section heading"
-// treatment. Auto mode mirrors the no-link case for nested directories with no index page. A leaf
-// item's `label`, when set, overrides the linked page's title; a group's `label`, when omitted,
-// falls back to its `link`'s page title.
+// treatment. A leaf item's `label`, when set, overrides the linked page's title; a group's
+// `label`, when omitted, falls back to its `link`'s page title.
 import { getCollection } from "astro:content";
 import { docsAstroPages, rawAstroPages } from "./astro-pages.js";
 import {
@@ -75,18 +59,6 @@ export interface NavTree {
 	nodes: NavNode[];
 	/** Every page in the tree, depth-first pre-order — i.e. top-to-bottom sidebar reading order. */
 	flat: NavPage[];
-}
-
-function compareNodes(a: NavNode, b: NavNode): number {
-	const aHasChildren = a.children.length > 0;
-	const bHasChildren = b.children.length > 0;
-	if (aHasChildren !== bHasChildren) return aHasChildren ? 1 : -1;
-	return a.label.localeCompare(b.label) || a.id.localeCompare(b.id);
-}
-
-function sortTree(nodes: NavNode[]): void {
-	nodes.sort(compareNodes);
-	for (const node of nodes) sortTree(node.children);
 }
 
 function collectPages(nodes: NavNode[], into: NavPage[]): void {
@@ -149,7 +121,7 @@ async function buildNavTree(): Promise<NavTree> {
 	];
 	const { sidebar } = getDocsConfig();
 
-	const nodes = sidebar ? buildConfigNodes(sidebar, entries, base) : buildAutoNodes(entries, base);
+	const nodes = buildConfigNodes(sidebar, entries, base);
 
 	const flat: NavPage[] = [];
 	collectPages(nodes, flat);
@@ -162,62 +134,6 @@ interface NavEntry {
 	id: string;
 	title: string;
 	description?: string;
-}
-
-/** Default tree: alphabetical, mirrors the content ids' directory structure. */
-function buildAutoNodes(entries: NavEntry[], base: string): NavNode[] {
-	const nodes: NavNode[] = [];
-	const byId = new Map<string, NavNode>();
-
-	// Materializes a node and every missing ancestor above it. Ancestors created this way start
-	// as inert directory labels; they become links if an entry with that exact id turns up.
-	function nodeFor(id: string): NavNode {
-		const existing = byId.get(id);
-		if (existing) return existing;
-
-		const cut = id.lastIndexOf("/");
-		const segment = lastSegment(id);
-		const node: NavNode = {
-			id,
-			segment,
-			label: segment,
-			depth: id.split("/").length - 1,
-			isPage: false,
-			children: [],
-		};
-		byId.set(id, node);
-
-		if (cut === -1) nodes.push(node);
-		else nodeFor(id.slice(0, cut)).children.push(node);
-
-		return node;
-	}
-
-	for (const entry of entries) {
-		const node = nodeFor(entry.id);
-		node.isPage = true;
-		node.label = entry.title;
-		node.description = entry.description;
-		node.href = `${base}${entry.id}/`;
-	}
-
-	sortTree(nodes);
-	fillDirectoryHrefs(nodes);
-	return nodes;
-}
-
-/**
- * A directory with no index page still needs somewhere to send a click once it's nested below the
- * root: give it its first descendant page's href, depth-first in display order. Root-level
- * directories with no index page keep the inert label treatment (see SidebarNav.astro).
- */
-function fillDirectoryHrefs(nodes: NavNode[]): void {
-	for (const node of nodes) {
-		fillDirectoryHrefs(node.children);
-		if (!node.isPage && node.depth > 0) {
-			node.href = firstHrefOf(node.children);
-		}
-	}
 }
 
 /**

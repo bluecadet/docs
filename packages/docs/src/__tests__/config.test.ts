@@ -6,19 +6,21 @@ import { resolveConfig, validateConfig } from "../config.js";
 
 const CONFIG_PATH = "/repo/docs.config.yaml";
 
-/** Every config below needs a `content` — it's required, so spelling it out each time is noise. */
+/** Every config below needs a `content` and `sidebar` — both required, so spelling them out each time is noise. */
 const CONTENT = ["docs/**/*.md"];
+const SIDEBAR = ["docs/index"];
 const ENTRY = { base: ".", files: ["docs/**/*.md"], route: "", assets: [] };
 
 /**
- * `content` is required, so tests aimed at any other key get a default one injected rather than
- * repeating it. Tests about `content` itself call `validateConfig` directly.
+ * `content` and `sidebar` are required, so tests aimed at any other key get defaults injected
+ * rather than repeating them. Tests about `content`/`sidebar` themselves call `validateConfig`
+ * directly.
  */
 function validate(
 	parsed: Record<string, unknown>,
 	configPath = CONFIG_PATH,
 ): ReturnType<typeof validateConfig> {
-	return validateConfig({ content: CONTENT, ...parsed }, configPath);
+	return validateConfig({ content: CONTENT, sidebar: SIDEBAR, ...parsed }, configPath);
 }
 
 describe("validateConfig", () => {
@@ -41,13 +43,14 @@ describe("validateConfig", () => {
 			landing: "docs/index.mdx",
 			base: "/my-project/",
 			site: "https://org.github.io",
+			sidebar: SIDEBAR,
 		});
 		expect(warnings).toEqual([]);
 	});
 
 	it("warns (not errors) on an unknown top-level key", () => {
 		const { config, warnings } = validate({ content: CONTENT, typo: "oops" }, CONFIG_PATH);
-		expect(config).toEqual({ content: [ENTRY] });
+		expect(config).toEqual({ content: [ENTRY], sidebar: SIDEBAR });
 		expect(warnings).toHaveLength(1);
 		expect(warnings[0]).toContain('"typo"');
 	});
@@ -71,19 +74,25 @@ describe("validateConfig", () => {
 
 	describe("content", () => {
 		it("expands a bare glob string into a full entry", () => {
-			const { config } = validateConfig({ content: "Packages/*/README.md" }, CONFIG_PATH);
+			const { config } = validateConfig(
+				{ content: "Packages/*/README.md", sidebar: SIDEBAR },
+				CONFIG_PATH,
+			);
 			expect(config.content).toEqual([
 				{ base: ".", files: ["Packages/*/README.md"], route: "", assets: [] },
 			]);
 		});
 
 		it("expands a bare string that isn't wrapped in an array", () => {
-			const { config } = validateConfig({ content: "docs/**/*.md" }, CONFIG_PATH);
+			const { config } = validateConfig({ content: "docs/**/*.md", sidebar: SIDEBAR }, CONFIG_PATH);
 			expect(config.content).toEqual([ENTRY]);
 		});
 
 		it("fills in defaults for an object entry that only sets files", () => {
-			const { config } = validateConfig({ content: [{ files: "a/*.md" }] }, CONFIG_PATH);
+			const { config } = validateConfig(
+				{ content: [{ files: "a/*.md" }], sidebar: SIDEBAR },
+				CONFIG_PATH,
+			);
 			expect(config.content).toEqual([{ base: ".", files: ["a/*.md"], route: "", assets: [] }]);
 		});
 
@@ -93,6 +102,7 @@ describe("validateConfig", () => {
 					content: [
 						{ base: "../packages", files: ["*/README.md"], route: "packages", assets: "**/*.png" },
 					],
+					sidebar: SIDEBAR,
 				},
 				CONFIG_PATH,
 			);
@@ -108,7 +118,10 @@ describe("validateConfig", () => {
 
 		it("accepts a mix of string and object entries", () => {
 			const { config } = validateConfig(
-				{ content: ["docs/**/*.md", { base: "pkg", files: "*/README.md", route: "packages" }] },
+				{
+					content: ["docs/**/*.md", { base: "pkg", files: "*/README.md", route: "packages" }],
+					sidebar: SIDEBAR,
+				},
 				CONFIG_PATH,
 			);
 			expect(config.content).toEqual([
@@ -137,7 +150,7 @@ describe("validateConfig", () => {
 
 		it("accepts an assets-only entry (no files)", () => {
 			const { config } = validateConfig(
-				{ content: [{ base: "..", assets: ["install.sh", "install.ps1"] }] },
+				{ content: [{ base: "..", assets: ["install.sh", "install.ps1"] }], sidebar: SIDEBAR },
 				CONFIG_PATH,
 			);
 			expect(config.content).toEqual([
@@ -147,7 +160,7 @@ describe("validateConfig", () => {
 
 		it("accepts an entry with both files and assets", () => {
 			const { config } = validateConfig(
-				{ content: [{ files: "docs/**/*.md", assets: "docs/img/**/*.png" }] },
+				{ content: [{ files: "docs/**/*.md", assets: "docs/img/**/*.png" }], sidebar: SIDEBAR },
 				CONFIG_PATH,
 			);
 			expect(config.content).toEqual([
@@ -176,7 +189,7 @@ describe("validateConfig", () => {
 
 		it("allows a base that climbs out of the config directory", () => {
 			const { config } = validateConfig(
-				{ content: [{ base: "../../shared/docs", files: "**/*.md" }] },
+				{ content: [{ base: "../../shared/docs", files: "**/*.md" }], sidebar: SIDEBAR },
 				CONFIG_PATH,
 			);
 			expect(config.content?.[0]?.base).toBe("../../shared/docs");
@@ -190,7 +203,7 @@ describe("validateConfig", () => {
 
 		it("warns on an unknown key inside a content entry", () => {
 			const { warnings } = validateConfig(
-				{ content: [{ files: "a/*.md", roots: "docs" }] },
+				{ content: [{ files: "a/*.md", roots: "docs" }], sidebar: SIDEBAR },
 				CONFIG_PATH,
 			);
 			expect(warnings).toHaveLength(1);
@@ -450,6 +463,18 @@ describe("validateConfig", () => {
 	});
 
 	describe("sidebar", () => {
+		it("throws when sidebar is absent", () => {
+			expect(() => validateConfig({ content: CONTENT }, CONFIG_PATH)).toThrowError(
+				/"sidebar" is required/,
+			);
+		});
+
+		it("throws when sidebar is an empty array", () => {
+			expect(() => validateConfig({ content: CONTENT, sidebar: [] }, CONFIG_PATH)).toThrowError(
+				/"sidebar" must not be empty/,
+			);
+		});
+
 		it("accepts a flat sidebar of page ids", () => {
 			const { config, warnings } = validate(
 				{
@@ -711,7 +736,7 @@ describe("validateConfig", () => {
 
 	it("warns once per unknown top-level key even alongside header/footer/sidebar", () => {
 		const { warnings } = validate(
-			{ header: { links: [] }, footer: { meta: "MIT" }, sidebar: [], typo: 1 },
+			{ header: { links: [] }, footer: { meta: "MIT" }, sidebar: SIDEBAR, typo: 1 },
 			CONFIG_PATH,
 		);
 		expect(warnings).toEqual([`${CONFIG_PATH}: unknown key "typo" is ignored.`]);
@@ -846,13 +871,13 @@ describe("resolveConfig (YAML file loading)", () => {
 
 	it("throws when title is missing", () => {
 		const root = makeRoot();
-		writeConfig(root, ["content:", "  - docs/**/*.md"]);
+		writeConfig(root, ["content:", "  - docs/**/*.md", "sidebar:", "  - docs/index"]);
 		expect(() => resolveConfig(overrides(root))).toThrowError(/"title" is required/);
 	});
 
 	it("accepts --title in place of a configured title", () => {
 		const root = makeRoot();
-		writeConfig(root, ["content:", "  - docs/**/*.md"]);
+		writeConfig(root, ["content:", "  - docs/**/*.md", "sidebar:", "  - docs/index"]);
 		expect(resolveConfig({ ...overrides(root), title: "From The Flag" }).title).toBe(
 			"From The Flag",
 		);
@@ -862,25 +887,46 @@ describe("resolveConfig (YAML file loading)", () => {
 		const root = makeRoot();
 		fs.mkdirSync(path.join(root, "docs"), { recursive: true });
 		fs.writeFileSync(path.join(root, "docs", "index.mdx"), "# Home\n");
-		writeConfig(root, ["title: T", "content:", "  - docs/**/*.md", "landing: docs/index.mdx"]);
+		writeConfig(root, [
+			"title: T",
+			"content:",
+			"  - docs/**/*.md",
+			"landing: docs/index.mdx",
+			"sidebar:",
+			"  - docs/index",
+		]);
 		expect(resolveConfig(overrides(root)).landing).toBe(path.join(root, "docs", "index.mdx"));
 	});
 
 	it("leaves landing undefined when the key is absent", () => {
 		const root = makeRoot();
-		writeConfig(root, ["title: T", "content:", "  - docs/**/*.md"]);
+		writeConfig(root, ["title: T", "content:", "  - docs/**/*.md", "sidebar:", "  - docs/index"]);
 		expect(resolveConfig(overrides(root)).landing).toBeUndefined();
 	});
 
 	it("throws naming the missing file when landing does not exist", () => {
 		const root = makeRoot();
-		writeConfig(root, ["title: T", "content:", "  - docs/**/*.md", "landing: docs/nope.md"]);
+		writeConfig(root, [
+			"title: T",
+			"content:",
+			"  - docs/**/*.md",
+			"landing: docs/nope.md",
+			"sidebar:",
+			"  - docs/index",
+		]);
 		expect(() => resolveConfig(overrides(root))).toThrowError(/does not exist/);
 	});
 
 	it("throws when landing is not a .md/.mdx file", () => {
 		const root = makeRoot();
-		writeConfig(root, ["title: T", "content:", "  - docs/**/*.md", "landing: docs/home.astro"]);
+		writeConfig(root, [
+			"title: T",
+			"content:",
+			"  - docs/**/*.md",
+			"landing: docs/home.astro",
+			"sidebar:",
+			"  - docs/index",
+		]);
 		expect(() => resolveConfig(overrides(root))).toThrowError(/must point at a \.md or \.mdx file/);
 	});
 
@@ -888,25 +934,46 @@ describe("resolveConfig (YAML file loading)", () => {
 		const root = makeRoot();
 		fs.mkdirSync(path.join(root, "docs"), { recursive: true });
 		fs.writeFileSync(path.join(root, "docs", "icon.svg"), "<svg/>");
-		writeConfig(root, ["title: T", "content:", "  - docs/**/*.md", "favicon: docs/icon.svg"]);
+		writeConfig(root, [
+			"title: T",
+			"content:",
+			"  - docs/**/*.md",
+			"favicon: docs/icon.svg",
+			"sidebar:",
+			"  - docs/index",
+		]);
 		expect(resolveConfig(overrides(root)).favicon).toBe(path.join(root, "docs", "icon.svg"));
 	});
 
 	it("leaves favicon undefined when the key is absent", () => {
 		const root = makeRoot();
-		writeConfig(root, ["title: T", "content:", "  - docs/**/*.md"]);
+		writeConfig(root, ["title: T", "content:", "  - docs/**/*.md", "sidebar:", "  - docs/index"]);
 		expect(resolveConfig(overrides(root)).favicon).toBeUndefined();
 	});
 
 	it("throws naming the missing file when favicon does not exist", () => {
 		const root = makeRoot();
-		writeConfig(root, ["title: T", "content:", "  - docs/**/*.md", "favicon: docs/nope.svg"]);
+		writeConfig(root, [
+			"title: T",
+			"content:",
+			"  - docs/**/*.md",
+			"favicon: docs/nope.svg",
+			"sidebar:",
+			"  - docs/index",
+		]);
 		expect(() => resolveConfig(overrides(root))).toThrowError(/does not exist/);
 	});
 
 	it("throws when favicon is not an .svg/.png/.ico file", () => {
 		const root = makeRoot();
-		writeConfig(root, ["title: T", "content:", "  - docs/**/*.md", "favicon: docs/icon.webp"]);
+		writeConfig(root, [
+			"title: T",
+			"content:",
+			"  - docs/**/*.md",
+			"favicon: docs/icon.webp",
+			"sidebar:",
+			"  - docs/index",
+		]);
 		expect(() => resolveConfig(overrides(root))).toThrowError(
 			/must point at a \.svg, \.png or \.ico file/,
 		);
@@ -916,7 +983,7 @@ describe("resolveConfig (YAML file loading)", () => {
 		const root = makeRoot();
 		const nested = path.join(root, "site");
 		fs.mkdirSync(nested, { recursive: true });
-		writeConfig(nested, ["title: T", "content:", "  - docs/**/*.md"]);
+		writeConfig(nested, ["title: T", "content:", "  - docs/**/*.md", "sidebar:", "  - docs/index"]);
 		const cfg = resolveConfig(overrides(nested));
 		expect(cfg.configDir).toBe(nested);
 	});

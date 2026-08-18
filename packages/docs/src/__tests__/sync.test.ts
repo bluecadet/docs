@@ -355,6 +355,7 @@ describe("syncContent", () => {
 			title: "Test",
 			branch: "main",
 			content: [entry({ base: "docs" })],
+			sidebar: ["index"],
 			...overrides,
 		};
 	}

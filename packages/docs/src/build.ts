@@ -91,6 +91,7 @@ export function applyEnv(cfg: ResolvedConfig): void {
 		title: cfg.title,
 		hasLanding: cfg.landing !== undefined,
 		configFileName: path.basename(cfg.configPath),
+		sidebar: cfg.sidebar,
 	};
 	if (cfg.repoUrl) payload.repoUrl = cfg.repoUrl;
 	// The published filename, not the source path — the app only needs to know what landed in
@@ -102,7 +103,6 @@ export function applyEnv(cfg: ResolvedConfig): void {
 	if (cfg.site) payload.site = cfg.site;
 	if (cfg.header) payload.header = cfg.header;
 	if (cfg.footer) payload.footer = cfg.footer;
-	if (cfg.sidebar) payload.sidebar = cfg.sidebar;
 	if (cfg.version) payload.version = cfg.version;
 	if (cfg.sidebarMeta) payload.sidebarMeta = cfg.sidebarMeta;
 	if (cfg.toc) payload.toc = cfg.toc;

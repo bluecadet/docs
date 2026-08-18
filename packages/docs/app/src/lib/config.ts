@@ -112,7 +112,7 @@ export interface DocsAppConfig {
 	site?: string;
 	header?: ConfigLinks;
 	footer?: FooterConfig;
-	sidebar?: SidebarItem[];
+	sidebar: SidebarItem[];
 	/** Version string, e.g. `v2.4.1`. Rendered in the header and at the bottom of the sidebar. */
 	version?: string;
 	/** Multiline string; each non-empty line renders as its own row in the sidebar's bottom meta block. */
@@ -121,9 +121,13 @@ export interface DocsAppConfig {
 	toc?: TocConfig;
 }
 
-const DEFAULTS: Pick<DocsAppConfig, "title" | "configFileName"> = {
+// Only reached when `DOCS_CONFIG` is absent, i.e. the app is running outside a CLI build. The CLI
+// requires a non-empty `sidebar:`, so an empty one here is a standalone-only fallback, never a
+// config a real build can produce.
+const DEFAULTS: Pick<DocsAppConfig, "title" | "configFileName" | "sidebar"> = {
 	title: "docs",
 	configFileName: "docs.config.yaml",
+	sidebar: [],
 };
 
 function parseDocsConfig(): DocsAppConfig {

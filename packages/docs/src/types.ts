@@ -126,10 +126,10 @@ export interface DocsConfig {
 	/** Grouped links and an optional meta string rendered in the footer chrome. */
 	footer?: FooterConfig;
 	/**
-	 * Author-controlled sidebar structure. When present, drives `getNavTree()` instead of the
-	 * default auto-generated (alphabetical, directory-mirroring) tree.
+	 * Author-controlled sidebar structure, and the only source of one — required and non-empty.
+	 * Pages left out still build and route, they just get no sidebar entry.
 	 */
-	sidebar?: SidebarItem[];
+	sidebar: SidebarItem[];
 	/** Version string, e.g. `v2.4.1`. Rendered in the header and at the bottom of the sidebar. */
 	version?: string;
 	/** Multiline string; each non-empty line renders as its own row in the sidebar's bottom meta block. */
@@ -164,7 +164,7 @@ export interface ResolvedConfig {
 	site?: string;
 	header?: ConfigLinks;
 	footer?: FooterConfig;
-	sidebar?: SidebarItem[];
+	sidebar: SidebarItem[];
 	version?: string;
 	sidebarMeta?: string;
 	toc?: TocConfig;
@@ -190,7 +190,7 @@ export interface DocsConfigPayload {
 	site?: string;
 	header?: ConfigLinks;
 	footer?: FooterConfig;
-	sidebar?: SidebarItem[];
+	sidebar: SidebarItem[];
 	version?: string;
 	sidebarMeta?: string;
 	toc?: TocConfig;

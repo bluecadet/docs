@@ -103,6 +103,12 @@ jobs:
               files: "*/README.md"
               route: packages
               assets: "**/*.svg"
+          sidebar:
+            - changelog
+            - getting-started
+            - component-demo
+            - mdx-demo
+            - packages/widget
           EOF
           cat > "$RUNNER_TEMP/fixture/CHANGELOG.md" <<'EOF'
           # Changelog
@@ -312,7 +318,7 @@ jobs:
         run: |
           test -f "$RUNNER_TEMP/no-landing-dist/index.html"
           grep -q 'http-equiv="refresh"' "$RUNNER_TEMP/no-landing-dist/index.html"
-          # The target is the first sidebar page (alphabetical in auto mode), not a hardcoded route.
+          # The target is the first page listed under the fixture's `sidebar:`, not a hardcoded route.
           grep -q 'url=/changelog/' "$RUNNER_TEMP/no-landing-dist/index.html"
           test -f "$RUNNER_TEMP/no-landing-dist/getting-started/index.html"
 
