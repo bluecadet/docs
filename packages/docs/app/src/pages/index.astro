@@ -97,6 +97,7 @@ const pageDescription = data?.description;
 			// this script only assigns the index and the marker, never the delay math.
 			for (const container of content.querySelectorAll("[data-reveal-stagger]")) {
 				Array.from(container.children).forEach((child, i) => {
+					if (!(child instanceof HTMLElement)) return;
 					child.style.setProperty("--reveal-index", String(Math.min(i, 8)));
 					child.setAttribute("data-reveal-item", "");
 				});

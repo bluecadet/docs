@@ -41,6 +41,12 @@ jobs:
       - name: Test
         run: npm test --workspaces --if-present
 
+      # The CLI half is covered by tsc via the Build step above; the app half is not, because
+      # packages/docs/tsconfig.json only includes src/. Without this, ~2.5k lines of app TS and
+      # every .astro frontmatter block are checked by nothing but esbuild's type-stripping.
+      - name: Typecheck the bundled Astro app
+        run: npm run check --workspace packages/docs
+
       - name: Smoke build this repo's own docs (workspace CLI, no deploy)
         run: node packages/docs/dist/cli.js build --out ./dist
 
