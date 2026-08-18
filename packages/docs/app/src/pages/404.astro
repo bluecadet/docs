@@ -267,8 +267,8 @@ const routesPayload = {
 			gap: 2rem; /* 32px */
 		}
 
-		/* Stacks a breakpoint earlier than buttons.css's mobile touch-target rule, so the tablet
-		   column repeats the centering/height here. */
+		/* Stacks a breakpoint earlier than Button.astro's own mobile touch-target rule (`.btn`'s
+		   scoped <style>), so the tablet column repeats the centering/height here. */
 		.notfound-cta {
 			flex-direction: column;
 		}

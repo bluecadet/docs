@@ -16,13 +16,12 @@
 // the slot boundary fine, so <RegistryRow>'s own scoped `.registry-row` rule can consume it via
 // `grid-template-columns: var(--registry-cols)` without either component reaching into the
 // other's shadow (:global()).
-const wrapperProps = Astro.props;
 const hasRows = Astro.slots.has("default");
 ---
 
 {
 	hasRows && (
-		<div class="landing-band landing-band--flush registry-table" {...wrapperProps}>
+		<div class="landing-band landing-band--flush registry-table">
 			<div class="registry-panel" data-reveal>
 				<div class="registry-header" aria-hidden="true">
 					<span class="type-eyebrow head-cell">package</span>

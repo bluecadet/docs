@@ -11,8 +11,8 @@
 // passes straight through, and a `class` of your own is merged rather than dropped, so a caller
 // can hang its own positioning on the same element.
 //
-// The look lives in styles/buttons.css, not here, because ClosingCta styles author-written plain
-// <a> tags it never gets to put a class on: both paths have to share one set of declarations.
+// The look lives in this component's own scoped <style> block below (the `.btn*` rules) — there is
+// no shared styles/buttons.css.
 import type { HTMLAttributes } from "astro/types";
 
 type Props = Omit<HTMLAttributes<"a">, "type"> &
@@ -67,20 +67,17 @@ const Tag = href ? "a" : "button";
 	color: var(--button-color, var(--accent-2));
 	border: 1px solid var(--accent-2-border-40);
 	background-color: transparent;
-
-	&:hover {
-		background-color: color-mix(in srgb, var(--button-color, var(--accent-2)) 6%, transparent);
-	}
 }
 
 .btn-ghost {
 	color: var(--button-color, var(--accent-2));
 	border: none;
 	background-color: transparent;
+}
 
-	&:hover {
-		background-color: color-mix(in srgb, var(--button-color, var(--accent-2)) 6%, transparent);
-	}
+.btn-secondary:hover,
+.btn-ghost:hover {
+	background-color: color-mix(in srgb, var(--button-color, var(--accent-2)) 6%, transparent);
 }
 
 </style>

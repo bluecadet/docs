@@ -31,7 +31,7 @@ const { eyebrow } = Astro.props;
 	}
 
 	.content :global(> h2) {
-		font: 400 1.75rem/1.2 var(--font-serif);
+		font: var(--weight-regular) 1.75rem/var(--leading-tight) var(--font-serif);
 		color: var(--ink);
 	}
 
@@ -42,7 +42,7 @@ const { eyebrow } = Astro.props;
 
 	.content :global(> p) {
 		font-size: 1.0625rem;
-		line-height: 1.8;
+		line-height: var(--leading-relaxed);
 		color: var(--text-muted);
 	}
 

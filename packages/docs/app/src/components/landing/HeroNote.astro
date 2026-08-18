@@ -11,7 +11,7 @@
 // slotted child its index. A third+ is hidden with :nth-of-type instead of dropped from the DOM.
 ---
 
-<p class="hero-note">
+<p class="hero-note type-sm">
 	<slot />
 </p>
 
@@ -20,7 +20,7 @@
 		margin: 0;
 		padding-block: 0.125rem 0.125rem;
 		padding-inline: 0.875rem 0;
-		font: 400 0.75rem/1.75 var(--font-mono);
+		line-height: 1.75;
 		text-wrap: balance;
 	}
 
