@@ -61,12 +61,26 @@ title: my-project
 content:
   - base: docs
     files: "**/*.md"
+sidebar:
+  - label: Tutorials
+    items:
+      - tutorials/getting-started
+  - label: How-to
+    items:
+      - how-to/deploy
+  - label: Reference
+    items:
+      - reference/config
+  - label: Explanation
+    items:
+      - explanation/design
 ```
 
-`title` and `content` are the only required keys. `content` lists where pages come from; nothing
-under `docs/` publishes without a matching entry here. `base: docs` matters — it's what gets
-stripped from each route, so `docs/reference/config.md` becomes `/reference/config/`. Leave `base`
-at its default (`.`) and the same file would publish at `/docs/reference/config/` instead.
+`title`, `content`, and `sidebar` are the required keys. `content` lists where pages come from;
+nothing under `docs/` publishes without a matching entry here. `base: docs` matters — it's what
+gets stripped from each route, so `docs/reference/config.md` becomes `/reference/config/`. Leave
+`base` at its default (`.`) and the same file would publish at `/docs/reference/config/` instead.
+`sidebar` lists which of those pages show up in the nav, and in what order.
 
 There's no landing page yet, so `/` will redirect to the first page in the sidebar. Want a real
 landing page instead? Point `landing:` at one `.md` or `.mdx` file:
@@ -92,7 +106,7 @@ npx @bluecadet/docs build
 This reads `./docs.config.yaml` and writes a static site to `./dist`. Open `dist/index.html` in a
 browser (or serve the folder) to see:
 
-- A sidebar generated from your published routes.
+- A sidebar built from the pages listed in `sidebar`.
 - Full-text search over every page (press `/` or click the search field) — see
   [Search](/reference/search/).
 - The site's built-in design applied automatically; there's no theme to configure.
@@ -122,8 +136,8 @@ authenticate against GitHub Packages.
 
 ## Next steps
 
-- Need per-repo settings (a custom title, a monorepo's extra READMEs, a non-root base path, header/
-  footer links, a hand-ordered sidebar)? See
+- Need per-repo settings (a custom title, a monorepo's extra READMEs, header/footer links, a
+  more elaborate sidebar)? See
   [Configure docs.config.yaml](/how-to/configure-docs-config-yaml/).
 - Full flag/behavior reference: [CLI](/reference/cli/) and
   [content conventions](/reference/content-conventions/).

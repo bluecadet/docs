@@ -62,8 +62,8 @@ Two fields are read by the site, both optional:
 
 No other frontmatter fields are read — the content schema is just `{ title, description? }`.
 
-Sidebar navigation is generated from the published file tree by default, or from `docs.config.yaml`'s
-`sidebar` field when set — see [docs.config.yaml](/reference/docs-config-yaml/#sidebar-semantics).
+Sidebar navigation comes entirely from `docs.config.yaml`'s required `sidebar` field — see
+[docs.config.yaml](/reference/docs-config-yaml/#sidebar-semantics).
 Full-text search — see [Search](/reference/search/) — is always generated from the published file
 tree; there's no separate search config. Neither reads frontmatter beyond `title`/`description`.
 
@@ -143,22 +143,19 @@ during the sync step:
   `CONTRIBUTING.md`, etc.) become a GitHub blob URL (`{repoUrl}/blob/{branch}/{path}`) when a
   `repoUrl` is known; otherwise the link is unwrapped to plain text (the hyperlink is dropped, the
   link text stays).
-- All of the above respect the configured base path — generated links and asset paths are
-  prefixed accordingly.
 - Absolute-looking (`/`-rooted) links and images already present in source markdown are treated as
-  site-root-relative and get the configured base path prefixed at rewrite time (e.g. `/foo/` →
-  `/launchpad/foo/` under `base: "/launchpad/"`) — they are not otherwise validated or resolved.
+  site-root-relative and passed through unchanged — they are not otherwise validated or resolved.
 
 ### MDX passthrough
 
 `.mdx` files (typically a rich `landing:` page) are copied through untransformed — no link/asset
 rewriting, no heading extraction beyond a best-effort regex for the title. This is deliberate: a
 full markdown AST pass doesn't understand JSX or component imports and would corrupt them. One
-consequence: MDX gets **no base-path prefixing either**, since that prefixing happens in the same
-rewrite pass. Give MDX files explicit `title:` frontmatter, and **prefer relative links**
-(`reference/cli/`, not `/reference/cli/`) for anything internal — they resolve correctly under any
-`base` because the browser resolves them against the current page's URL. This applies to plain
-markdown links as well as any JSX component `href`/`src` props or frontmatter-driven links you
+consequence: MDX gets **no link rewriting at all** — a link has to be correct as written. Give MDX
+files explicit `title:` frontmatter, and **use root-relative links** (`/reference/cli/`, not
+`reference/cli/`) for anything internal — a root-relative path resolves the same regardless of the
+linking page's own depth, where a page-relative link would need adjusting per page. This applies to
+plain markdown links as well as any JSX component `href`/`src` props or frontmatter-driven links you
 author in the MDX yourself.
 
 ## `.astro` pages

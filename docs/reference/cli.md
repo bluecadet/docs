@@ -25,7 +25,6 @@ Installing requires GitHub Packages auth — see
 | `--config <path>` | `./docs.config.yaml` | Config file to build from. Its directory (`configDir`) anchors every relative path in the config and every route id the build derives — cwd is never consulted. |
 | `--out <dir>` | `<config dir>/dist` | Build output directory (`build` only). |
 | `--site <url>` | — | Absolute site origin, e.g. `https://bluecadet.github.io`. |
-| `--base <path>` | `/` | Base path for the deployed site, e.g. `/launchpad/` for a GitHub Pages project site. |
 | `--title <title>` | — | Override the configured site title (also satisfies the required `title` if the config omits it). |
 | `--repo-url <url>` | — | Override the detected GitHub repo URL (used for out-of-tree link rewriting and the header's GitHub link). |
 | `-h, --help` | — | Show usage. |

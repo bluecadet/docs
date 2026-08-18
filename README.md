@@ -19,10 +19,9 @@ npx @bluecadet/docs build
 ```
 
 Reads `README.md` and `docs/` from the current directory and writes a static site to `./dist`. Add
-an optional `docs.config.yaml` at the repo root for a custom title, GitHub URL, deploy base path,
-extra content globs (monorepo package READMEs, etc.), header/footer links, or a hand-ordered
-sidebar. Deploy it from CI by pointing the build command at `npx @bluecadet/docs build` and the
-publish directory at `dist`.
+an optional `docs.config.yaml` at the repo root for a custom title, GitHub URL, extra content globs
+(monorepo package READMEs, etc.), header/footer links, and a hand-ordered sidebar. Deploy it from CI
+by pointing the build command at `npx @bluecadet/docs build` and the publish directory at `dist`.
 
 See the [full docs](https://bluecadet.github.io/docs/) for a tutorial, how-to guides, and
 reference material.

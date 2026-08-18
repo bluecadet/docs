@@ -4,8 +4,8 @@ description: "Covers when and how to add a docs.config.yaml to override the CLI'
 
 # Configure docs.config.yaml
 
-Every site needs a `docs.config.yaml` at its root — `title` and `content` are required, CLI flags
-override the file, and this how-to covers the rest of what it can do.
+Every site needs a `docs.config.yaml` at its root — `title`, `content`, and `sidebar` are
+required, CLI flags override the file, and this how-to covers the rest of what it can do.
 
 ```yaml
 title: My Project
@@ -16,8 +16,14 @@ content:
   - base: packages
     files: "*/README.md"
     route: packages
-base: /my-project/
 site: https://org.github.io
+sidebar:
+  - label: Tutorials
+    items:
+      - tutorials/getting-started
+  - label: Reference
+    items:
+      - reference/cli
 ```
 
 ## When you need more than the required fields
@@ -26,8 +32,6 @@ site: https://org.github.io
   `git remote get-url origin` for `repoUrl` by default; set it explicitly if that's missing or
   wrong. `repoUrl` drives both the header's default GitHub link and out-of-tree link rewriting
   (source files, `LICENSE`, etc. become GitHub blob links).
-- **Deploying to a GitHub Pages *project* site** (`org.github.io/my-project`, not a user/org root
-  site). Set `base` to `/my-project/` so generated links and asset paths carry the prefix.
 - **A real landing page instead of the default redirect.** With no `landing:` key, `/` redirects
   to the first sidebar page. Point `landing:` at one `.md`/`.mdx` file to publish it at `/` instead.
 - **A monorepo** with docs living outside a single `docs/` tree (e.g. per-package READMEs). Add
@@ -35,8 +39,8 @@ site: https://org.github.io
   [Include package READMEs from a monorepo](/how-to/include-package-readmes-from-a-monorepo/).
 - **Extra links in the header or footer** (a changelog, a status page, a second repo) beyond the
   default GitHub link — set `header.links`/`footer.groups`.
-- **Author-controlled sidebar order or grouping** instead of the default alphabetical,
-  directory-mirroring tree — set `sidebar`.
+- **Nested groups or custom labels in your `sidebar`** beyond a flat list of pages — see
+  [Writing a custom sidebar](#writing-a-custom-sidebar) below.
 
 ## Adding header/footer links
 
@@ -64,7 +68,7 @@ footer:
 Either field, once set, fully replaces that chrome's default content — `header.links` here means no
 more default GitHub icon link, and `footer.groups` means no more default "docs"/"github" pair. See
 the [reference](/reference/docs-config-yaml/#headerfooter-links) for the external-link (↗)
-detection rule and the base-prefixing caveat.
+detection rule and how `href` is used as written.
 
 ## Writing a custom sidebar
 
@@ -100,10 +104,10 @@ fails the build, naming the bad id — see
 
 For every scalar field, the CLI resolves in this order, first match wins:
 
-1. The matching CLI flag (`--title`, `--repo-url`, `--base`, `--site`).
+1. The matching CLI flag (`--title`, `--repo-url`, `--site`).
 2. The `docs.config.yaml` field.
 3. A built-in default — see the [reference](/reference/docs-config-yaml/) for what each field
-   falls back to. `title` and `content` have none; both are required.
+   falls back to. `title`, `content`, and `sidebar` have none; all three are required.
 
 `content`, `landing`, `header`, `footer`, and `sidebar` have no CLI equivalent; they're config-file
 only.

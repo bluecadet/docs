@@ -4,9 +4,9 @@ description: Documents every docs.config.yaml field, its type, its default, and 
 
 # docs.config.yaml schema
 
-Required, at `--config`'s path (`./docs.config.yaml` by default). `title` and `content` are
-required; everything else is optional. The file's own directory — not the shell's cwd — is what
-every relative path below resolves against.
+Required, at `--config`'s path (`./docs.config.yaml` by default). `title`, `content`, and
+`sidebar` are required; everything else is optional. The file's own directory — not the shell's
+cwd — is what every relative path below resolves against.
 
 ```yaml
 title: My Project
@@ -24,7 +24,6 @@ content:
     files: "*/README.md"
     route: packages
 
-base: /my-project/
 site: https://org.github.io
 
 header:
@@ -80,12 +79,11 @@ toc:
 | `favicon` | `string` | — (no favicon) | Path (relative to the config file) of an `.svg`/`.png`/`.ico` file published as the site's favicon. See [Favicon](#favicon). |
 | `accent` | `string` (6-digit hex) | `#9cc3a9` (sage) | The STATE accent — where you are, what succeeded. See [Accent colors](#accent-colors). |
 | `accent2` | `string` (6-digit hex) | `#e0a75e` (amber) | The ATTENTION accent — what changed, what's required, what will break. See [Accent colors](#accent-colors). |
-| `base` | `string` | `/` | Base path for the deployed site. |
 | `site` | `string` | — | Absolute site origin. Also drives canonical URLs, Open Graph meta tags, and sitemap generation — set once every page gets a `<link rel="canonical">`, `og:*` tags, and a `sitemap-index.xml`; left unset, all three are skipped. A `robots.txt` is written either way, and names the sitemap when this is set — see [Crawling](#crawling). |
 | `header.links` | `{ label, href }[]` | — | Extra links rendered in the header after its fixed "docs" link, replacing the default GitHub link entirely when set — see [Notes](#notes). |
 | `footer.groups` | `{ title, links: { label, href, note? }[] }[]` | — | Titled groups of links rendered in the footer, replacing the default "docs"/"github" pair entirely when set — see [Notes](#notes). |
 | `footer.meta` | `string` | — | Right-aligned meta string in the footer (e.g. `MIT licensed · no telemetry`), rendered on every page. |
-| `sidebar` | `SidebarItem[]` | — | Author-controlled sidebar structure. When present, replaces the default auto-generated (alphabetical, route-mirroring) sidebar — see [Sidebar semantics](#sidebar-semantics). |
+| `sidebar` | `SidebarItem[]` | *required, non-empty* | Author-controlled sidebar structure — see [Sidebar semantics](#sidebar-semantics). |
 | `version` | `string` | — | Version string (e.g. `v2.4.1`), rendered as small mono text in the header and at the bottom of the sidebar. |
 | `sidebarMeta` | `string` | — | Multiline string rendered at the bottom of the sidebar, below `version` if both are set. Each non-empty line becomes its own row (e.g. `MIT licensed` / `no telemetry`). |
 | `toc.note` | `string` | — | Short note shown in the attention accent color (amber by default) below the desktop "on this page" list (e.g. `updated for 2.4`). |
@@ -175,11 +173,10 @@ renders on every page whether or not `meta` is set. On pages where nothing else 
 (doc pages at any width, and every page below desktop widths), an unset `meta` leaves it as an
 empty hairline-bordered strip. If you configure `footer.groups`, set `footer.meta` too.
 
-In both cases, `href` is used exactly as written — it is **not** base-prefixed or rewritten the
-way links inside published markdown are (see
-[link rewriting](/reference/content-conventions/#link-and-asset-rewriting)). For an internal link
-under a non-root `base`, either hardcode the base prefix yourself (e.g. `/my-project/changelog/`)
-or use a full absolute URL.
+In both cases, `href` is used exactly as written — it is **not** rewritten the way links inside
+published markdown are (see
+[link rewriting](/reference/content-conventions/#link-and-asset-rewriting)). Use a root-relative
+path (e.g. `/changelog/`) or a full absolute URL for internal links.
 
 An `href` that's an absolute `http(s)` URL pointing at a different origin than `site` (or any
 absolute `http(s)` URL at all, when `site` isn't configured) gets the same "leaves the site" (↗)
@@ -228,8 +225,8 @@ with the leading/trailing slashes stripped (a `content` entry with `base: docs` 
 a markdown page. A `layout: "raw"` astro page can't: it owns its entire document and has nowhere to
 sit in the nav, so referencing one in `sidebar` is a build error naming the page.
 
-- **The tree is fully explicit.** There's no merging with the auto-generated tree — once `sidebar`
-  is set, it's the entire sidebar, in the exact order written. Nothing is sorted for you.
+- **The tree is fully explicit.** `sidebar` is the entire sidebar, in the exact order written —
+  nothing is sorted for you.
 - **Pages not listed in `sidebar` still build and route.** They just don't appear in the sidebar
   (or in prev/next pagination, which walks the same tree) — this is intended, not a bug, for pages
   you want reachable by direct link only (e.g. a page linked from your landing page but not part of
@@ -294,7 +291,7 @@ redirect stub (neither is content worth indexing). Pages that shouldn't be index
 
 ## Notes
 
-- Every scalar field (`title`/`repoUrl`/`base`/`site`) can also be set (or overridden) via a CLI
+- Every scalar field (`title`/`repoUrl`/`site`) can also be set (or overridden) via a CLI
   flag; flags win over the file — see [CLI](/reference/cli/). `content`/`landing`/`header`/
   `footer`/`sidebar`/`version`/`sidebarMeta`/`toc`/`favicon`/`accent`/`accent2` have no CLI flag
   equivalent; they're config-file only.
@@ -325,7 +322,3 @@ redirect stub (neither is content worth indexing). Pages that shouldn't be index
   the same source file.
 - **With no `landing` configured, `/` is a meta-refresh redirect to the first sidebar page, not a
   real page.** It carries no content and isn't indexed by search.
-- **With `base` set, the generated `robots.txt` is ignored by crawlers.** They only ever fetch
-  `<origin>/robots.txt`, and a build writes to `<origin>/<base>/robots.txt` — the origin root
-  belongs to whatever else is deployed there, not to this build. The `Sitemap:` line stays correct;
-  submit the sitemap URL directly, or serve a `robots.txt` at the origin root yourself.
