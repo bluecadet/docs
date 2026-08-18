@@ -31,7 +31,6 @@ describe("validateConfig", () => {
 				repoUrl: "https://github.com/org/my-project",
 				content: ["Packages/*/README.md"],
 				landing: "docs/index.mdx",
-				base: "/my-project/",
 				site: "https://org.github.io",
 			},
 			CONFIG_PATH,
@@ -41,7 +40,6 @@ describe("validateConfig", () => {
 			repoUrl: "https://github.com/org/my-project",
 			content: [{ base: ".", files: ["Packages/*/README.md"], route: "", assets: [] }],
 			landing: "docs/index.mdx",
-			base: "/my-project/",
 			site: "https://org.github.io",
 			sidebar: SIDEBAR,
 		});
@@ -60,7 +58,6 @@ describe("validateConfig", () => {
 		"repoUrl",
 		"accent",
 		"accent2",
-		"base",
 		"site",
 		"version",
 		"sidebarMeta",
@@ -774,7 +771,6 @@ describe("resolveConfig (YAML file loading)", () => {
 				"accent: '#8fb4d6'",
 				"accent2: '#d98a6e'",
 				"site: https://acme.github.io",
-				"base: /proj/",
 				"content:",
 				"  - packages/*/README.md",
 				"header:",
@@ -818,7 +814,6 @@ describe("resolveConfig (YAML file loading)", () => {
 		expect(cfg.accent).toBe("#8fb4d6");
 		expect(cfg.accent2).toBe("#d98a6e");
 		expect(cfg.site).toBe("https://acme.github.io");
-		expect(cfg.base).toBe("/proj/");
 		expect(cfg.content).toEqual([
 			{ base: ".", files: ["packages/*/README.md"], route: "", assets: [] },
 		]);

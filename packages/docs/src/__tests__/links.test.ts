@@ -15,7 +15,6 @@ function makeCtx(overrides: Partial<RewriteContext> = {}): RewriteContext {
 		configDir: CONFIG_DIR,
 		repoUrl: undefined,
 		branch: "main",
-		base: "/",
 		...overrides,
 	};
 }
@@ -162,69 +161,6 @@ describe("transformMarkdown - anchors and query strings", () => {
 			undefined,
 		);
 		expect(body).toContain("(/reference/config/?x=1#section)");
-	});
-});
-
-describe("transformMarkdown - base path prefixing", () => {
-	it("prefixes a resolved doc-to-doc link with the configured base", () => {
-		const routes: RouteMap = new Map([["/repo/docs/reference/config.md", "/reference/config/"]]);
-		const { body } = transformMarkdown(
-			"[cfg](reference/config.md)",
-			makeCtx({ routes, base: "/launchpad/" }),
-			undefined,
-		);
-		expect(body).toContain("(/launchpad/reference/config/)");
-	});
-
-	it("prefixes a published asset path with the configured base", () => {
-		const assets: AssetMap = new Map([["/repo/docs/assets/x.png", "assets/x.png"]]);
-		const { body } = transformMarkdown(
-			"![alt](assets/x.png)",
-			makeCtx({ assets, base: "/launchpad/" }),
-			undefined,
-		);
-		expect(body).toContain("(/launchpad/assets/x.png)");
-	});
-
-	it("treats a hand-authored root-relative link as site-root-relative and base-prefixes it", () => {
-		const { body } = transformMarkdown(
-			"[abs](/how-to/foo/)",
-			makeCtx({ base: "/launchpad/" }),
-			undefined,
-		);
-		expect(body).toContain("(/launchpad/how-to/foo/)");
-	});
-
-	it("treats a hand-authored root-relative image as site-root-relative and base-prefixes it", () => {
-		const { body } = transformMarkdown(
-			"![alt](/assets/x.png)",
-			makeCtx({ base: "/launchpad/" }),
-			undefined,
-		);
-		expect(body).toContain("(/launchpad/assets/x.png)");
-	});
-
-	it("base-prefixes a root-relative href inside raw HTML", () => {
-		const { body } = transformMarkdown(
-			'<a href="/how-to/foo/">Foo</a>',
-			makeCtx({ base: "/launchpad/" }),
-			undefined,
-		);
-		expect(body).toContain('href="/launchpad/how-to/foo/"');
-	});
-
-	it('does not double-prefix when base is the default "/"', () => {
-		const { body } = transformMarkdown("[abs](/how-to/foo/)", makeCtx({ base: "/" }), undefined);
-		expect(body).toContain("(/how-to/foo/)");
-	});
-
-	it("does not prefix a protocol-relative URL", () => {
-		const { body } = transformMarkdown(
-			"![alt](//cdn.example.com/x.png)",
-			makeCtx({ base: "/launchpad/" }),
-			undefined,
-		);
-		expect(body).toContain("(//cdn.example.com/x.png)");
 	});
 });
 

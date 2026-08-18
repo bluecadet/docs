@@ -26,8 +26,6 @@ export interface RewriteContext {
 	configDir: string;
 	repoUrl: string | undefined;
 	branch: string;
-	/** Deployed base path, e.g. "/launchpad/". Defaults to "/". */
-	base: string;
 }
 
 export interface TransformResult {
@@ -93,9 +91,8 @@ function rewriteTree(tree: Root, ctx: RewriteContext, warnings: string[]): void 
 		const link = node as Link;
 		switch (classifyUrl(link.url)) {
 			case "external":
-				return;
 			case "root-relative":
-				link.url = withBase(link.url, ctx.base);
+				// Already root-relative; left exactly as authored.
 				return;
 			case "asset":
 				link.url = resolveAsset(link.url, ctx, warnings);
@@ -121,7 +118,7 @@ function resolveDocLink(rawUrl: string, ctx: RewriteContext, warnings: string[])
 	const { pathPart, suffix } = splitUrl(rawUrl);
 	const abs = path.resolve(ctx.fromAbsDir, pathPart);
 	const route = ctx.routes.get(abs);
-	if (route) return withBase(route, ctx.base) + suffix;
+	if (route) return `${route}${suffix}`;
 	if (ctx.repoUrl) {
 		const relFromRoot = toPosix(path.relative(ctx.configDir, abs));
 		if (!relFromRoot.startsWith("..")) {
@@ -147,12 +144,12 @@ function resolveDocLink(rawUrl: string, ctx: RewriteContext, warnings: string[])
  */
 function resolveAsset(rawUrl: string, ctx: RewriteContext, warnings: string[]): string {
 	if (EXTERNAL.test(rawUrl)) return rawUrl;
-	if (isRootRelative(rawUrl)) return withBase(rawUrl, ctx.base);
+	if (isRootRelative(rawUrl)) return rawUrl;
 	const { pathPart, suffix } = splitUrl(rawUrl);
 	const abs = path.resolve(ctx.fromAbsDir, pathPart);
 
 	const published = ctx.assets.get(abs);
-	if (published !== undefined) return withBase(`/${published}`, ctx.base) + suffix;
+	if (published !== undefined) return `/${published}${suffix}`;
 
 	warnings.push(
 		`${ctx.fromLabel}: asset not published -> ${rawUrl} (add a glob covering ${abs} to an \`assets\` key in docs.config.yaml)`,
@@ -160,18 +157,7 @@ function resolveAsset(rawUrl: string, ctx: RewriteContext, warnings: string[]): 
 	const fallback = toPosix(path.relative(ctx.configDir, abs));
 	// Outside the config's own directory there's no sensible site path to invent; leave it be.
 	if (fallback.startsWith("..")) return rawUrl;
-	return withBase(`/${fallback}`, ctx.base) + suffix;
-}
-
-/**
- * Prefixes a `/`-rooted path with the deployed base path (e.g. "/launchpad/foo" from "/foo").
- * Used both for paths we construct ourselves and for hand-authored `/`-rooted links already
- * present in source markdown, which we treat as site-root-relative rather than rewriting further.
- */
-function withBase(urlPath: string, base: string): string {
-	if (base === "/" || base === "") return urlPath;
-	const trimmed = base.endsWith("/") ? base.slice(0, -1) : base;
-	return `${trimmed}${urlPath}`;
+	return `/${fallback}${suffix}`;
 }
 
 /** A `/`-rooted path, but not a protocol-relative URL like `//cdn.example.com/x`. */
@@ -196,9 +182,8 @@ function classifyUrl(url: string): UrlClass {
 function resolveLinkOrAsset(rawUrl: string, ctx: RewriteContext, warnings: string[]): string {
 	switch (classifyUrl(rawUrl)) {
 		case "external":
-			return rawUrl;
 		case "root-relative":
-			return withBase(rawUrl, ctx.base);
+			return rawUrl;
 		case "asset":
 			return resolveAsset(rawUrl, ctx, warnings);
 		case "doc":
@@ -216,9 +201,8 @@ function rewriteRawHtml(value: string, ctx: RewriteContext, warnings: string[]):
 		(_m, pre: string, url: string, post: string) => {
 			switch (classifyUrl(url)) {
 				case "external":
-					return pre + url + post;
 				case "root-relative":
-					return pre + withBase(url, ctx.base) + post;
+					return pre + url + post;
 				case "asset":
 					return pre + resolveAsset(url, ctx, warnings) + post;
 				case "doc":

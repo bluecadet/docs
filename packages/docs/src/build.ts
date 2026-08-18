@@ -72,12 +72,10 @@ export function logSyncResult(result: SyncResult): void {
 }
 
 /**
- * Sets `DOCS_BASE`/`DOCS_SITE`/`DOCS_CONFIG_DIR` (all three read directly by astro.config.mjs) and
- * the consolidated `DOCS_CONFIG` JSON payload that app code reads via `app/src/lib/config.ts`'s
- * `getDocsConfig()`.
+ * Sets `DOCS_SITE`/`DOCS_CONFIG_DIR` (both read directly by astro.config.mjs) and the consolidated
+ * `DOCS_CONFIG` JSON payload that app code reads via `app/src/lib/config.ts`'s `getDocsConfig()`.
  */
 export function applyEnv(cfg: ResolvedConfig): void {
-	if (cfg.base) process.env.DOCS_BASE = cfg.base;
 	if (cfg.site) process.env.DOCS_SITE = cfg.site;
 	// Backs the `@docs-src/` import alias, which is how a synced page reaches a component in the
 	// consumer's own repo (see app/astro.config.mjs — synced pages are copies, so relative
@@ -99,7 +97,6 @@ export function applyEnv(cfg: ResolvedConfig): void {
 	if (cfg.favicon) payload.favicon = faviconFileName(cfg.favicon);
 	if (cfg.accent) payload.accent = cfg.accent;
 	if (cfg.accent2) payload.accent2 = cfg.accent2;
-	if (cfg.base) payload.base = cfg.base;
 	if (cfg.site) payload.site = cfg.site;
 	if (cfg.header) payload.header = cfg.header;
 	if (cfg.footer) payload.footer = cfg.footer;

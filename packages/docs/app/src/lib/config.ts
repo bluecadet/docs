@@ -108,7 +108,6 @@ export interface DocsAppConfig {
 	 */
 	hasLanding?: boolean;
 	repoUrl?: string;
-	base?: string;
 	site?: string;
 	header?: ConfigLinks;
 	footer?: FooterConfig;

@@ -29,7 +29,6 @@ const STRING_KEYS = [
 	"favicon",
 	"accent",
 	"accent2",
-	"base",
 	"site",
 	"version",
 	"sidebarMeta",
@@ -59,7 +58,6 @@ export interface CliOverrides {
 	out: string;
 	title?: string;
 	repoUrl?: string;
-	base?: string;
 	site?: string;
 }
 
@@ -91,7 +89,6 @@ export function resolveConfig(overrides: CliOverrides): ResolvedConfig {
 		branch: getGitBranch(configDir),
 		content: fileConfig.content ?? [],
 		landing: resolveLanding(fileConfig.landing, configDir, configPath),
-		base: overrides.base ?? fileConfig.base,
 		site: overrides.site ?? fileConfig.site,
 		header: fileConfig.header,
 		footer: fileConfig.footer,

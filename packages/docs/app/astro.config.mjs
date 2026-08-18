@@ -15,9 +15,8 @@ import { remarkAlerts } from "./src/lib/remark-alerts";
 
 // Populated by the CLI (see ../src/build.ts / ../src/dev.ts) before this config loads. Pages and
 // layouts read the consolidated DOCS_CONFIG JSON payload via getDocsConfig() (src/lib/config.ts),
-// not process.env directly — DOCS_BASE/DOCS_SITE/DOCS_CONFIG_DIR below are this build-time file's
-// own concern only.
-const base = process.env.DOCS_BASE;
+// not process.env directly — DOCS_SITE/DOCS_CONFIG_DIR below are this build-time file's own
+// concern only.
 const site = process.env.DOCS_SITE;
 // Absolute path of the directory holding the consumer's docs.config.yaml. Backs the `@docs-src/`
 // alias below; unset only when this app is run directly (`astro dev` in this repo), which no
@@ -40,13 +39,10 @@ try {
 // The root URL sitemap() would otherwise list for "/" — used below to drop it when there's no real
 // landing page, since that route is just a noindex meta-refresh to the first sidebar page.
 //
-// Forced to a trailing slash before it's used for either job: `base` reaches this file as the raw
-// `base:` string from the consumer's config (the CLI passes it through unvalidated), so "/proj" is
-// as likely as "/proj/". Astro normalizes it internally and emits "<site>/proj/" in the sitemap,
-// which the filter below has to match exactly — and `new URL("sitemap-index.xml", ...)` resolves
-// against the last path *segment*, so an unslashed base would silently hoist the sitemap URL in
-// robotsTxt() up to the origin root.
-const rootUrl = site ? new URL(base || "/", site).href.replace(/\/?$/, "/") : undefined;
+// Forced to a trailing slash before it's used for either job: `new URL("sitemap-index.xml", ...)`
+// resolves against the last path *segment*, so an unslashed root would silently hoist the sitemap
+// URL in robotsTxt() up to the wrong place.
+const rootUrl = site ? new URL("/", site).href.replace(/\/?$/, "/") : undefined;
 
 /**
  * Absolute URL of the sitemap index — only when `site` is set, since that's the same condition
@@ -121,14 +117,9 @@ function pagefindIndex() {
  *
  * Written from `astro:build:done` rather than shipped as a `public/` file because sync.ts owns
  * `public/` outright — `resetPublicDir()` wipes and rebuilds it on every sync, so nothing static
- * survives there — and because the `Sitemap:` line is derived from the same `site`/`base` pair
- * that decides whether sitemap() runs at all. Consequence: `docs dev` serves no robots.txt. That
- * is fine; nothing crawls a dev server.
- *
- * Known limitation: crawlers only ever fetch `<origin>/robots.txt`. With `base` set (a project
- * site at `<origin>/<base>/`), this file lands at `<origin>/<base>/robots.txt` and is ignored —
- * the origin root is not ours to write to. The `Sitemap:` line stays correct either way, and a
- * root-hosted site (the common case) is unaffected.
+ * survives there — and because the `Sitemap:` line is derived from the same `site` config that
+ * decides whether sitemap() runs at all. Consequence: `docs dev` serves no robots.txt. That is
+ * fine; nothing crawls a dev server.
  */
 function robotsTxt() {
 	return {
@@ -167,7 +158,6 @@ function codeCopyScript() {
 
 export default defineConfig({
 	...(site ? { site } : {}),
-	...(base ? { base } : {}),
 	integrations: [
 		mdx(),
 		pagefindIndex(),

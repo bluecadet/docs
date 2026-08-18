@@ -117,8 +117,6 @@ export interface DocsConfig {
 	 * no landing page, `/` redirects to the first page in the sidebar.
 	 */
 	landing?: string;
-	/** Base path for the deployed site, e.g. `/launchpad/` for a GitHub Pages project site. */
-	base?: string;
 	/** Absolute site origin, e.g. `https://bluecadet.github.io`. */
 	site?: string;
 	/** Extra links rendered in the header chrome. */
@@ -160,7 +158,6 @@ export interface ResolvedConfig {
 	content: ContentEntry[];
 	/** Absolute path to the landing page source file, when one is configured. */
 	landing?: string;
-	base?: string;
 	site?: string;
 	header?: ConfigLinks;
 	footer?: FooterConfig;
@@ -186,7 +183,6 @@ export interface DocsConfigPayload {
 	favicon?: string;
 	accent?: string;
 	accent2?: string;
-	base?: string;
 	site?: string;
 	header?: ConfigLinks;
 	footer?: FooterConfig;

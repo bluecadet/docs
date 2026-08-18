@@ -125,7 +125,6 @@ function writePage(absPath: string, route: string, ctx: WriteCtx): void {
 			configDir: ctx.cfg.configDir,
 			repoUrl: ctx.cfg.repoUrl,
 			branch: ctx.cfg.branch,
-			base: ctx.cfg.base ?? "/",
 		};
 		const result = transformMarkdown(parsed.content, rewriteCtx, title);
 		body = result.body;

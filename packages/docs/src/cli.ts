@@ -16,7 +16,6 @@ Options:
                      relative path in the config, and every route id, resolves against.
   --out <dir>        Build output directory (default: <config dir>/dist)
   --site <url>       Absolute site origin, e.g. https://bluecadet.github.io
-  --base <path>      Base path for the deployed site, e.g. /launchpad/
   --title <title>    Override the configured site title
   --repo-url <url>   Override the detected GitHub repo URL
   -h, --help         Show this help message
@@ -30,7 +29,6 @@ async function main(): Promise<void> {
 			config: { type: "string" },
 			out: { type: "string" },
 			site: { type: "string" },
-			base: { type: "string" },
 			title: { type: "string" },
 			"repo-url": { type: "string" },
 			help: { type: "boolean", short: "h" },
@@ -61,7 +59,6 @@ async function main(): Promise<void> {
 		out,
 		title: values.title,
 		repoUrl: values["repo-url"],
-		base: values.base,
 		site: values.site,
 	};
 
