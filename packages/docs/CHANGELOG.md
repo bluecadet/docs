@@ -1,5 +1,26 @@
 # @bluecadet/docs
 
+## 1.1.0
+
+### Minor Changes
+
+- [`3d75e50`](https://github.com/bluecadet/docs/commit/3d75e507e46c820087a38a03a1d265b2c19f3b87) - Generate a `robots.txt` on every build
+
+  Written to the output root with permissive crawl rules, plus a `Sitemap:` line naming the sitemap
+  index when `site` is set. Sitemap generation itself is unchanged.
+
+- [`de5e745`](https://github.com/bluecadet/docs/commit/de5e745268bbed0c927f679cc841f480e02a135e) - Require `sidebar`, and remove the deployed base path
+
+  `sidebar` in `docs.config.yaml` is now required and must be non-empty. The auto-generated sidebar —
+  derived from content ids alphabetically whenever `sidebar` was absent — is gone. Sites that relied
+  on it must list their pages explicitly; pages left out of `sidebar` still build and route, they
+  just get no sidebar entry.
+
+  The `base:` key and the `--base` flag are removed too. Deploying under a subpath is no longer
+  supported: a site builds for the root of wherever it is served.
+
+- [`52dcd20`](https://github.com/bluecadet/docs/commit/52dcd2090fc82e72b3c56f0c0951563562aa5214) - Update asciinema player styles
+
 ## 1.0.0
 
 ### Major Changes
