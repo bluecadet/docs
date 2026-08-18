@@ -12,22 +12,8 @@ relative path in it, and every route the site publishes, resolves against.
 
 ## Usage
 
-`@bluecadet/docs` is published to [GitHub Packages](https://github.com/bluecadet/docs/pkgs/npm/docs), not npmjs.com, so a consumer repo needs a one-time registry setup before its first `npx` call.
-
-### One-time setup
-
-Add an `.npmrc` at the consumer repo's root:
-
-```
-@bluecadet:registry=https://npm.pkg.github.com
-//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}
-```
-
-- **Local dev:** create a classic GitHub personal access token with the `read:packages` scope, then
-  export it as `NODE_AUTH_TOKEN` (e.g. in your shell profile). Never commit the token.
-- **CI (e.g. Netlify):** set `NODE_AUTH_TOKEN` as a build environment variable, using a classic PAT
-  with the `read:packages` scope — CI hosts other than GitHub Actions have no GitHub-issued token
-  to substitute, so a PAT is the only option.
+`@bluecadet/docs` is published on [npm](https://www.npmjs.com/package/@bluecadet/docs) — no
+registry setup needed.
 
 From any repo, with a `docs.config.yaml` at its root:
 
@@ -171,10 +157,17 @@ sidebar:
 | `repoUrl` | `git remote get-url origin`, normalized to `https://host/org/repo` | Used to rewrite links pointing outside the published set to GitHub blob URLs, and for the header's default GitHub link. |
 | `base` | `/` | Base path for the deployed site. |
 | `site` | — | Absolute site origin. |
+| `favicon` | — | Path (relative to the config file) to a `.svg`, `.png`, or `.ico` file published as the site's favicon. Must exist. With none set, no `<link rel="icon">` is rendered at all. |
+| `accent` | tokens.css's sage default | STATE accent color (hex) — e.g. what succeeded, where you are. Must be a 6-digit hex color, e.g. `#9cc3a9`. |
+| `accent2` | tokens.css's amber default | ATTENTION accent color (hex) — e.g. what changed, what's required. Must be a 6-digit hex color. |
 | `header.links` | — | `{ label, href }[]`. When set, fully replaces the header's default GitHub link; the header's leading "docs" link is fixed and always renders first. `href` isn't base-prefixed — use an absolute URL or hardcode the base for internal links under a non-root `base`. An `http(s)` `href` pointing off the configured `site` origin gets the external-link (↗) affordance. |
 | `footer.groups` | — | `{ title, links: { label, href, note? }[] }[]`. When set, fully replaces the footer's default "docs"+"github" pair. Each group is a labeled column; `note` is an optional short muted annotation after a link's label. Same `href`/external-link rules as `header.links`. |
 | `footer.meta` | — | Right-aligned meta string in the footer (e.g. `MIT licensed · no telemetry`), rendered on every page. |
 | `sidebar` | — | Array of `{ label, items }` groups; `items` are page content ids and/or nested groups, in author order. Replaces the default auto-generated sidebar entirely. Pages left out of `sidebar` still build/route, just without a sidebar entry. A `sidebar` entry naming a page id with no matching content is a build error. |
+| `version` | — | Version string (e.g. `v2.4.1`), rendered in the header and at the bottom of the sidebar. |
+| `sidebarMeta` | — | Multiline string; each non-empty line renders as its own row in the sidebar's bottom meta block. |
+| `toc.note` | — | Short attention-accented note (e.g. `updated for 2.4`) shown in the desktop "on this page" TOC's bottom meta block. |
+| `toc.editLink` | — | URL template for a per-page "edit this page" link; `{path}` is replaced with the page's source path relative to the repo root, e.g. `docs/how-to/foo.md`. |
 
 `title`/`repoUrl`/`landing`/`base`/`site` must be strings if present — a wrong type (e.g.
 `base: 5`) is a build error naming the field and the value it got. `footer.groups[].title`/`.links`

@@ -9,22 +9,8 @@ repo.
 
 ## Quick start
 
-`@bluecadet/docs` is published to [GitHub Packages](https://github.com/bluecadet/docs/pkgs/npm/docs), not npmjs.com, so it needs a one-time registry setup before the first `npx` call.
-
-### One-time setup
-
-Add an `.npmrc` at your repo root:
-
-```
-@bluecadet:registry=https://npm.pkg.github.com
-//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}
-```
-
-- **Local dev:** create a classic GitHub personal access token with the `read:packages` scope, then
-  export it as `NODE_AUTH_TOKEN` (e.g. in your shell profile). Never commit the token.
-- **CI (e.g. Netlify):** set `NODE_AUTH_TOKEN` as a build environment variable, using a classic PAT
-  with the `read:packages` scope — CI hosts other than GitHub Actions have no GitHub-issued token
-  to substitute, so a PAT is the only option.
+`@bluecadet/docs` is published on [npm](https://www.npmjs.com/package/@bluecadet/docs) — no
+registry setup needed.
 
 From any repo:
 

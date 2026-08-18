@@ -18,7 +18,7 @@ header:
     - label: github
       href: https://github.com/bluecadet/docs
     - label: package
-      href: https://github.com/bluecadet/docs/pkgs/npm/docs
+      href: https://www.npmjs.com/package/@bluecadet/docs
 
 sidebar:
   - label: Tutorials
@@ -57,7 +57,7 @@ footer:
         - label: github
           href: https://github.com/bluecadet/docs
         - label: package
-          href: https://github.com/bluecadet/docs/pkgs/npm/docs
+          href: https://www.npmjs.com/package/@bluecadet/docs
         - label: issues
           href: https://github.com/bluecadet/docs/issues
         - label: releases
@@ -70,4 +70,4 @@ footer:
         - label: launchpad
           href: https://github.com/bluecadet/launchpad
           note: github.com/bluecadet/launchpad
-  meta: ISC licensed · builds to static files
+  meta: builds to static files
