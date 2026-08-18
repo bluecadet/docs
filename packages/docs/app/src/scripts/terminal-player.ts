@@ -110,22 +110,21 @@ function setUpCast(mount: HTMLElement): void {
 			.catch(setErrorState);
 	});
 
+	function setPlayButtonState(playing: boolean): void {
+		if (!playButton) return;
+		playButton.textContent = playing ? PAUSE_GLYPH : PLAY_GLYPH;
+		playButton.dataset.playing = playing ? "true" : "false";
+		playButton.setAttribute("aria-label", playing ? "Pause" : "Play");
+	}
+
 	player.addEventListener("play", () => {
-		if (playButton) {
-			playButton.textContent = PAUSE_GLYPH;
-			playButton.dataset.playing = "true";
-			playButton.setAttribute("aria-label", "Pause");
-		}
+		setPlayButtonState(true);
 		cancelAnimationFrame(raf);
 		tick();
 	});
 
 	const stop = () => {
-		if (playButton) {
-			playButton.textContent = PLAY_GLYPH;
-			playButton.dataset.playing = "false";
-			playButton.setAttribute("aria-label", "Play");
-		}
+		setPlayButtonState(false);
 		cancelAnimationFrame(raf);
 		renderProgress();
 	};
@@ -135,11 +134,8 @@ function setUpCast(mount: HTMLElement): void {
 	renderProgress();
 }
 
-// Resolved to a plain URL (the `?url` suffix), not imported as a CSS module: a bare dynamic
-// `import("…css")` still gets pulled into Vite's page-level CSS graph and linked in every page's
-// `<head>` at build time — the exact leak this is meant to avoid. A `<link>` appended to the head
-// only once a cast mount is confirmed present is the one approach that actually keeps this ~15.6KB
-// stylesheet off pages with no Terminal.
+// `?url` resolves this to the asset's path rather than inlining/linking it — see the file header
+// for why the load has to be dynamic at all.
 async function loadStockPlayerCss(): Promise<void> {
 	const { default: href } = await import("asciinema-player/dist/bundle/asciinema-player.css?url");
 	if (document.querySelector("link[data-terminal-player-css]")) return;

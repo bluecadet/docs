@@ -16,8 +16,8 @@ const ROUTABLE_EXT = /\.(md|mdx|astro)$/i;
  * `base`. A consumer's `docs.config.yaml` commonly sits next to its own `package.json` (and thus
  * `node_modules/`), and a broad glob like `"**\/*.md"` has no other way to know it shouldn't sweep
  * up a dependency's vendored docs or a prior build's output. This is a deliberate, documented
- * default — not discovery by convention — and it applies even when a user's own glob is broad
- * enough to otherwise reach these paths.
+ * default (same no-discovery-by-convention policy as `syncContent`'s docstring below) — it
+ * applies even when a user's own glob is broad enough to otherwise reach these paths.
  */
 export const DEFAULT_GLOB_IGNORE = ["node_modules", ".git", "dist", ".astro", ".cache"];
 
@@ -342,12 +342,8 @@ function titleCaseFromFilename(absPath: string): string {
 
 /** Copies every asset named by an `assets` glob to its single published path under `public/`. */
 function publishAssets(assets: AssetMap, publicDir: string): number {
-	let count = 0;
-	for (const [from, to] of assets) {
-		copyInto(from, path.join(publicDir, to));
-		count++;
-	}
-	return count;
+	for (const [from, to] of assets) copyInto(from, path.join(publicDir, to));
+	return assets.size;
 }
 
 /**

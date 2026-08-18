@@ -54,8 +54,7 @@ export type SidebarItem = string | SidebarItemObject;
 export interface SidebarItemObject {
 	/**
 	 * Explicit display label. When omitted and `link` is set, falls back to the linked page's
-	 * title. An object with `items` but neither `label` nor `link` has no label source and is a
-	 * config error.
+	 * title. See `validateSidebarItem` (config.ts) for the "no label source" validation rule.
 	 */
 	label?: string;
 	/** Content id this item (or, for a group, the group's own heading) links to. */
@@ -111,7 +110,7 @@ export interface DocsConfig {
 	accent?: string;
 	/** ATTENTION accent color (hex), e.g. what changed, what's required. Defaults to the shared amber. */
 	accent2?: string;
-	/** Where the site's pages come from. Required and non-empty — there is no discovery by convention. */
+	/** Where the site's pages come from. Required and non-empty — no discovery by convention (see `syncContent`, sync.ts). */
 	content?: ContentEntry[];
 	/**
 	 * Path (relative to the config file) of the `.md`/`.mdx` file published at `/`. Optional: with

@@ -142,8 +142,8 @@ function resolveDocLink(rawUrl: string, ctx: RewriteContext, warnings: string[])
  * original relative url in place is not an option: Astro resolves relative image urls in synced
  * markdown against its own content directory and aborts the whole build with `ImageNotFound`, so a
  * missing `assets:` glob would surface as a stack trace from deep inside Astro instead of the
- * warning above. A `/`-rooted url is treated as a public-dir path and left alone, which keeps the
- * build finishing and leaves one visibly-broken image plus a warning that says what to add.
+ * warning above. When the computed fallback path would still land outside the config's own
+ * directory, there's no sensible site path to invent either — that case is warned and left alone.
  */
 function resolveAsset(rawUrl: string, ctx: RewriteContext, warnings: string[]): string {
 	if (EXTERNAL.test(rawUrl)) return rawUrl;

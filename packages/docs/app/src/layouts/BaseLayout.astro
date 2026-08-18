@@ -199,9 +199,10 @@ const hasToc = main === "article" && headings.some((heading) => heading.depth ==
 		border-inline: 1px solid var(--hairline-08);
 	}
 
-	/* SidebarNav renders nothing — either because `sidebar={false}` (landing, 404) or because
-	   SidebarNav.astro found no nav-worthy pages — so collapse the now-empty rail column instead of
-	   reserving width for it. One rule covers both cases. */
+	/* SidebarNav renders nothing — either because `sidebar={false}` (currently just the landing
+	   page) or because SidebarNav.astro found no nav-worthy pages at all (an edge case for a
+	   consumer with too few docs, not specific to any one page) — so collapse the now-empty rail
+	   column instead of reserving width for it. One rule covers both cases. */
 	.page-body:not(:has(.sidebar-rail)) { grid-template-columns: 1fr; }
 
 	.page-main {

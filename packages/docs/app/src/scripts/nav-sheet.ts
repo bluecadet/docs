@@ -1,9 +1,5 @@
-// Client behavior for NavSheet.astro: a native <dialog> used as a full-screen mobile/tablet nav
-// drawer. `<dialog>.showModal()` already gives us a focus trap (background content becomes inert),
-// background-scroll locking (see the `html:has(dialog:modal)` rule in styles/global.css), and an
-// `esc`-to-close/`cancel` event for free — same pattern SearchModal.astro's script relies on — so
-// this only has to handle opening and closing on backdrop click (see ../lib/dialog.ts, shared by
-// both scripts).
+// Client behavior for NavSheet.astro: a full-screen mobile/tablet nav drawer built on a native
+// <dialog> — see ../lib/dialog.ts for the shared focus-trap/scroll-lock/esc mechanics.
 import { bindDialogChrome } from "../lib/dialog.js";
 
 export function initNavSheet(): void {

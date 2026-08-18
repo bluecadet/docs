@@ -65,9 +65,9 @@ export interface CliOverrides {
 
 /**
  * Reads the config file at `overrides.configPath` and merges CLI overrides. The config file is the
- * anchor for the whole build: it is required (there is no discovery by convention to fall back on),
- * and its directory — not cwd — is what every relative path in it, and every derived route id,
- * resolves against.
+ * anchor for the whole build: it is required (no discovery by convention — see `syncContent` in
+ * sync.ts), and its directory — not cwd — is what every relative path in it, and every derived
+ * route id, resolves against.
  */
 export function resolveConfig(overrides: CliOverrides): ResolvedConfig {
 	const configPath = overrides.configPath;
@@ -481,9 +481,6 @@ function validateContentEntry(
 	);
 	warnUnknownKeys(obj, CONTENT_ENTRY_KEYS, label, configPath, warnings);
 
-	// `files` is required unless `assets` is set: an entry publishing only static assets (e.g. an
-	// install script served from a repo root) has no pages to declare, so `files` is the one that
-	// becomes optional. An entry with neither has nothing to publish and is a config error.
 	const files = validateGlobList(obj.files, `${label}.files`, configPath, false);
 	const assets = validateGlobList(obj.assets, `${label}.assets`, configPath, false);
 	if (files.length === 0 && assets.length === 0) {

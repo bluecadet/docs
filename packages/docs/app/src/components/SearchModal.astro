@@ -42,15 +42,12 @@ const startHere = [...new Map([...entryPoints, ...flat].map((page) => [page.id, 
 	<div class="search-modal__body dialog-body" data-search-body>
 	</div>
 	<div class="search-modal__footer">
-		<!-- scripts/search.ts's setHintsIndexing() rewrites this container's innerHTML at runtime
-		     (see the :global() comment in the <style> block below) with its own hardcoded
-		     `<span class="kbd-hint">...` template. That JS-side class list duplicates the one below
-		     and MUST be kept in sync by hand — including any `.type-*` utility class — or the
-		     utility silently stops applying after the first indexing-state toggle even though this
-		     static markup still looks correct in source. The wrapper's own `.type-xs` class (set
-		     below, on `[data-search-hints]` itself) is NOT part of that duplication risk: it lives on
-		     the persistent element, which the JS only ever toggles `.is-indexing` on top of and
-		     never replaces, so it keeps applying to the "▞ indexing…" text the JS swaps in. -->
+		<!-- scripts/search.ts's setHintsIndexing() replaces this container's children with its own
+		     hardcoded `<span class="kbd-hint">...` markup, which MUST be kept in sync by hand with
+		     the static version below — including any `.type-*` utility class, or the utility
+		     silently stops applying after the first indexing-state toggle. The wrapper's own
+		     `.type-xs` (on `[data-search-hints]` itself) is exempt: the JS only ever toggles
+		     `.is-indexing` on it and never replaces the element. -->
 		<div class="search-modal__hints type-xs" data-search-hints>
 			<span class="kbd-hint type-2xs"><kbd>↑↓</kbd> navigate</span>
 			<span class="kbd-hint type-2xs"><kbd>↵</kbd> open</span>
@@ -173,9 +170,7 @@ const startHere = [...new Map([...entryPoints, ...flat].map((page) => [page.id, 
 	/* :global() because scripts/search.ts's setHintsIndexing() rewrites this container's innerHTML
 	   at runtime — that injected markup never carries Astro's scoped-CSS data attribute, so these
 	   three selectors have to match on class name alone (same pattern as the .search-row/
-	   .search-group globals below). That JS template's `.kbd-hint` spans carry the same `.type-2xs`
-	   class the static markup above does — kept in sync by hand, see the comment on
-	   [data-search-hints] above. */
+	   .search-group globals below). */
 	.search-modal__footer :global(.search-modal__hints) {
 		display: flex;
 		gap: 1rem;

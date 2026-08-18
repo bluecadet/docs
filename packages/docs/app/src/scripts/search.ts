@@ -185,10 +185,7 @@ export function initSearchModal(): void {
 	function groupHtml(label: string, items: string[]): string {
 		if (items.length === 0) return "";
 		const labelId = `search-group-label-${label.toLowerCase().replace(/\s+/g, "-")}`;
-		// `.type-label-plain` (see typography.css) covers this label's font/letter-spacing exactly —
-		// SearchModal.astro's `:global(.search-group__label)` rule only supplies the
-		// text-transform/color this class doesn't. This div exists ONLY here (never in
-		// SearchModal.astro's static markup), so the class has to be baked into this template string.
+		// .type-label-plain (see typography.css) — same JS/markup sync rule as setHintsIndexing(); this div only exists here, so the class is baked into the template.
 		return (
 			`<div class="search-group" role="group" aria-labelledby="${labelId}">` +
 			`<div class="search-group__label type-label-plain" id="${labelId}">${label}</div>${items.join("")}</div>`
@@ -326,9 +323,7 @@ export function initSearchModal(): void {
 
 		const pills: string[] = [];
 		if (repoUrl) {
-			// `.type-sm` (see typography.css) covers this pill's font exactly — SearchModal.astro's
-			// `:global(.search-pill)` rule no longer sets it. These anchors exist ONLY here (never in
-			// SearchModal.astro's static markup), so the class has to be baked into this template string.
+			// .type-sm (see typography.css) — same sync rule; this pill only exists here, never in SearchModal's static markup.
 			pills.push(
 				`<a class="search-pill search-pill--neutral type-sm" href="${escapeHtml(`${repoUrl}/issues?q=${encodeURIComponent(query)}`)}" target="_blank" rel="noopener noreferrer">search github issues ↗</a>`,
 			);

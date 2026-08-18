@@ -2,6 +2,7 @@
 // server has no idea what URL 404'd — GitHub Pages serves the same static 404.html for every
 // miss) and the build-time route list serialized into #notfound-routes-data, then renders the
 // "requested" panel and the "did you mean" suggestions.
+import { escapeHtml } from "../../lib/escape-html";
 import { similarity } from "./similarity";
 
 interface RouteEntry {
@@ -17,14 +18,6 @@ interface RoutesPayload {
 
 const MATCH_THRESHOLD = 0.4;
 const MAX_SUGGESTIONS = 3;
-
-function escapeHtml(value: string): string {
-	return value
-		.replace(/&/g, "&amp;")
-		.replace(/</g, "&lt;")
-		.replace(/>/g, "&gt;")
-		.replace(/"/g, "&quot;");
-}
 
 function renderRequestedPath(el: Element, pathname: string): void {
 	const parts = pathname.split("/").filter(Boolean);

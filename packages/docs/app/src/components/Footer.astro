@@ -5,11 +5,11 @@
 // renders link groups/meta we actually have data for — no fictional changelog/discord links, no
 // fabricated version/license string.
 //
-// Layout differences between the docs (sidebar) and landing/404 (no-sidebar) pages come only from
+// Layout differences between the docs (sidebar) and landing (no-sidebar) pages come only from
 // the `--rail-*`/`--brand-pad-*`/`--nav-flex` custom properties BaseLayout sets on `.page` /
 // `.page--no-sidebar` — see Header/HeaderShell's matching comments — never from a prop here. The
 // same mechanism also moves the brand mark between the rail column (docs, where the sidebar
-// already lives under it) and the bottom bar (landing/404, which has no rail to put it in): see
+// already lives under it) and the bottom bar (landing, which has no rail to put it in): see
 // the `:global(.page--no-sidebar)` rules below.
 import { externalLinkAttrs, getDocsConfig, isExternalLink } from "../lib/config";
 import type { FooterGroup } from "../lib/config";

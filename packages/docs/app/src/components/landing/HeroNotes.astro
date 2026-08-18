@@ -1,14 +1,7 @@
 ---
 // Groups <HeroNote> marginalia into the column beside the lead paragraph (tablet up) or the row
-// below it (mobile):
-//
-//   <HeroNotes>
-//     <HeroNote>First note.</HeroNote>
-//     <HeroNote>Second note.</HeroNote>
-//   </HeroNotes>
-//
-// Same reasoning as HeroEyebrows: Hero.astro places this wrapper as the single grid item for the
-// notes column/row, and the individual notes stack inside it with an ordinary flex column.
+// below it (mobile) — see Hero.astro's header comment for why this needs to be a single wrapper.
+// Notes stack inside it with an ordinary flex column; `--reveal-delay: 3` staggers the reveal-on-scroll.
 ---
 
 <div class="hero-notes" data-reveal>

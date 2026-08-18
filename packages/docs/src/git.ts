@@ -10,7 +10,7 @@ export function getGitRemoteUrl(root: string): string | undefined {
 	return normalizeRemoteUrl(raw);
 }
 
-/** Best-effort current branch name, falling back to "main". */
+/** Best-effort current branch name. */
 export function getGitBranch(root: string): string {
 	return tryGit(root, ["rev-parse", "--abbrev-ref", "HEAD"]) ?? "main";
 }

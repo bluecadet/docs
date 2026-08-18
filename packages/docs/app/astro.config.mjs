@@ -14,7 +14,9 @@ import { rehypeTables } from "./src/lib/rehype-tables";
 import { remarkAlerts } from "./src/lib/remark-alerts";
 
 // Populated by the CLI (see ../src/build.ts / ../src/dev.ts) before this config loads. Pages and
-// layouts read DOCS_TITLE/DOCS_REPO_URL directly from process.env server-side.
+// layouts read the consolidated DOCS_CONFIG JSON payload via getDocsConfig() (src/lib/config.ts),
+// not process.env directly — DOCS_BASE/DOCS_SITE/DOCS_CONFIG_DIR below are this build-time file's
+// own concern only.
 const base = process.env.DOCS_BASE;
 const site = process.env.DOCS_SITE;
 // Absolute path of the directory holding the consumer's docs.config.yaml. Backs the `@docs-src/`

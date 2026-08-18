@@ -17,8 +17,9 @@ export async function getStaticPaths() {
 	const astroPages = [...docsAstroPages, ...rawAstroPages];
 
 	// The CLI's sync step guarantees every astro-pages/ route is collision-free with the markdown
-	// collection (see ../../../src/sync.ts's buildRouteMap) — this only guards a stale astro-pages/
-	// dir left over from a build/dev run that skipped sync, which sync itself can't produce.
+	// collection (see ../../../src/sync.ts's discoverContent, which throws on a route collision) —
+	// this only guards a stale astro-pages/ dir left over from a build/dev run that skipped sync,
+	// which sync itself can't produce.
 	for (const page of astroPages) {
 		if (entries.some((entry) => entry.id === page.id)) {
 			throw new Error(

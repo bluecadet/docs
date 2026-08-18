@@ -1,15 +1,7 @@
 ---
-// Groups <HeroEyebrow> chips into the row above the headline:
-//
-//   <HeroEyebrows>
-//     <HeroEyebrow tone="state">Label</HeroEyebrow>
-//     <HeroEyebrow>Neutral label</HeroEyebrow>
-//   </HeroEyebrows>
-//
-// Hero.astro lays its children out with CSS Grid, and a grid area can only take one item without
-// its slotted contents overlapping (Astro gives Hero no way to inspect a slotted child's type, so
-// it can't tell three flat <HeroEyebrow> siblings apart from one to spread them across a track
-// itself). This wrapper is that one item — the chips inside it lay out with an ordinary flex row.
+// Groups <HeroEyebrow> chips into the row above the headline. See Hero.astro's header comment for
+// why this needs to be a single wrapper (Astro can't inspect a slotted child's component type, so
+// N flat children can't be spread across a grid area on their own) — chips inside lay out via flex.
 ---
 
 <div class="hero-eyebrows" data-reveal>
