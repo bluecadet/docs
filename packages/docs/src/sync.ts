@@ -3,6 +3,7 @@ import path from "node:path";
 import matter from "gray-matter";
 import type { RewriteContext } from "./links.js";
 import { transformMarkdown } from "./links.js";
+import { toPosix } from "./path-utils.js";
 import type { AssetMap, ContentEntry, ResolvedConfig, RouteMap } from "./types.js";
 
 const H1 = /^#[ \t]+(.+?)[ \t]*$/m;
@@ -367,8 +368,4 @@ function resetPublicDir(publicDir: string): void {
 function copyInto(from: string, to: string): void {
 	fs.mkdirSync(path.dirname(to), { recursive: true });
 	fs.copyFileSync(from, to);
-}
-
-function toPosix(p: string): string {
-	return p.split(path.sep).join("/");
 }

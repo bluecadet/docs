@@ -7,6 +7,7 @@ import remarkStringify from "remark-stringify";
 import { unified } from "unified";
 import type { Parent } from "unist";
 import { visit } from "unist-util-visit";
+import { toPosix } from "./path-utils.js";
 import type { AssetMap, RouteMap } from "./types.js";
 
 const IMAGE_EXT = /\.(png|jpe?g|gif|svg|webp|avif|ico|bmp)$/i;
@@ -214,8 +215,4 @@ function splitUrl(url: string): { pathPart: string; suffix: string } {
 	const pathPart = queryIndex === -1 ? beforeHash : beforeHash.slice(0, queryIndex);
 	const query = queryIndex === -1 ? "" : beforeHash.slice(queryIndex);
 	return { pathPart, suffix: query + hash };
-}
-
-function toPosix(p: string): string {
-	return p.split(path.sep).join("/");
 }

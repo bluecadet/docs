@@ -1,7 +1,8 @@
 import path from "node:path";
+import { DEFAULT_GLOB_IGNORE } from "./sync.js";
 
 /** Directory names that are never content: VCS metadata, dependencies, build caches/output. */
-const IGNORED_DIR_NAMES = new Set(["node_modules", ".git", ".astro", ".cache"]);
+const IGNORED_DIR_NAMES = new Set(DEFAULT_GLOB_IGNORE);
 
 /**
  * True if a path change (relative to the watched repo root) is noise we should never react to:
