@@ -171,6 +171,32 @@ export interface ResolvedConfig {
 	toc?: TocConfig;
 }
 
+/**
+ * The shape of the `DOCS_CONFIG` JSON payload `applyEnv` (build.ts) serializes for the bundled app.
+ * Mirrors `DocsAppConfig` in `packages/docs/app/src/lib/config.ts`, which can't import this file
+ * directly — the app ships as a standalone bundle without `src/` (see that file's own comment) —
+ * so the two are instead kept in sync by a conformance test in `__tests__/`.
+ */
+export interface DocsConfigPayload {
+	title: string;
+	/** Always set — `cfg.landing !== undefined`, never conditionally omitted like the fields below. */
+	hasLanding: boolean;
+	configFileName: string;
+	repoUrl?: string;
+	/** The published favicon filename (see `faviconFileName` in sync.ts), not `cfg.favicon`'s source path. */
+	favicon?: string;
+	accent?: string;
+	accent2?: string;
+	base?: string;
+	site?: string;
+	header?: ConfigLinks;
+	footer?: FooterConfig;
+	sidebar?: SidebarItem[];
+	version?: string;
+	sidebarMeta?: string;
+	toc?: TocConfig;
+}
+
 /** Maps an absolute source file path to its resolved site route. */
 export type RouteMap = Map<string, string>;
 

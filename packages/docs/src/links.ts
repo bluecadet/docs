@@ -91,24 +91,27 @@ function rewriteTree(tree: Root, ctx: RewriteContext, warnings: string[]): void 
 
 	visit(tree, "link", (node, index, parent) => {
 		const link = node as Link;
-		if (EXTERNAL.test(link.url)) return;
-		if (isRootRelative(link.url)) {
-			link.url = withBase(link.url, ctx.base);
-			return;
-		}
-		if (IMAGE_EXT.test(splitUrl(link.url).pathPart)) {
-			link.url = resolveAsset(link.url, ctx, warnings);
-			return;
-		}
-		const resolved = resolveDocLink(link.url, ctx, warnings);
-		if (resolved) {
-			link.url = resolved;
-			return;
-		}
-		// Unresolvable and no repoUrl to fall back to: drop the hyperlink, keep the text.
-		if (parent && typeof index === "number") {
-			(parent as Parent).children.splice(index, 1, ...link.children);
-			return index;
+		switch (classifyUrl(link.url)) {
+			case "external":
+				return;
+			case "root-relative":
+				link.url = withBase(link.url, ctx.base);
+				return;
+			case "asset":
+				link.url = resolveAsset(link.url, ctx, warnings);
+				return;
+			case "doc": {
+				const resolved = resolveDocLink(link.url, ctx, warnings);
+				if (resolved) {
+					link.url = resolved;
+					return;
+				}
+				// Unresolvable and no repoUrl to fall back to: drop the hyperlink, keep the text.
+				if (parent && typeof index === "number") {
+					(parent as Parent).children.splice(index, 1, ...link.children);
+					return index;
+				}
+			}
 		}
 	});
 }
@@ -143,7 +146,7 @@ function resolveDocLink(rawUrl: string, ctx: RewriteContext, warnings: string[])
  * build finishing and leaves one visibly-broken image plus a warning that says what to add.
  */
 function resolveAsset(rawUrl: string, ctx: RewriteContext, warnings: string[]): string {
-	if (EXTERNAL.test(rawUrl) || rawUrl.startsWith("data:")) return rawUrl;
+	if (EXTERNAL.test(rawUrl)) return rawUrl;
 	if (isRootRelative(rawUrl)) return withBase(rawUrl, ctx.base);
 	const { pathPart, suffix } = splitUrl(rawUrl);
 	const abs = path.resolve(ctx.fromAbsDir, pathPart);
@@ -176,12 +179,31 @@ function isRootRelative(url: string): boolean {
 	return url.startsWith("/") && !url.startsWith("//");
 }
 
+type UrlClass = "external" | "root-relative" | "asset" | "doc";
+
+/**
+ * The bucket a url falls into for rewriting. `EXTERNAL` also covers `data:` URIs. Callers differ in
+ * what they do with each bucket, not in how they classify.
+ */
+function classifyUrl(url: string): UrlClass {
+	if (EXTERNAL.test(url)) return "external";
+	if (isRootRelative(url)) return "root-relative";
+	if (IMAGE_EXT.test(splitUrl(url).pathPart)) return "asset";
+	return "doc";
+}
+
 /** Reference-definition variant: guesses image vs. doc-link from the file extension. */
 function resolveLinkOrAsset(rawUrl: string, ctx: RewriteContext, warnings: string[]): string {
-	if (EXTERNAL.test(rawUrl) || rawUrl.startsWith("data:")) return rawUrl;
-	if (isRootRelative(rawUrl)) return withBase(rawUrl, ctx.base);
-	if (IMAGE_EXT.test(splitUrl(rawUrl).pathPart)) return resolveAsset(rawUrl, ctx, warnings);
-	return resolveDocLink(rawUrl, ctx, warnings) ?? rawUrl;
+	switch (classifyUrl(rawUrl)) {
+		case "external":
+			return rawUrl;
+		case "root-relative":
+			return withBase(rawUrl, ctx.base);
+		case "asset":
+			return resolveAsset(rawUrl, ctx, warnings);
+		case "doc":
+			return resolveDocLink(rawUrl, ctx, warnings) ?? rawUrl;
+	}
 }
 
 function rewriteRawHtml(value: string, ctx: RewriteContext, warnings: string[]): string {
@@ -192,12 +214,16 @@ function rewriteRawHtml(value: string, ctx: RewriteContext, warnings: string[]):
 	out = out.replace(
 		/(<a[^>]*\shref=")([^"]+)(")/gi,
 		(_m, pre: string, url: string, post: string) => {
-			if (EXTERNAL.test(url)) return pre + url + post;
-			if (isRootRelative(url)) return pre + withBase(url, ctx.base) + post;
-			const resolved = IMAGE_EXT.test(splitUrl(url).pathPart)
-				? resolveAsset(url, ctx, warnings)
-				: (resolveDocLink(url, ctx, warnings) ?? url);
-			return pre + resolved + post;
+			switch (classifyUrl(url)) {
+				case "external":
+					return pre + url + post;
+				case "root-relative":
+					return pre + withBase(url, ctx.base) + post;
+				case "asset":
+					return pre + resolveAsset(url, ctx, warnings) + post;
+				case "doc":
+					return pre + (resolveDocLink(url, ctx, warnings) ?? url) + post;
+			}
 		},
 	);
 	return out;

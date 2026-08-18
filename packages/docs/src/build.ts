@@ -1,8 +1,9 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { build as astroBuild } from "astro";
+import type { SyncResult } from "./sync.js";
 import { faviconFileName, syncContent } from "./sync.js";
-import type { ResolvedConfig } from "./types.js";
+import type { DocsConfigPayload, ResolvedConfig } from "./types.js";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 /** The bundled Astro app, shipped alongside `dist/` in the published package. */
@@ -59,12 +60,7 @@ export async function runBuild(cfg: ResolvedConfig): Promise<void> {
 	});
 }
 
-export function logSyncResult(result: {
-	pageCount: number;
-	assetCount: number;
-	warnings: string[];
-	notices: string[];
-}): void {
+export function logSyncResult(result: SyncResult): void {
 	console.log(`[docs] synced ${result.pageCount} page(s), ${result.assetCount} asset(s)`);
 	for (const notice of result.notices) console.log(`[docs] ${notice}`);
 	if (result.warnings.length > 0) {
@@ -91,7 +87,7 @@ export function applyEnv(cfg: ResolvedConfig): void {
 	// `hasLanding` tells the app whether route "/" is a real page or has to become a redirect to the
 	// first sidebar page (see app/src/pages/index.astro). The redirect *target* is resolved app-side
 	// from the nav tree rather than passed in here — the CLI has no view of sidebar ordering.
-	const payload: Record<string, unknown> = {
+	const payload: DocsConfigPayload = {
 		title: cfg.title,
 		hasLanding: cfg.landing !== undefined,
 		configFileName: path.basename(cfg.configPath),
