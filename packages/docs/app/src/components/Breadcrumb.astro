@@ -59,7 +59,9 @@ const parent = ancestors.at(-1);
 		margin-block-end: 1.875rem;
 	}
 
-	.breadcrumb__segment {
+	/* The inert (no-index-page) ancestor span carries `.breadcrumb__segment` alone, without
+	   `.link-muted` — it needs its own resting color since it never gets one from that class. */
+	.breadcrumb__segment:not(.link-muted) {
 		color: var(--text-muted);
 	}
 

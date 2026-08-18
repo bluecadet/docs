@@ -6,11 +6,11 @@ import { externalLinkAttrs } from "../../lib/config";
 
 interface Props {
 	href: string;
-	/** Link text before the "↗". Defaults to "github" for the repoUrl fallback use. */
-	label?: string;
+	/** Link text before the "↗". */
+	label: string;
 }
 
-const { href, label = "github" } = Astro.props;
+const { href, label } = Astro.props;
 ---
 
 <a class="repo-link" href={href} {...externalLinkAttrs(href)}> {label} ↗ </a>

@@ -1,6 +1,4 @@
 ---
-import type { $brand } from 'astro:schema';
-
 // Registry table for the landing page's MDX body: a desktop grid table that reflows into stacked
 // cards on mobile. Compose it from <RegistryRow> children:
 //
@@ -11,22 +9,14 @@ import type { $brand } from 'astro:schema';
 //     </RegistryRow>
 //   </RegistryTable>
 //
-// A childless <RegistryTable /> renders nothing. `title`/`subtitle` are optional, following
-// GeneralBand's precedent for an optional heading (OtherTools requires both).
+// A childless <RegistryTable /> renders nothing.
 //
 // The column template lives here, on the container, as the --registry-cols custom property —
 // scoped styles can't select slotted children directly, but a custom property inherits through
 // the slot boundary fine, so <RegistryRow>'s own scoped `.registry-row` rule can consume it via
 // `grid-template-columns: var(--registry-cols)` without either component reaching into the
 // other's shadow (:global()).
-interface Props {
-	/** Optional band heading. */
-	title?: string;
-	/** Optional band subheading, rendered under the title. */
-	subtitle?: string;
-}
-
-const { title, subtitle, ...wrapperProps } = Astro.props;
+const wrapperProps = Astro.props;
 const hasRows = Astro.slots.has("default");
 ---
 
@@ -70,10 +60,6 @@ const hasRows = Astro.slots.has("default");
 
 	.registry-rows {
 		--reveal-stagger-offset: 2;
-	}
-
-	.registry-table-head + .registry-panel {
-		margin-block-start: 2.5rem;
 	}
 
 	.registry-header {

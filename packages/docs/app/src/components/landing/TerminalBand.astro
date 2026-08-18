@@ -11,25 +11,14 @@
 // the window itself, the transcript-vs-cast branch, and the `cast`/`rows`/`cols`/`poster`/`loop`
 // prop docs, all passed straight through here).
 import Terminal from "../Terminal.astro";
+import type { Props as TerminalProps } from "../Terminal.astro";
 
-interface Props {
+type Props = Pick<TerminalProps, "cwd" | "cast" | "rows" | "cols" | "poster" | "loop"> & {
 	/** Small caption above the terminal. */
 	caption?: string;
 	/** Attention-accented figure at the end of the caption row, e.g. a wall-clock duration. */
 	duration?: string;
-	/** Working-directory label in the terminal's title bar. */
-	cwd?: string;
-	/** URL/path to an asciicast v2 `.cast` file. When set, renders a player instead of the
-	    `<Line>` transcript slot. */
-	cast?: string;
-	/** Terminal grid size passed to the player; falls back to the cast file's own header. */
-	rows?: number;
-	cols?: number;
-	/** Poster frame shown before playback starts, e.g. `npt:0:03` — passed straight through. */
-	poster?: string;
-	/** Loops playback when it ends. */
-	loop?: boolean;
-}
+};
 
 const { caption, duration, ...terminalProps } = Astro.props;
 ---

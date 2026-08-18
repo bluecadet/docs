@@ -23,7 +23,7 @@
 // padding, background, hairline, the 880px width cap — lives one layer up in
 // `landing/TerminalBand.astro`, which renders this component. Doc-page prose bodies can render
 // this directly.
-interface Props {
+export interface Props {
 	/** Working-directory label in the terminal's title bar. */
 	cwd?: string;
 	/** URL/path to an asciicast v2 `.cast` file. When set, renders a player instead of the

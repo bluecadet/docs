@@ -18,7 +18,7 @@ const { links } = Astro.props;
 		isExternalLink(link.href) ? (
 			<RepoLink href={link.href} label={link.label} />
 		) : (
-			<a class="nav-link link-muted" href={link.href}>
+			<a class="link-muted" href={link.href}>
 				{link.label}
 			</a>
 		),
