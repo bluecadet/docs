@@ -84,12 +84,12 @@ export function initNotFound(): void {
 			row.href = entry.route.href;
 			row.className = i === 0 ? "dym-row dym-row--active active-row" : "dym-row";
 			row.innerHTML = `
-				<span class="dym-bullet">▸</span>
+				<span class="dym-bullet type-sm">▸</span>
 				<span class="dym-text">
 					<span class="dym-title">${escapeHtml(entry.route.title)}</span>
 					<span class="dym-path">${escapeHtml(entry.route.id)}</span>
 				</span>
-				<span class="dym-enter">${i === 0 ? "↵" : ""}</span>
+				<span class="dym-enter type-2xs">${i === 0 ? "↵" : ""}</span>
 			`;
 			dymList.appendChild(row);
 		});

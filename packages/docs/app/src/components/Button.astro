@@ -27,7 +27,7 @@ const Tag = href ? "a" : "button";
 ---
 
 <Tag
-	class:list={["btn", `btn-${variant}`, className]}
+	class:list={["btn", "type-md", `btn-${variant}`, className]}
 	href={href}
 	type={href ? undefined : (type ?? "button")}
 	{...rest}
@@ -43,7 +43,6 @@ const Tag = href ? "a" : "button";
 	gap: 0.375rem; /* 6px — separates a trailing <kbd> or glyph from the label */
 	padding: 0.75rem 1.25rem; /* 12px 20px */
 	border-radius: var(--radius-md);
-	font: var(--weight-regular) 0.8125rem var(--font-mono); /* 13px, same as .type-md */
 	cursor: pointer;
 	/* Every button clears the 48px touch target, with its label centered in the taller box. */
 	justify-content: center;
