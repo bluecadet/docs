@@ -8,6 +8,7 @@ import { transformerMetaHighlight } from "@shikijs/transformers";
 import { defineConfig } from "astro/config";
 import { createIndex } from "pagefind";
 import { searchForWorkspaceRoot } from "vite";
+import { writeLlmsFiles } from "./src/lib/llms";
 import { rehypeCodeBlocks } from "./src/lib/rehype-code-blocks";
 import { rehypeHeadingAnchors } from "./src/lib/rehype-heading-anchors";
 import { rehypeTables } from "./src/lib/rehype-tables";
@@ -26,12 +27,16 @@ const configDir = process.env.DOCS_CONFIG_DIR?.replace(/\\/g, "/");
 const APP_ROOT = fileURLToPath(new URL(".", import.meta.url));
 
 // Same `DOCS_CONFIG` payload app/src/lib/config.ts parses at runtime — read again here, config-
-// build-side, only for the one field this file needs: whether "/" is a real landing page or the
-// noindex redirect stub (see src/pages/index.astro / LandingRedirect.astro). Duplicated rather than
+// build-side, only for the fields this file needs: the site title, and whether "/" is a real
+// landing page or the noindex redirect stub (see src/pages/index.astro / LandingRedirect.astro). Duplicated rather than
 // imported because this file loads before the app's own module graph is available to it.
 let hasLanding = true;
+// The site title, for llms.txt's H1 (see llmsTxt() below).
+let siteTitle = "Docs";
 try {
-	hasLanding = Boolean(JSON.parse(process.env.DOCS_CONFIG ?? "{}").hasLanding);
+	const payload = JSON.parse(process.env.DOCS_CONFIG ?? "{}");
+	hasLanding = Boolean(payload.hasLanding);
+	siteTitle = payload.title ?? siteTitle;
 } catch {
 	// Malformed DOCS_CONFIG is the CLI's problem to have caught already — fall back to including "/".
 }
@@ -139,6 +144,28 @@ function robotsTxt() {
 }
 
 /**
+ * Writes LLM-friendly copies of the site: a `.md` twin of every doc page, plus llms.txt and
+ * llms-full.txt at the output root (see src/lib/llms.ts). Unconditional, like robotsTxt(): absolute
+ * URLs when `site` is set, root-relative otherwise. Built from the finished HTML, so it has to run
+ * in `astro:build:done` — and `docs dev` serves none of it.
+ */
+function llmsTxt() {
+	return {
+		name: "llms-txt",
+		hooks: {
+			"astro:build:done": async ({ dir, logger }) => {
+				const pageCount = await writeLlmsFiles({
+					outDir: fileURLToPath(dir),
+					title: siteTitle,
+					rootUrl,
+				});
+				logger.info(`wrote llms.txt, llms-full.txt and ${pageCount} markdown page(s)`);
+			},
+		},
+	};
+}
+
+/**
  * Loads the copy-button client script (app/src/scripts/code-copy.ts) on every page. There's no
  * layout component in this package to hang a <script> tag off directly, so this is done via the
  * integration API instead: `injectScript("page", ...)` bundles the given module through Vite and
@@ -163,6 +190,7 @@ export default defineConfig({
 		pagefindIndex(),
 		codeCopyScript(),
 		robotsTxt(),
+		llmsTxt(),
 		// Requires `site` (it warns and no-ops without one — see its own astro:build:done hook), so
 		// only registered when the CLI's `site` config option is set. It already excludes /404 (and
 		// /500) on its own; the extra `filter` below additionally drops "/" when there's no real

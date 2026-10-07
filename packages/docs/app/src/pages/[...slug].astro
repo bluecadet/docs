@@ -8,6 +8,7 @@ import Pagination from "../components/Pagination.astro";
 import Toc from "../components/Toc.astro";
 import { type AstroPage, docsAstroPages, rawAstroPages } from "../lib/astro-pages";
 import { getDocsConfig } from "../lib/config";
+import { markdownUrl } from "../lib/llms";
 import { getDocPages } from "../lib/nav";
 
 export async function getStaticPaths() {
@@ -95,6 +96,7 @@ if (!RawPage) {
 			headings={headings}
 			currentId={currentId}
 			editHref={editHref}
+			markdownHref={markdownUrl(Astro.url.pathname)}
 		>
 			<Breadcrumb id={currentId} title={title} />
 			{/* data-pagefind-body scopes the search index to this article's own prose — see the

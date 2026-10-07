@@ -242,6 +242,16 @@ jobs:
           grep -q '^Sitemap: https://example.com/sitemap-index.xml$' \
             "$RUNNER_TEMP/fixture-dist/robots.txt"
 
+          # llms.txt indexes the sidebar (flat here, so under a fallback section) with absolute .md
+          # URLs, since `--site` is set; each listed page has its Markdown copy beside its HTML.
+          grep -q '^# Fixture Repo$' "$RUNNER_TEMP/fixture-dist/llms.txt"
+          grep -q '^- \[Getting Started\](https://example.com/getting-started.md)' \
+            "$RUNNER_TEMP/fixture-dist/llms.txt"
+          grep -q '^# Getting Started$' "$RUNNER_TEMP/fixture-dist/getting-started.md"
+          test -s "$RUNNER_TEMP/fixture-dist/llms-full.txt"
+          grep -q '<link rel="alternate" type="text/markdown" href="https://example.com/getting-started.md">' \
+            "$RUNNER_TEMP/fixture-dist/getting-started/index.html"
+
           # `landing:` owns "/", and its relative image resolves to the single path the packages
           # entry's `assets` glob published it at — under that entry's `route` prefix.
           grep -q 'src="/packages/widget/diagram.svg"' "$RUNNER_TEMP/fixture-dist/index.html"
