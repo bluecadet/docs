@@ -36,10 +36,12 @@ sidebar:
       - reference/docs-config-yaml
       - reference/content-conventions
       - reference/search
+      - reference/llm-output
       - reference/astro-page-demo
   - label: Explanation
     items:
       - explanation/architecture
+      - explanation/markdown-negotiation
 
 footer:
   groups:
