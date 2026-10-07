@@ -1,6 +1,7 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { build as astroBuild } from "astro";
+import { writeNetlifyFiles } from "./netlify.js";
 import type { SyncResult } from "./sync.js";
 import { faviconFileName, syncContent } from "./sync.js";
 import type { DocsConfigPayload, ResolvedConfig } from "./types.js";
@@ -41,6 +42,9 @@ async function withAppCwd<T>(fn: () => Promise<T>): Promise<T> {
 
 /** Syncs the consumer repo's markdown into the bundled app, then runs a static Astro build. */
 export async function runBuild(cfg: ResolvedConfig): Promise<void> {
+	// Captured before withAppCwd moves it: on Netlify this is the base directory, where the
+	// Frameworks API output has to land.
+	const cwd = process.cwd();
 	const result = syncContent(cfg, APP_ROOT);
 	logSyncResult(result);
 	applyEnv(cfg);
@@ -58,6 +62,10 @@ export async function runBuild(cfg: ResolvedConfig): Promise<void> {
 			logLevel: "info",
 		});
 	});
+
+	if (await writeNetlifyFiles(cwd)) {
+		console.log("[docs] wrote Netlify edge function for Accept: text/markdown");
+	}
 }
 
 export function logSyncResult(result: SyncResult): void {
