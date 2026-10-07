@@ -8,7 +8,7 @@
 // A matching blockquote is rewritten in place (via mdast->hast `data.hName`/`hProperties`, the
 // standard technique for custom hast output from a remark plugin) into:
 //
-//   <div class="callout callout--attention">
+//   <div class="callout callout--attention" data-alert="WARNING">
 //     <div class="callout-label">HEADS UP</div>
 //     <div class="callout-body">...rest of the blockquote's content...</div>
 //   </div>
@@ -66,6 +66,8 @@ export function remarkAlerts() {
 				hName: "div",
 				hProperties: {
 					className: ["callout", attention ? "callout--attention" : "callout--neutral"],
+					// The keyword the label above loses, for llms.ts to restore as `> [!KEYWORD]`.
+					dataAlert: keyword,
 				},
 			};
 		});
