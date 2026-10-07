@@ -1,5 +1,13 @@
 # @bluecadet/docs
 
+## 1.2.0
+
+### Minor Changes
+
+- [#3](https://github.com/bluecadet/docs/pull/3) [`a2980b0`](https://github.com/bluecadet/docs/commit/a2980b0e90028f38c6bb5ea05e6832f844545545) - Every build now writes LLM-friendly copies of the docs: a Markdown version of each page (`/foo/bar/` → `/foo/bar.md`), an `llms.txt` index in sidebar order, and `llms-full.txt` with every page concatenated. Each doc page links its Markdown copy with `<link rel="alternate" type="text/markdown">`.
+
+- [#3](https://github.com/bluecadet/docs/pull/3) [`22b8bbe`](https://github.com/bluecadet/docs/commit/22b8bbe094bd504c3fe354458ad7de58d30de8eb) - Builds on Netlify now serve a page's Markdown copy to requests that send `Accept: text/markdown`, through a generated edge function. Browsers still get HTML, and builds outside Netlify write nothing extra.
+
 ## 1.1.0
 
 ### Minor Changes
