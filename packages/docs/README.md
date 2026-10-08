@@ -256,3 +256,9 @@ resolution).
   isn't watched — restart to pick it up. On Linux, `fs.watch` isn't reliably recursive, so edits in
   subdirectories may need a restart there too.
 - **MDX is passed through, not transformed** — see [MDX passthrough](#mdx-passthrough) above.
+
+## License
+
+Source-available, not open source. `@bluecadet/docs` may only be used to build documentation for
+Bluecadet projects, including by contributors to Bluecadet's open source repos. Any other use
+requires written permission. See [LICENSE](https://github.com/bluecadet/docs/blob/main/LICENSE).

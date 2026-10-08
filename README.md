@@ -31,3 +31,9 @@ reference material.
 | Package | Description |
 | --- | --- |
 | [`@bluecadet/docs`](./packages/docs) | CLI (`npx @bluecadet/docs build`) that syncs a repo's markdown into a bundled Astro app and builds a static site with Pagefind search. |
+
+## License
+
+Source-available, not open source. `@bluecadet/docs` may only be used to build documentation for
+Bluecadet projects, including by contributors to Bluecadet's open source repos. Any other use
+requires written permission. See [LICENSE](https://github.com/bluecadet/docs/blob/main/LICENSE).
