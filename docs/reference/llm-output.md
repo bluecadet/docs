@@ -11,11 +11,12 @@ and anything else that would rather not parse a page's chrome. There is no confi
 
 | Path | Contents |
 | --- | --- |
-| `<route>.md` | One per doc page: the page's content as Markdown. |
-| `/llms.txt` | An index of every page in [llms.txt](https://llmstxt.org) format. |
-| `/llms-full.txt` | Every page's Markdown, concatenated in `llms.txt` order. |
+| `<route>.md` | One per page: the page's content as Markdown. |
+| `/index.md` | The landing page's Markdown copy (only when `landing:` is configured). |
+| `/llms.txt` | An index of every doc page in [llms.txt](https://llmstxt.org) format. |
+| `/llms-full.txt` | Every doc page's Markdown, concatenated in `llms.txt` order. |
 
-All three are written by an `astro:build:done` hook after the HTML exists. `docs dev` writes none
+These files are written by an `astro:build:done` hook after the HTML exists. `docs dev` writes none
 of them.
 
 ## Page URLs
@@ -24,16 +25,18 @@ A page's Markdown copy sits beside its route, with the trailing slash replaced b
 
 | Page | Markdown |
 | --- | --- |
+| `/` | `/index.md` (only when a `landing:` page is configured) |
 | `/reference/cli/` | `/reference/cli.md` |
 | `/packages/docs/` | `/packages/docs.md` |
 
-Each doc page also advertises its copy in `<head>`:
+Each page that has a Markdown copy also advertises it in `<head>`:
 
 ```html
 <link rel="alternate" type="text/markdown" href="/reference/cli.md">
 ```
 
-The landing page (`/`), the 404 page and `layout: "raw"` astro pages get no Markdown copy.
+The 404 page and `layout: "raw"` Astro pages get no Markdown copy. When there is no `landing:`
+configured, the meta-refresh redirect at `/` also has none.
 
 ## Page Markdown
 
@@ -85,8 +88,10 @@ When the build runs on Netlify (`NETLIFY=true`, which Netlify sets), it also wri
 - `edge-functions/docs-markdown.ts` answers requests that send `Accept: text/markdown` with the
   page's `.md` copy, as `Content-Type: text/markdown; charset=utf-8` with `Vary: Accept`. When a
   route has no copy, the request gets the normal HTML instead.
-- `config.json` serves every `.md` file as `text/markdown; charset=utf-8`. An existing
-  `config.json` there is merged into, not replaced.
+- `config.json` serves every `.md` file as `text/markdown; charset=utf-8`, and adds a
+  `Link: </llms.txt>; rel="describedby"` response header on `/` so agents that fetch only the
+  homepage can discover the `llms.txt` index without parsing HTML. An existing `config.json` is
+  merged into, not replaced; an existing `/` rule is patched in place rather than moved.
 
 ```sh
 curl -H "Accept: text/markdown" https://docs.example.com/reference/cli/

@@ -12,7 +12,7 @@ export default async (request: Request): Promise<Response | undefined> => {
 	const url = new URL(request.url);
 	url.pathname = `${url.pathname.replace(/\/$/, "") || "/index"}.md`;
 	const markdown = await fetch(url);
-	// No Markdown copy (the landing page, 404s, raw pages): serve whatever the route normally would.
+	// No Markdown copy (404s, raw pages, the no-landing redirect): serve whatever the route normally would.
 	if (!markdown.ok) return;
 
 	// Built fresh rather than copied: `fetch` may have decompressed the body, so the upstream

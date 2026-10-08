@@ -23,7 +23,7 @@ describe("writeNetlifyFiles", () => {
 		expect(existsSync(path.join(cwd, ".netlify"))).toBe(false);
 	});
 
-	it("writes the edge function and the .md header rule on Netlify", async () => {
+	it("writes the edge function, a / Link header, and the /*.md content-type rule on Netlify", async () => {
 		vi.stubEnv("NETLIFY", "true");
 		expect(await writeNetlifyFiles(cwd)).toBe(true);
 
@@ -34,11 +34,14 @@ describe("writeNetlifyFiles", () => {
 		expect(fn).toContain('header: { accept: "text/markdown" }');
 		const config = JSON.parse(await readFile(path.join(cwd, ".netlify/v1/config.json"), "utf8"));
 		expect(config).toEqual({
-			headers: [{ for: "/*.md", values: { "Content-Type": "text/markdown; charset=utf-8" } }],
+			headers: [
+				{ for: "/", values: { Link: '</llms.txt>; rel="describedby"' } },
+				{ for: "/*.md", values: { "Content-Type": "text/markdown; charset=utf-8" } },
+			],
 		});
 	});
 
-	it("merges into an existing config.json", async () => {
+	it("merges into an existing config.json, preserving other rules in place", async () => {
 		vi.stubEnv("NETLIFY", "true");
 		const v1 = path.join(cwd, ".netlify/v1");
 		await mkdir(v1, { recursive: true });
@@ -54,7 +57,37 @@ describe("writeNetlifyFiles", () => {
 		expect(config.redirects).toEqual([]);
 		expect(config.headers).toEqual([
 			other,
+			{ for: "/", values: { Link: '</llms.txt>; rel="describedby"' } },
 			{ for: "/*.md", values: { "Content-Type": "text/markdown; charset=utf-8" } },
 		]);
+	});
+
+	it("merges the Link header into an existing / rule, preserving other values and the key's original case", async () => {
+		vi.stubEnv("NETLIFY", "true");
+		const v1 = path.join(cwd, ".netlify/v1");
+		await mkdir(v1, { recursive: true });
+		const existing = {
+			for: "/",
+			values: { "X-Frame-Options": "DENY", link: '</feed.xml>; rel="alternate"' },
+		};
+		await writeFile(path.join(v1, "config.json"), JSON.stringify({ headers: [existing] }));
+
+		await writeNetlifyFiles(cwd);
+
+		const config = JSON.parse(await readFile(path.join(v1, "config.json"), "utf8"));
+		const home = config.headers.find((r: { for: string }) => r.for === "/");
+		expect(home.values["X-Frame-Options"]).toBe("DENY");
+		expect(home.values.link).toBe('</feed.xml>; rel="alternate", </llms.txt>; rel="describedby"');
+		expect("Link" in home.values).toBe(false);
+	});
+
+	it("does not duplicate the Link value when run twice", async () => {
+		vi.stubEnv("NETLIFY", "true");
+		await writeNetlifyFiles(cwd);
+		await writeNetlifyFiles(cwd);
+		const config = JSON.parse(await readFile(path.join(cwd, ".netlify/v1/config.json"), "utf8"));
+		const home = config.headers.find((r: { for: string }) => r.for === "/");
+		const occurrences = (home.values.Link.match(/llms\.txt/g) ?? []).length;
+		expect(occurrences).toBe(1);
 	});
 });

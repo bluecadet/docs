@@ -21,6 +21,7 @@ import LandingHeader from "../components/landing/LandingHeader.astro";
 import LandingRedirect from "../components/landing/LandingRedirect.astro";
 import { docsEntryHref } from "../lib/nav";
 import { getDocsConfig, LANDING_ENTRY_ID } from "../lib/config";
+import { markdownUrl } from "../lib/llms";
 import "../styles/landing.css";
 
 const { title: siteTitle, hasLanding } = getDocsConfig();
@@ -45,6 +46,7 @@ const pageDescription = data?.description;
 			appendSiteTitle={false}
 			sidebar={false}
 			ogType="website"
+			markdownHref={markdownUrl(Astro.url.pathname)}
 		>
 			<LandingHeader slot="header" />
 

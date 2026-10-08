@@ -221,16 +221,19 @@ export async function writeLlmsFiles({ outDir, title, rootUrl }: WriteOptions): 
 	const pages = new Map<string, PageMarkdown>();
 	let sections: LlmsSection[] = [];
 	let summary: string | undefined;
+	let landingWritten = false;
 	for (const file of htmlFiles) {
 		const tree = htmlParser.parse(await readFile(path.join(outDir, file), "utf8"));
 		const page = await convertPage(tree);
 		if (!page) continue;
 
 		const pathname = `/${file.split(path.sep).join("/")}`.replace(/index\.html$/, "");
-		// The landing page is mostly MDX components with no text equivalent; it lends llms.txt its
-		// summary and nothing else.
+		// The landing page writes index.md and supplies llms.txt's summary line, but stays
+		// out of the sidebar navigation listing and llms-full.txt.
 		if (pathname === "/") {
 			summary = page.description;
+			await writeFile(path.join(outDir, markdownUrl(pathname).slice(1)), page.markdown, "utf8");
+			landingWritten = true;
 			continue;
 		}
 		if (sections.length === 0) sections = sidebarSections(tree);
@@ -264,5 +267,5 @@ export async function writeLlmsFiles({ outDir, title, rootUrl }: WriteOptions): 
 	);
 	await writeFile(path.join(outDir, "llms-full.txt"), full.join("\n"), "utf8");
 
-	return pages.size;
+	return pages.size + (landingWritten ? 1 : 0);
 }
