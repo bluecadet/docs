@@ -1,5 +1,11 @@
 # @bluecadet/docs
 
+## 1.2.1
+
+### Patch Changes
+
+- [#5](https://github.com/bluecadet/docs/pull/5) [`2d25c7b`](https://github.com/bluecadet/docs/commit/2d25c7b02d0c9f7990af35fdec2eaf7110186108) - Builds with a `landing:` page now write `/index.md`, so `Accept: text/markdown` requests to `/` on Netlify return the landing page's Markdown copy instead of falling through to HTML. Netlify builds also add a `Link: </llms.txt>; rel="describedby"` response header on `/` so agents can discover the llms.txt index from the homepage without parsing HTML.
+
 ## 1.2.0
 
 ### Minor Changes
