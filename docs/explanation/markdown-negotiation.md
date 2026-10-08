@@ -31,7 +31,7 @@ files themselves are plain static files and work on any host.
    fetches it from the same deploy. `*.md` is excluded from the function's own paths, so that
    fetch goes straight to the static file.
 3. If the `.md` exists, the function returns it as `text/markdown; charset=utf-8` with
-   `Vary: Accept`. If it doesn't (the landing page, a 404), the function steps aside and the
+   `Vary: Accept`. If it doesn't (a 404, the no-landing redirect), the function steps aside and the
    request gets whatever the route normally serves.
 
 The function checks the `Accept` header itself too, so a browser still gets HTML if the router's

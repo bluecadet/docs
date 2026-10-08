@@ -1,5 +1,14 @@
-import { describe, expect, it } from "vitest";
-import { buildLlmsTxt, markdownUrl, pageToMarkdown, parseSidebar } from "../../app/src/lib/llms.js";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import {
+	buildLlmsTxt,
+	markdownUrl,
+	pageToMarkdown,
+	parseSidebar,
+	writeLlmsFiles,
+} from "../../app/src/lib/llms.js";
 
 /** A built doc page, trimmed to the markup [...slug].astro and the rehype plugins produce. */
 function docPage(body: string, description?: string): string {
@@ -154,5 +163,84 @@ describe("buildLlmsTxt", () => {
 
 	it("omits the summary when there is none", () => {
 		expect(buildLlmsTxt("Site", undefined, [])).toBe("# Site\n");
+	});
+});
+
+describe("writeLlmsFiles", () => {
+	let outDir: string;
+
+	beforeEach(() => {
+		outDir = fs.mkdtempSync(path.join(os.tmpdir(), "docs-llms-test-"));
+	});
+
+	afterEach(() => {
+		fs.rmSync(outDir, { recursive: true, force: true });
+	});
+
+	function write(relPath: string, content: string): void {
+		const abs = path.join(outDir, relPath);
+		fs.mkdirSync(path.dirname(abs), { recursive: true });
+		fs.writeFileSync(abs, content);
+	}
+
+	/** A built landing page with `data-pagefind-body` (real landing, not a redirect). */
+	const landingHtml = `<!doctype html><html><head><title>My Docs</title><meta name="description" content="All the docs."></head><body><div class="landing-body" data-pagefind-body data-pagefind-meta="title:My Docs"><p>Welcome.</p></div></body></html>`;
+
+	/** A no-landing redirect — no `data-pagefind-body`, so `convertPage` returns undefined. */
+	const redirectHtml =
+		"<!doctype html><html><head><title>My Docs</title></head><body><p>Redirecting</p></body></html>";
+
+	/** A built doc page with a sidebar. */
+	const cliHtml =
+		`<!doctype html><html><head><title>CLI — My Docs</title><meta name="description" content="All CLI flags."></head><body>` +
+		`<nav id="sidebar-nav"><div class="sidebar-list"><a class="sidebar-item" href="/reference/cli/">CLI</a></div></nav>` +
+		`<article class="prose" data-pagefind-body data-pagefind-meta="title:CLI"><h1>CLI</h1><p>Flags.</p></article></body></html>`;
+
+	it("writes index.md for a real landing page", async () => {
+		write("index.html", landingHtml);
+		write("reference/cli/index.html", cliHtml);
+		await writeLlmsFiles({ outDir, title: "My Docs" });
+		expect(fs.existsSync(path.join(outDir, "index.md"))).toBe(true);
+		const md = fs.readFileSync(path.join(outDir, "index.md"), "utf8");
+		expect(md).toMatch(/^# My Docs\n/);
+	});
+
+	it("does not write index.md for a no-landing redirect", async () => {
+		write("index.html", redirectHtml);
+		write("reference/cli/index.html", cliHtml);
+		await writeLlmsFiles({ outDir, title: "My Docs" });
+		expect(fs.existsSync(path.join(outDir, "index.md"))).toBe(false);
+	});
+
+	it("uses the landing description as the llms.txt summary and omits the landing from navigation", async () => {
+		write("index.html", landingHtml);
+		write("reference/cli/index.html", cliHtml);
+		await writeLlmsFiles({ outDir, title: "My Docs" });
+		const txt = fs.readFileSync(path.join(outDir, "llms.txt"), "utf8");
+		expect(txt).toContain("> All the docs.");
+		expect(txt).not.toContain("/index.md");
+	});
+
+	it("excludes the landing page from llms-full.txt", async () => {
+		write("index.html", landingHtml);
+		write("reference/cli/index.html", cliHtml);
+		await writeLlmsFiles({ outDir, title: "My Docs" });
+		const full = fs.readFileSync(path.join(outDir, "llms-full.txt"), "utf8");
+		expect(full).not.toContain("Welcome.");
+		expect(full).toContain("# CLI");
+	});
+
+	it("counts index.md in the returned page count when a landing page is present", async () => {
+		write("index.html", landingHtml);
+		write("reference/cli/index.html", cliHtml);
+		const count = await writeLlmsFiles({ outDir, title: "My Docs" });
+		expect(count).toBe(2);
+	});
+
+	it("does not count the redirect in the returned page count when no landing is configured", async () => {
+		write("index.html", redirectHtml);
+		write("reference/cli/index.html", cliHtml);
+		const count = await writeLlmsFiles({ outDir, title: "My Docs" });
+		expect(count).toBe(1);
 	});
 });
