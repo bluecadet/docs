@@ -1,0 +1,77 @@
+---
+import type { TocSection } from "../lib/toc";
+
+interface Props {
+	sections: TocSection[];
+	firstSlug: string;
+}
+
+const { sections, firstSlug } = Astro.props;
+---
+
+<ul class="toc-list" role="list">
+	{sections.map((section) => (
+		<li>
+			<a
+				class="toc-link"
+				class:list={{ "is-active": section.slug === firstSlug }}
+				aria-current={section.slug === firstSlug ? "location" : undefined}
+				href={`#${section.slug}`}
+			>
+				{section.text}
+			</a>
+			{section.children.length > 0 && (
+				<Astro.self sections={section.children} firstSlug={firstSlug} />
+			)}
+		</li>
+	))}
+</ul>
+
+<style>
+	/* Reset article list styles as well as browser defaults; the mobile TOC lives in .prose. */
+	.toc-list {
+		margin: 0;
+		padding: 0;
+		list-style: none;
+		color: inherit;
+		line-height: inherit;
+	}
+
+	.toc-list > li {
+		margin: 0;
+	}
+
+	.toc-list .toc-list {
+		padding-inline-start: 0.875rem;
+	}
+
+	.toc-link {
+		display: block;
+		padding: 0.3125rem 0 0.3125rem 0.875rem;
+		color: var(--text-muted);
+		text-decoration: none;
+		overflow-wrap: anywhere;
+	}
+
+	.toc-link:hover,
+	.toc-link:focus-visible {
+		color: var(--ink);
+		text-decoration: underline;
+	}
+
+	.toc-link.is-active {
+		color: var(--accent);
+	}
+
+	:global(.toc-aside) .toc-link.is-active {
+		box-shadow: -1px 0 var(--accent);
+	}
+
+	:global(.toc-disclosure) .toc-link {
+		display: flex;
+		align-items: center;
+		/* Fixed CSS px so targets do not shrink with text zoom. */
+		min-block-size: 44px;
+		padding-block: 0.125rem;
+	}
+</style>

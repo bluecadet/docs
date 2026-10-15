@@ -1,7 +1,7 @@
 ---
-// Above-H1 breadcrumb: `docs / <segment> / … / <page>`, one segment per directory level. An
-// intermediate segment links when that directory has its own index page (the CLI collapses
-// `docs/guides/index.md` onto `/guides/`) and stays inert text when it doesn't.
+// Above-H1 breadcrumb: `<section> / … / <page>`, following the configured sidebar ancestry.
+// Ancestors retain their nav-tree links (or stay inert when they have none). No synthetic site
+// root is prepended; a page with no ancestors shows only its title.
 //
 // Mobile (<=767px) swaps this for a full-bleed pill button showing `<parent> / <page>` plus an
 // "all pages" trigger that opens NavSheet.astro — the design's mobile doc-page header treatment.
@@ -15,7 +15,6 @@ interface Props {
 }
 
 const { id, title } = Astro.props;
-const base = import.meta.env.BASE_URL;
 const { nodes } = await getNavTree();
 
 // Everything above the current page, outermost first.
@@ -24,11 +23,9 @@ const parent = ancestors.at(-1);
 ---
 
 <nav class="breadcrumb type-sm" aria-label="Breadcrumb">
-	<a class="breadcrumb__segment link-muted" href={base}>docs</a>
 	{
 		ancestors.map((node) => (
 			<>
-				<span class="breadcrumb__sep">/</span>
 				{node.href ? (
 					<a class="breadcrumb__segment link-muted" href={node.href}>
 						{node.segment}
@@ -36,10 +33,10 @@ const parent = ancestors.at(-1);
 				) : (
 					<span class="breadcrumb__segment">{node.label}</span>
 				)}
+				<span class="breadcrumb__sep">/</span>
 			</>
 		))
 	}
-	<span class="breadcrumb__sep">/</span>
 	<span class="breadcrumb__current">{title}</span>
 </nav>
 

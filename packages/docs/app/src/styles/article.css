@@ -143,6 +143,7 @@
 	letter-spacing: var(--tracking-label);
 	color: var(--text-muted);
 	text-transform: uppercase;
+	scroll-margin-block-start: var(--heading-scroll-offset);
 }
 
 /* ---- Body text --------------------------------------------------------- */
@@ -229,6 +230,16 @@
 	background: var(--white-07);
 	border-radius: var(--radius-sm);
 	padding: 0.125rem 0.3125rem;
+}
+
+/* Identifiers keep the surrounding heading's scale and weight, but never its label casing or
+   tracking. Body inline code keeps the compact treatment above. */
+.prose :is(h1, h2, h3, h4, h5, h6) code {
+	font-size: inherit;
+	font-weight: inherit;
+	line-height: inherit;
+	text-transform: none;
+	letter-spacing: normal;
 }
 
 .prose pre code {

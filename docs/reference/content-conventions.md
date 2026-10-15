@@ -67,9 +67,34 @@ Sidebar navigation comes entirely from `docs.config.yaml`'s required `sidebar` f
 Full-text search — see [Search](/reference/search/) — is always generated from the published file
 tree; there's no separate search config. Neither reads frontmatter beyond `title`/`description`.
 
+## Breadcrumbs
+
+Breadcrumbs follow the configured sidebar ancestry, ending with the current page title. They do
+not prepend a site-wide `docs` link. Ancestors keep their navigation links; sections without a
+link remain plain text. A top-level page (or a page not listed in the sidebar) shows only its
+title, with no separator.
+
+On mobile, the navigation pill shows the nearest sidebar ancestor and current title, or just the
+title when there is no ancestor. Its “all pages” button still opens the navigation sheet. A real
+sidebar ancestor named `docs` is kept in both variants; no route segments are stripped.
+
 ## Markdown features
 
 Beyond standard GitHub-flavored markdown, the site renders a few things specially.
+
+### Headings and table of contents
+
+The “on this page” table of contents includes authored `##`, `###`, and `####` headings
+(H2–H4), in document order. Subheadings nest beneath the nearest preceding shallower heading;
+skipped levels do not create empty entries. The desktop rail and the expandable tablet/mobile
+outline contain the same links. The current section is highlighted as you scroll or follow a
+heading link. Pages with only H3/H4 headings still get a TOC; pages with no H2–H4 headings do not.
+H1 is the page title, and H5/H6 are not included in the outline.
+
+Inline code in headings follows the heading's font size and weight. Identifiers such as
+`camelCase` retain their authored case and normal letter spacing, including in H4 headings,
+whose non-code text keeps its uppercase label style. Body inline code keeps its compact styling.
+H2–H4 fragment links leave clearance beneath the sticky header.
 
 ### Alerts
 
@@ -185,7 +210,7 @@ export const description = "Optional lead/meta text."; // "docs" layout only
 Known limitations:
 
 - No TOC extraction — `.astro` pages render no on-disk headings, so there's no "on this page"
-  column (matches a markdown page with no `##` headings).
+  column (matches a markdown page with no H2–H4 headings).
 - No edit link — there's no single source file to point a `toc.editLink` template at.
 - No relative imports between consumer files. Each page is synced standalone into the app's own
   source tree; import shared UI from `@bluecadet/docs/components` (see

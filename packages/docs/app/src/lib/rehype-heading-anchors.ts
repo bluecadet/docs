@@ -37,10 +37,8 @@ import type { Element, Root } from "hast";
 import { visit } from "unist-util-visit";
 import { textContent } from "./hast-text.js";
 
-/** H1 is the page title (lifted out of the article body entirely — see article.css) and never
-    gets an anchor. H2 is the only level the design draws a "#" prefix on; H3 is included too since
-    it's just as valid a deep-link target and gets an `id` from the same slugger, even though it
-    doesn't appear in the `Toc`/sidebar "on this page" lists (those only track depth-2 headings). */
+/** H1 is the page title and never gets an anchor. H2/H3 keep the visible "#" affordance;
+    H4 is a TOC/deep-link target too, but retains its compact label treatment without a prefix. */
 const ANCHORED_HEADINGS = new Set(["h2", "h3"]);
 
 export function rehypeHeadingAnchors() {

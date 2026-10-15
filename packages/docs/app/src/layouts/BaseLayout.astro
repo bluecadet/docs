@@ -12,6 +12,8 @@
 // Pages that need a different header/footer (landing, 404) pass them through the named slots;
 // doc pages get the defaults.
 import "../styles/index.css";
+import type { MarkdownHeading } from "astro";
+import { isTocHeading } from "../lib/toc";
 import Header from "../components/Header.astro";
 import NavSheet from "../components/NavSheet.astro";
 import SearchModal from "../components/SearchModal.astro";
@@ -20,17 +22,11 @@ import Toc from "../components/Toc.astro";
 import Footer from "../components/Footer.astro";
 import { faviconType, getDocsConfig } from "../lib/config";
 
-interface Heading {
-	depth: number;
-	slug: string;
-	text: string;
-}
-
 interface Props {
 	title: string;
 	description?: string;
-	/** Article headings — renders the right-hand TOC column when there are any H2s. */
-	headings?: Heading[];
+	/** Article headings — renders the right-hand TOC column when there are any H2–H4 headings. */
+	headings?: MarkdownHeading[];
 	/** Active nav entry id. */
 	currentId?: string;
 	/**
@@ -96,7 +92,7 @@ const canonicalUrl =
 const markdownUrl = markdownHref && Astro.site ? new URL(markdownHref, Astro.site).href : markdownHref;
 
 // Only reserve the TOC column when there is actually something to put in it.
-const hasToc = main === "article" && headings.some((heading) => heading.depth === 2);
+const hasToc = main === "article" && headings.some(isTocHeading);
 ---
 
 <html lang="en">
