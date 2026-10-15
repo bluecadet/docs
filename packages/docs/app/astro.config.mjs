@@ -240,7 +240,9 @@ export default defineConfig({
 		// `rehype-heading-anchors.ts` for the full ordering rationale.
 		rehypePlugins: [rehypeCodeBlocks, rehypeTables, rehypeHeadingIds, rehypeHeadingAnchors],
 		shikiConfig: {
-			theme: "css-variables",
+			// Shared by Markdown and MDX. Keep Vitesse's token palette; article.css overrides
+			// only the fenced block's background to match the site's --surface-code.
+			theme: "vitesse-dark",
 			// Enables the standard ```lang {2,5-7} meta syntax: adds a "highlighted" class to the
 			// matching `.line` spans (see article.css for the tint that reads it).
 			transformers: [transformerMetaHighlight()],

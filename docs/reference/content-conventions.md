@@ -127,7 +127,10 @@ colors. A blockquote without a `[!KEYWORD]` marker renders as a plain quote.
 
 Fenced code blocks with a language tag (` ```sh `, ` ```ts `, etc.) get a header bar showing that
 language and a copy button — no configuration needed, this applies automatically to every fenced
-block.
+block in Markdown and MDX, including landing pages. Syntax highlighting uses **Vitesse Dark**'s
+token colors on the site's code surface (`--surface-code`), rather than the theme's own background.
+This is a shared default, not a `docs.config.yaml` option; site accents do not recolor syntax
+tokens. Inline prose code and terminal transcripts keep their existing site styling.
 
 Add a brace-delimited line list right after the language tag to highlight specific lines — single
 numbers and ranges both work, comma-separated. ` ```ts {2,5-7} ` highlights lines 2 and 5 through

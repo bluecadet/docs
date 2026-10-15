@@ -1,6 +1,6 @@
 /*
- * Article typography — everything inside the rendered markdown content (`<article class="prose">`,
- * owned by a concurrent agent; this file only ever reaches inside that scope).
+ * Article typography — rendered Markdown/MDX content inside `<article class="prose">`.
+ * Fenced-code component styles also cover landing MDX outside `.prose`.
  *
  * Responsive: the one breakpoint that matters here is the mobile table -> card degradation at
  * the bottom of this file. Everything else in `.prose` reflows fine at any width unchanged.
@@ -268,9 +268,10 @@
 /* ---- Code blocks --------------------------------------------------------
    `<pre class="astro-code" data-language="...">` (Shiki's output, renamed by Astro from its
    "shiki" class — see @astrojs/internal-helpers/dist/shiki.js) is wrapped by
-   `rehype-code-blocks.ts` in this `.code-block` header-bar + copy-button chrome. */
+   `rehype-code-blocks.ts` in this `.code-block` header-bar + copy-button chrome. These rules
+   belong to the code-block component, not prose typography, so landing MDX shares them too. */
 
-.prose .code-block {
+.code-block {
 	margin: 1.5rem 0;
 	border: 1px solid var(--hairline-10);
 	border-radius: var(--radius-md);
@@ -278,7 +279,7 @@
 	overflow: hidden;
 }
 
-.prose .code-block-header {
+.code-block .code-block-header {
 	display: flex;
 	align-items: center;
 	gap: 0.75rem;
@@ -288,11 +289,11 @@
 	color: var(--text-dim);
 }
 
-.prose .code-block-lang {
+.code-block .code-block-lang {
 	text-transform: lowercase;
 }
 
-.prose .code-copy {
+.code-block .code-copy {
 	margin-inline-start: auto;
 	background: none;
 	border: 1px solid var(--hairline-14);
@@ -306,20 +307,28 @@
 		border-color var(--transition-fast);
 }
 
-.prose .code-copy:hover {
+.code-block .code-copy:hover {
 	color: var(--ink);
 	border-color: color-mix(in srgb, white 22%, transparent);
 }
 
-.prose .code-copy--copied {
+.code-block .code-copy--copied {
 	color: var(--accent);
 	border-color: var(--accent-border-30);
 }
 
-.prose .code-block pre {
+.code-block pre {
 	margin: 0;
 	padding-block: 0.875rem;
 	font: var(--weight-regular) 0.8125rem/var(--leading-relaxed) var(--font-mono); /* 13px */
+}
+
+/* Shiki emits the theme's background as an inline style. Override only that property on wrapped
+   syntax blocks, leaving Vitesse's foreground and token colors intact. `!important` is needed to
+   beat the generated inline background without rewriting Shiki's serialized styles. Inline code,
+   terminal transcripts, and unwrapped pre elements are deliberately outside this selector. */
+.code-block pre.astro-code {
+	background-color: var(--surface-code) !important;
 }
 
 /* `<code>` is forced to `display: block; inline-size: max-content` so it grows to the width of its
@@ -327,17 +336,21 @@
    would otherwise stay clamped to the visible viewport width. That gives `.line`'s
    `min-inline-size: 100%` below a containing block as wide as the full scrollable content, not just
    what's currently in view, so every line's background — including shorter highlighted lines —
-   reaches the true scrolled-right edge, not just the viewport edge. `line-height: inherit` undoes
+   reaches the true scrolled-right edge, not just the viewport edge. `font: inherit` undoes
    `.prose code`'s `font` shorthand (above), which resets line-height to `normal` — harmless while
    `<code>` stayed inline (the row strut came from block-level `pre`'s own 1.8 line-height either
    way), but load-bearing now that `<code>` itself is the block container establishing the line
    boxes: without it, rows would compress from `pre`'s deliberate 1.8 down to the mono font's
-   `normal` metric. */
-.prose .code-block pre > code {
+   `normal` metric. The remaining resets keep code styling independent of the page shell. */
+.code-block pre > code {
 	display: block;
 	inline-size: max-content;
 	min-inline-size: 100%;
-	line-height: inherit;
+	font: inherit;
+	color: inherit;
+	background: none;
+	padding: 0;
+	border-radius: 0;
 }
 
 /* Shiki wraps each source line in its own `.line` span inside `<pre><code>`. The inline padding
@@ -348,7 +361,7 @@
    above — rather than `pre`'s, which only ever reflects the unscrolled viewport width) and
    stretches every line to fill it; lines longer than that grow past it exactly as they did when the
    padding lived on `pre`. */
-.prose .code-block pre .line {
+.code-block pre .line {
 	display: inline-block;
 	min-inline-size: 100%;
 	padding-inline: 1.125rem;
@@ -357,7 +370,7 @@
 /* Highlighted lines from the `{2,5-7}` meta-string syntax (@shikijs/transformers'
    transformerMetaHighlight, wired up in astro.config.mjs) — a neutral tint, not an accent color,
    since this marks emphasis, not state. */
-.prose .code-block pre .line.highlighted {
+.code-block pre .line.highlighted {
 	background: var(--white-07);
 }
 
@@ -367,28 +380,6 @@
    here, or it would butt against surrounding paragraphs. */
 .prose .terminal {
 	margin-block: 1.5rem;
-}
-
-/* Shiki's `css-variables` theme (astro.config.mjs `markdown.shikiConfig.theme`) reads token colors
-   from `--astro-code-*` custom properties instead of baking in hex values — see
-   createCssVariablesTheme() in @shikijs/core. Mapped onto the article palette: restrained and
-   mostly monochrome, the state accent for strings/success values, the attention accent used
-   sparingly (links only). */
-.prose {
-	--astro-code-foreground: var(--text-code);
-	--astro-code-background: var(--surface-code);
-	--astro-code-token-comment: var(--text-dim);
-	--astro-code-token-string: var(--accent);
-	--astro-code-token-string-expression: var(--accent);
-	--astro-code-token-constant: var(--accent);
-	--astro-code-token-keyword: var(--ink);
-	--astro-code-token-function: var(--ink);
-	--astro-code-token-parameter: var(--text-code);
-	--astro-code-token-punctuation: var(--text-muted);
-	--astro-code-token-link: var(--accent-2);
-	--astro-code-token-inserted: var(--accent);
-	--astro-code-token-deleted: var(--accent-2);
-	--astro-code-token-changed: var(--accent-2);
 }
 
 /* ---- Callouts (GitHub-style markdown alerts, see remark-alerts.ts) ----- */
