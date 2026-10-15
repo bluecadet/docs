@@ -1,5 +1,15 @@
 # @bluecadet/docs
 
+## 1.2.2
+
+### Patch Changes
+
+- [`7d99ea3`](https://github.com/bluecadet/docs/commit/7d99ea3b4fc8a9fb7be699114da64e72096d513c) - Include H2–H4 headings in both desktop and mobile tables of contents, with nested lists and synchronized current-section highlighting. Pages with only H3/H4 headings now get a TOC too. Heading code inherits the heading's size and weight while preserving identifier casing and spacing; ordinary prose code and heading styles are unchanged. H4 fragment links now clear the sticky header.
+
+- [`7d99ea3`](https://github.com/bluecadet/docs/commit/7d99ea3b4fc8a9fb7be699114da64e72096d513c) - Remove the synthetic leading `docs /` link from desktop breadcrumbs. Trails now start with the configured sidebar ancestry, matching the mobile navigation pill's root-free behavior. Ancestor links and real `docs`-named entries are preserved; pages with no ancestors show only their title, without a separator. No configuration changes are required.
+
+- [`547ee18`](https://github.com/bluecadet/docs/commit/547ee18b4e5ae7c44610e90b02e216392b8de03e) - Use Vitesse Dark syntax colors for fenced code in Markdown and MDX, including landing pages. Keep code block backgrounds matched to the site's code surface, with the existing copy buttons and line highlighting. Inline code and terminal styling are unchanged.
+
 ## 1.2.1
 
 ### Patch Changes
