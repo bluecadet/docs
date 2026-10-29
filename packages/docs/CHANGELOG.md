@@ -1,5 +1,13 @@
 # @bluecadet/docs
 
+## 1.2.3
+
+### Patch Changes
+
+- [`8703369`](https://github.com/bluecadet/docs/commit/87033699aca9c4b5243d5815aeb550f977528856) - Support `[!code highlight]` and `[!code highlight:3]` comment notation in fenced code blocks, including Markdown, MDX, and landing pages. Remove markers from rendered and copied code.
+
+- [`d18c82e`](https://github.com/bluecadet/docs/commit/d18c82ec79fbb038e512228f75c9c70efe5b8ff8) - Reduce lead text to 15px and general band body copy to 14px on mobile. Set landing quotes to 26px on mobile and use shared typography utilities for band copy, quotes, and attribution.
+
 ## 1.2.2
 
 ### Patch Changes
