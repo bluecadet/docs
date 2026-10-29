@@ -15,7 +15,7 @@
  * font declarations from its own `<style>` block — leaving them in place means the class silently
  * loses and becomes dead code.
  *
- * Responsive step-downs stay local to the component: a `@media` rule setting `font-size` ONLY —
+ * Component-specific responsive step-downs stay local: a `@media` rule setting `font-size` ONLY —
  * never the full `font:` shorthand, which would reset family/weight/line-height back to UA
  * defaults. Being unlayered, a local font-size-only override still correctly beats the base class.
  *
@@ -98,6 +98,10 @@
 	font: var(--weight-medium) 1.25rem/var(--leading-snug) var(--font-serif); /* 20px */
 }
 
+.type-quote {
+	font: var(--weight-light) 2.125rem/var(--leading-snug) var(--font-serif); /* 34px */
+}
+
 .type-stat {
 	font: var(--weight-light) 2.125rem/var(--leading-none) var(--font-serif); /* 34px */
 }
@@ -114,4 +118,10 @@
 .type-prose-sm {
 	font-size: 0.875rem; /* 14px */
 	line-height: var(--leading-relaxed);
+}
+
+@media (max-width: 767px) {
+	.type-lead {
+		font-size: 0.9375rem; /* 15px */
+	}
 }

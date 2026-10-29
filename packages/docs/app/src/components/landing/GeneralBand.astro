@@ -12,7 +12,7 @@ const { eyebrow } = Astro.props;
 			{eyebrow}
 		</div>
 	)}
-	<div class="content" data-reveal data-reveal-stagger>
+	<div class="content type-lead" data-reveal data-reveal-stagger>
 			<slot />
 	</div>
 
@@ -41,8 +41,6 @@ const { eyebrow } = Astro.props;
 	}
 
 	.content :global(> p) {
-		font-size: 1.0625rem;
-		line-height: var(--leading-relaxed);
 		color: var(--text-muted);
 	}
 
@@ -54,6 +52,12 @@ const { eyebrow } = Astro.props;
 		--reveal-delay: 1;
 	}
 
+
+	@media (max-width: 767px) {
+		.content {
+			font-size: 0.875rem; /* 14px, matching .type-prose-sm */
+		}
+	}
 
 	@media (min-width: 1024px) {
 		.general-band {

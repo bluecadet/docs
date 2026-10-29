@@ -8,10 +8,10 @@ const { name, title } = Astro.props;
 ---
 
 <div class="landing-band landing-block-quote">
-  <blockquote>
+  <blockquote class="type-quote">
     <slot />
   </blockquote>
-  <p class="attribution">
+  <p class="attribution type-sm">
     <span class="attribution-name">{name}</span>
     <span class="attribution-title">{title}</span>
   </p>
@@ -27,7 +27,6 @@ const { name, title } = Astro.props;
   }
 
   blockquote {
-		font: 300 2.125rem/1.4 var(--font-serif);
     color: var(--ink);
 
     & i {
@@ -39,7 +38,7 @@ const { name, title } = Astro.props;
   .attribution {
     display: flex;
     flex-direction: column;
-    font: var(--weight-regular) 0.75rem/1.8 var(--font-mono);
+    line-height: var(--leading-relaxed);
     color: var(--text-dim);
   }
 
@@ -48,4 +47,9 @@ const { name, title } = Astro.props;
 
   }
 
+  @media (max-width: 767px) {
+    blockquote {
+      font-size: var(--type-h2);
+    }
+  }
 </style>
