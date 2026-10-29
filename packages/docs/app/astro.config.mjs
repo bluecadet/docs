@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 import { rehypeHeadingIds } from "@astrojs/markdown-remark";
 import mdx from "@astrojs/mdx";
 import sitemap from "@astrojs/sitemap";
-import { transformerMetaHighlight } from "@shikijs/transformers";
+import { transformerMetaHighlight, transformerNotationHighlight } from "@shikijs/transformers";
 import { defineConfig } from "astro/config";
 import { createIndex } from "pagefind";
 import { searchForWorkspaceRoot } from "vite";
@@ -243,9 +243,9 @@ export default defineConfig({
 			// Shared by Markdown and MDX. Keep Vitesse's token palette; article.css overrides
 			// only the fenced block's background to match the site's --surface-code.
 			theme: "vitesse-dark",
-			// Enables the standard ```lang {2,5-7} meta syntax: adds a "highlighted" class to the
-			// matching `.line` spans (see article.css for the tint that reads it).
-			transformers: [transformerMetaHighlight()],
+			// Both fence metadata ({2,5-7}) and comment notation ([!code highlight:3]) add
+			// "highlighted" to matching `.line` spans; article.css supplies the tint.
+			transformers: [transformerMetaHighlight(), transformerNotationHighlight()],
 		},
 	},
 });

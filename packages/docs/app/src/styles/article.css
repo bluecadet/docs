@@ -367,9 +367,8 @@
 	padding-inline: 1.125rem;
 }
 
-/* Highlighted lines from the `{2,5-7}` meta-string syntax (@shikijs/transformers'
-   transformerMetaHighlight, wired up in astro.config.mjs) — a neutral tint, not an accent color,
-   since this marks emphasis, not state. */
+/* Highlighted lines from fence metadata or [!code highlight] comments (Shiki transformers
+   wired up in astro.config.mjs). A neutral tint marks emphasis, not state. */
 .code-block pre .line.highlighted {
 	background: var(--white-07);
 }

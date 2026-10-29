@@ -147,6 +147,18 @@ const config = {
 };
 ```
 
+Alternatively, use `// [!code highlight:3]` on its own line to highlight the next three lines.
+At the end of a code line, it highlights that line and the next two. Omit `:3` to highlight a
+single line. The marker is removed from rendered and copied code.
+
+```ts
+// [!code highlight:3]
+const config = {
+  retries: 3,
+  timeout: 5000,
+};
+```
+
 ### Tables
 
 Standard markdown tables render in a bordered, horizontally-scrollable container. No extra syntax

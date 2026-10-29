@@ -10,6 +10,59 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 const packageRoot = fileURLToPath(new URL("../..", import.meta.url));
 const source = '// A greeting\nconst message = "Hello";\nconsole.log(message);';
+const notationCases = [
+	{
+		name: "standalone range",
+		source:
+			'// Before\n// [!code highlight:3]\nconst message = "Hello";\nconsole.log(message);\nconsole.log("Done");\n// After',
+		rendered:
+			'// Before\nconst message = "Hello";\nconsole.log(message);\nconsole.log("Done");\n// After',
+		highlighted: [1, 2, 3],
+	},
+	{
+		name: "inline single line",
+		source: 'const message = "Hello"; // [!code highlight]\nconsole.log(message);',
+		rendered: 'const message = "Hello";\nconsole.log(message);',
+		highlighted: [0],
+	},
+	{
+		name: "combined import and nested call",
+		source: `import { mdToHtml } from '@bluecadet/launchpad/content/transforms/md-to-html'; // [!code highlight]
+
+export default defineConfig({
+  plugins: [
+    content({
+      transforms: [
+        mdToHtml({ // [!code highlight:3]
+          path: '$.item.description'
+        })
+      ]
+    })
+  ]
+});`,
+		rendered: `import { mdToHtml } from '@bluecadet/launchpad/content/transforms/md-to-html';
+
+export default defineConfig({
+  plugins: [
+    content({
+      transforms: [
+        mdToHtml({
+          path: '$.item.description'
+        })
+      ]
+    })
+  ]
+});`,
+		highlighted: [0, 6, 7, 8],
+	},
+	{
+		name: "inline range",
+		source:
+			'const message = "Hello"; // [!code highlight:3]\nconsole.log(message);\nconsole.log("Done");\n// After',
+		rendered: 'const message = "Hello";\nconsole.log(message);\nconsole.log("Done");\n// After',
+		highlighted: [0, 1, 2],
+	},
+];
 let scratch: string;
 let output: string;
 
@@ -38,7 +91,7 @@ beforeAll(() => {
 		path.join(fixture, "docs.config.yaml"),
 		'title: Fixture\nlanding: landing.mdx\ncontent: ["*.{md,mdx}"]\nsidebar: [markdown, mdx]\naccent: "#ff00ff"\n',
 	);
-	const content = `---\ntitle: Syntax\n---\n\nInline \`message\` stays inline.\n\n\`\`\`ts {2-3}\n${source}\n\`\`\`\n\n\`\`\`\nplain text\n\`\`\`\n`;
+	const content = `---\ntitle: Syntax\n---\n\nInline \`message\` stays inline.\n\n\`\`\`ts {2-3}\n${source}\n\`\`\`\n\n\`\`\`\nplain text\n\`\`\`\n${notationCases.map((fixture) => `\n\`\`\`ts\n${fixture.source}\n\`\`\`\n`).join("")}`;
 	fs.writeFileSync(path.join(fixture, "markdown.md"), content);
 	fs.writeFileSync(path.join(fixture, "mdx.mdx"), content);
 	// Consumer-style import using the actual Terminal and Line components in the isolated app.
@@ -172,7 +225,7 @@ describe.each(["markdown", "mdx", ""])('rendered syntax on "%s"', (route) => {
 	it("preserves wrappers, copyable text, line order, metadata highlighting, and inline code", () => {
 		const tree = page(route);
 		const blocks = selectAll(".code-block", tree);
-		expect(blocks).toHaveLength(2);
+		expect(blocks).toHaveLength(2 + notationCases.length);
 		const block = blocks[0];
 		expect(text(select(".code-block-header .code-block-lang", block)!)).toBe("ts");
 		expect(select("button.code-copy", block)?.properties.type).toBe("button");
@@ -185,6 +238,18 @@ describe.each(["markdown", "mdx", ""])('rendered syntax on "%s"', (route) => {
 		const inline = select("p > code", tree);
 		expect(inline && text(inline)).toBe("message");
 		expect(inline?.properties.style).toBeUndefined();
+	});
+	it.each(notationCases)("supports $name highlight notation without copying markers", (fixture) => {
+		const block = selectAll(".code-block", page(route))[2 + notationCases.indexOf(fixture)];
+		const pre = select("pre", block)!;
+		const lines = selectAll(".line", pre);
+		expect(lines.map(text).map((line) => line.trimEnd())).toEqual(fixture.rendered.split("\n"));
+		expect(selectAll(".line.highlighted", pre)).toEqual(
+			fixture.highlighted.map((index) => lines[index]),
+		);
+		// The copy button reads the rendered PRE's textContent.
+		expect(text(pre)).not.toContain("[!code");
+		expect(select("button.code-copy", block)).toBeDefined();
 	});
 });
 
